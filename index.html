@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Frameline Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar">
+            <h1>FrameLine<span>Tool</span></h1>
+            
+            <div class="controls">
+
+    <div class="input-group">
+        <label>Canvas / Resolution</label>
+        <select id="resolutionSelect">
+            <option value="custom">Custom / Manual</option>
+            <optgroup label="Broadcast & Web">
+                <option value="1920,1080" selected>HD (1920 x 1080)</option>
+                <option value="3840,2160">UHD (3840 x 2160)</option>
+                <option value="1280,720">HD 720p</option>
+            </optgroup>
+            <optgroup label="Cinema (DCI)">
+                <option value="2048,1080">DCI 2K FF (2048 x 1080)</option>
+                <option value="1998,1080">DCI 2K Flat (1998 x 1080)</option>
+                <option value="2048,858">DCI 2K Scope (2048 x 858)</option>
+                <option value="4096,2160">DCI 4K FF (4096 x 2160)</option>
+                <option value="3996,2160">DCI 4K Flat (3996 x 2160)</option>
+                <option value="4096,2160">DCI 4K Scope (4096 x 2160)</option>
+            </optgroup>
+            <optgroup label="Social Media">
+                <option value="1080,1920">Vertical (9:16)</option>
+                <option value="1080,1350">Portrait (4:5)</option>
+                <option value="1080,1080">Square (1:1)</option>
+            </optgroup>
+        </select>
+    </div>
+
+     <div class="presets"  id="resBtnContainer">
+                    <button onclick="setPreset(1920, 1080, this)">HD</button>
+                    <button onclick="setPreset(3840, 2160, this)">UHD</button>
+                    <button onclick="setPreset(1998, 1080, this)">DCI 2k Flat</button>
+            </div>    
+
+    <div id="dimensionsGroup"> 
+         <div class="input-group">
+            <label>Width (px)</label>
+          <input type="number" id="width" value="1920" min="1">
+       </div>
+    <div class="input-group">
+        <label>Height (px)</label>
+        <input type="number" id="height" value="1080" min="1">
+    </div>
+</div>
+                
+  <div class="input-group">
+    <label>Frameline</label>
+    <select id="aspectSelect">
+        
+        <option value="custom">Custom / Manual</option>
+        <optgroup label="Cinema Standards">
+            <option value="2.39" selected>2.39:1 (Anamorphic / Scope)</option>
+            <option value="1.9">1.9:1 (Full Container)</option>
+            <option value="1.85">1.85:1 (Cinema Flat)</option>
+            <option value="1.66">1.66:1 (European Flat)</option>
+            <option value="1.37">1.37:1 (Academy Ratio)</option>
+        </optgroup>
+        <optgroup label="TV & Video">
+            <option value="1.78">1.78:1 (16:9 HDTV)</option>
+            <option value="1.33">1.33:1 (4:3 SDTV)</option>
+        </optgroup>
+        <optgroup label="Social Media">
+            <option value="1.00">1.00:1 (Square)</option>
+            <option value="0.80">0.80:1 (4:5 Portrait)</option>
+            <option value="0.56">0.56:1 (9:16 Vertical)</option>
+        </optgroup>
+    </select>
+</div>
+
+
+<div class="presets-mini" id="aspectBtnContainer">
+            <button onclick="setAspect(2.39, this)">2.39</button>
+        <button onclick="setAspect(1.85, this)">1.85</button>
+        <button onclick="setAspect(1.33, this)">4:3</button>
+    </div>
+
+<div class="input-group hidden" id="aspectGroup">
+    <label>Manual Aspect Ratio</label>
+<input type="text" id="aspect" value="2.39" placeholder="Ex: 16:9">
+
+<div style="margin-top: 15px;">
+    <label style="display: flex; justify-content: space-between;">
+        <span>Frameline Scale</span>
+        <span id="scaleValue" style="color: #007bff;">100%</span>
+    </label>
+    <input type="range" id="scaleInput" min="10" max="100" value="100" step="1">
+</div>
+</div>
+
+
+
+       
+<button id="advancedBtn" class="btn-advanced">
+    ⚙️ Advanced Options <span id="arrow">▼</span>
+</button>
+
+        <div id="advancedGroup" class="advanced-content hidden">
+
+
+                    <div class="input-group">
+    <label>Matte Opacity: <span id="opacityValue" style="color: #007bff;">100%</span></label>
+    <input type="range" id="opacity" min="0" max="100" value="0">
+
+    <div class="presets-mini">
+        <button onclick="setOpacity(25, this)">25%</button>
+        <button onclick="setOpacity(50, this)">50%</button>
+        <button onclick="setOpacity(75, this)">75%</button>
+        <button onclick="setOpacity(100, this)">100%</button>
+    </div>
+</div>
+
+    
+             <div class="input-group">
+                   <label>Line Color</label>
+                  <input type="color" id="lineColor" value="#00ff00">
+             </div>
+
+           <div class="input-group">
+              <label>Line Thickness</label>
+              <input type="number" id="thickness" value="2" min="1" max="10">
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+
+<div class="input-group checkbox-row">
+    <div style="display: flex; align-items: center;">
+        <input type="checkbox" id="safeActionToggle">
+        <label for="safeActionToggle" style="margin: 0 0 0 8px; cursor: pointer;">Safe Action</label>
+    </div>
+    <div style="display: flex; align-items: center; width: 80px;">
+        <input type="number" id="safeActionVal" value="93" min="50" max="100">
+        <span style="font-size: 0.8rem; margin-left: 5px; color: #888;">%</span>
+    </div>
+</div>
+
+<div class="input-group checkbox-row">
+    <div style="display: flex; align-items: center;">
+        <input type="checkbox" id="safeTitleToggle">
+        <label for="safeTitleToggle" style="margin: 0 0 0 8px; cursor: pointer;">Safe Title</label>
+    </div>
+    <div style="display: flex; align-items: center; width: 80px;">
+        <input type="number" id="safeTitleVal" value="90" min="50" max="100">
+        <span style="font-size: 0.8rem; margin-left: 5px; color: #888;">%</span>
+    </div>
+</div>
+
+<hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+
+<div style="margin-bottom: 10px; font-weight: bold; color: #ddd;">
+    Secondary Frameline
+</div>
+
+<div class="input-group checkbox-row">
+    <div style="display: flex; align-items: center;">
+        <input type="checkbox" id="secFrameOn">
+        <label for="secFrameOn" style="margin: 0 0 0 8px; cursor: pointer;">Enable 2nd Frame</label>
+    </div>
+</div>
+
+<div id="secFrameControls" class="hidden" style="padding-left: 10px; border-left: 2px solid #444;">
+    
+    <div class="input-group" style="margin-bottom: 15px;">
+        <label>2nd Aspect (e.g. 9:16)</label>
+        <input type="text" id="secFrameAspect" value="9:16">
+    </div>
+
+<div style="
+        margin-top: 10px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: flex-start; /* Fuerza todo a la izquierda */
+        width: 100%;
+    ">
+        <input type="checkbox" id="secFrameFit" style="width: auto; margin: 0; cursor: pointer;">
+        
+        <label for="secFrameFit" style="margin-left: 8px; font-size: 0.9rem; color: #aaa; cursor: pointer; user-select: none;">
+            Fit inside Main Frameline
+        </label>
+    </div>
+
+
+
+    <div class="input-group" style="margin-bottom: 15px;">
+        
+    </div>
+        <label>2nd Line Color</label>
+        <input type="color" id="secFrameColor" value="#ff0000"> </div>
+
+</div>
+
+
+        </div>
+                
+           
+
+            <button id="downloadBtn" class="btn-primary">Download PNG</button>
+
+            <div class="monetization">
+                <a href="#" class="coffee-btn">☕ Buy me a Coffee</a>
+                <div class="ad-placeholder">Google Ads Space</div>
+            </div>
+        </aside>
+
+        <main class="preview-area">
+            <p class="preview-label">Preview</p>
+            <canvas id="myCanvas"></canvas>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

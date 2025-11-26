@@ -1,0 +1,247 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #1a1a1a; /* Gris oscuro estilo cine */
+    color: #eee;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100%;
+}
+
+/* BARRA LATERAL */
+.sidebar {
+    width: 300px;
+    background-color: #252525;
+    padding: 20px;
+    border-right: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+h1 { font-size: 1.2rem; margin-bottom: 30px; }
+h1 span { color: #007bff; }
+
+.input-group { margin-bottom: 8px; }
+label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
+input {
+    width: 100%;
+    background: #333;
+    border: 1px solid #444;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+input, select {
+    width: 100%;
+    background: #333;
+    border: 1px solid #444;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 14px; /* Opcional: ajustar tamaño de letra */
+}
+
+/* Para que las opciones agrupadas se vean bien */
+optgroup {
+    background: #222;
+    color: #888;
+    font-style: normal;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 10px;
+}
+.btn-primary:hover { background: #0056b3; }
+
+/* MONETIZACIÓN */
+.monetization { margin-top: auto; padding-top: 20px; border-top: 1px solid #333; }
+.coffee-btn {
+    display: block;
+    text-align: center;
+    background: #FFDD00;
+    color: black;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.ad-placeholder {
+    background: #333;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 0.8rem;
+    border: 1px dashed #444;
+}
+
+/* ÁREA DE CANVAS */
+.preview-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-image: linear-gradient(45deg, #222 25%, transparent 25%), 
+                      linear-gradient(-45deg, #222 25%, transparent 25%), 
+                      linear-gradient(45deg, transparent 75%, #222 75%), 
+                      linear-gradient(-45deg, transparent 75%, #222 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    padding: 20px;
+}
+
+canvas {
+    max-width: 90%;
+    max-height: 80vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    background: transparent; /* Importante para que sea PNG transparente */
+}
+
+.presets { 
+    display: flex; gap: 5px; margin-bottom: 20px; 
+}
+.presets button { 
+    background: #444; color: #ccc; border: 1px solid #555; 
+    padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;
+}
+.presets button:hover { 
+    background: #007bff; /* Azul al pasar el mouse */
+    color: white;
+    border-color: #007bff; }
+
+/* Animación de "flash" para avisar que cambió el valor */
+@keyframes flash {
+    0% { background-color: #555; }
+    50% { background-color: #007bff; } /* Azul */
+    100% { background-color: #333; }
+}
+
+.highlight-change {
+    animation: flash 0.5s ease-out;
+}
+
+/* Estilo para los botones pequeños debajo del input */
+.presets-mini {
+    display: flex;
+    gap: 5px;       /* Espacio entre botones */
+    margin-top: 8px; /* Espacio con el input de arriba */
+    margin-bottom: 20px /* Espacio con el input de abajo */
+}
+
+
+.presets-mini button {
+    flex: 1;        /* Que ocupen todo el ancho disponible */
+    background: #444;
+    color: #ccc;
+    border: 1px solid #555;
+    padding: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.presets-mini button:hover {
+    background: #007bff; /* Azul al pasar el mouse */
+    color: white;
+    border-color: #007bff;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Opcional: Una pequeña animación para cuando aparezca */
+#aspectGroup {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Botón de Advanced (Gris y sutil) */
+.btn-advanced {
+    width: 100%;
+    background: transparent;
+    border: 1px solid #444;
+    color: #aaa;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between; /* Para separar texto de la flecha */
+    align-items: center;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.btn-advanced:hover {
+    background: #333;
+    color: white;
+}
+
+/* El contenedor de las opciones */
+.advanced-content {
+    background: #222;
+    border: 1px solid #333;
+    border-top: none; /* Para que parezca unido al botón */
+    padding: 15px;
+    border-radius: 0 0 5px 5px;
+    margin-bottom: 20px;
+}
+
+/* Asegúrate de tener la clase hidden (si no la tienes ya) */
+.hidden {
+    display: none !important;
+}
+
+
+/* Estado activo para los botones seleccionados */
+button.active {
+    background-color: #007bff !important; /* El !important asegura que se quede azul */
+    color: white !important;
+    border-color: #007bff !important;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); /* Un toque de profundidad */
+}
+
+/* Estilo para las filas de Safe Area */
+.checkbox-row {
+    display: flex;
+    justify-content: space-between; /* Separa el checkbox del número */
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* Ajuste para los checkbox */
+.checkbox-row input[type="checkbox"] {
+    width: auto; /* Que no ocupen todo el ancho */
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Ajuste para los inputs de porcentaje pequeños */
+.checkbox-row input[type="number"] {
+    text-align: right;
+    padding: 5px;
+}
