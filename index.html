@@ -234,46 +234,61 @@
 
         </div>
                 
-           <div class="input-group" style="border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 20px; margin-top: 20px;">
+  <div class="input-group" style="border-bottom: 1px solid #444; padding-bottom: 20px; margin-bottom: 20px;  margin-top: 20px;">
     <label>Background Image (Preview)</label>
-    
-    <div style="display: flex; gap: 5px;">
-        <input type="file" id="imageLoader" accept="image/*" style="display: none;">
+
+    <div onclick="document.getElementById('imageLoader').click()" 
+         style="
+            background: #333; 
+            border: 1px solid #444; 
+            border-radius: 4px; 
+            padding: 8px 10px; 
+            color: #aaa; 
+            font-size: 0.9rem; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            transition: all 0.2s;
+         "
+         onmouseover="this.style.borderColor='#666'; this.style.color='#fff'"
+         onmouseout="this.style.borderColor='#444'; this.style.color='#aaa'"
+    >
+        <span>△ Load</span>
+        <span style="font-size: 0.8rem; opacity: 0.7;"></span>
         
-        <button onclick="document.getElementById('imageLoader').click()" style="background: #444; color: white; border: 1px solid #555;">
-            △ Load
-        </button>
-
-       <div style="
-    display: flex; 
-    align-items: center;      /* Centra verticalmente el contenido */
-    background: #333; 
-    border: 1px solid #444; 
-    border-radius: 4px; 
-    padding: 5px 10px;        /* Relleno idéntico a los botones vecinos */
-    cursor: pointer;
-">
-    <input type="checkbox" id="showImageToggle" checked style="margin: 0; cursor: pointer;">
-    
-    <label for="showImageToggle" style="
-        flex: 1;
-        margin-left: 3px;     /* Separación entre cajita y texto */
-        font-size: 0.75rem;    /* Tamaño de letra */
-        color: #ddd;          /* Color de texto claro */
-        cursor: pointer; 
-        user-select: none;    /* Evita que se seleccione el texto al hacer clic */
-        line-height: 1;       /* Ayuda al centrado vertical */
-        white-space: nowrap;
-    ">
-    Show 
-    </label>
-</div>
-
-        <button onclick="removeImage()" style="background: #333; color: #aaa; border: 1px solid #444;">
-            ✕ Remove
-        </button>
+        <input type="file" id="imageLoader" accept="image/*" style="display: none;">
     </div>
-</div>
+
+    <div style="
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-top: 8px; 
+        padding: 0 2px;
+    ">
+        <div style="display: flex; align-items: center;">
+            <input type="checkbox" id="showImageToggle" checked style="margin: 0; cursor: pointer;">
+            <label for="showImageToggle" style="margin: 30 0 0 8px; cursor: pointer;">
+                Show Image
+            </label>
+        </div>
+
+
+
+        <span onclick="removeImage()" style="
+            font-size: 0.8rem; 
+            color: #d9534f; 
+            cursor: pointer; 
+            transition: color 0.2s;
+            margin-bottom: 50px;
+        "
+        onmouseover="this.style.color='#ff7b77'"
+        onmouseout="this.style.color='#d9534f'"
+        >
+            ✕ Remove
+        </span>
+    </div>
 
 <div style="
         margin-top: -4px; 
