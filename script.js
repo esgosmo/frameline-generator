@@ -1,553 +1,308 @@
-// ==========================================
-// 1. REFERENCIAS UI (INTERFAZ)
-// ==========================================
-const canvas = document.getElementById('myCanvas');
-const ctx = canvas.getContext('2d');
-const btnDownload = document.getElementById('downloadBtn');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Julián Jaquez - 2025">
+    <meta name="description" content="Professional Frameline Generator Tool for Filmmakers">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Frameline Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-// Textos informativos
-const textoOpacidad = document.getElementById('opacityValue');
-const textoEscala = document.getElementById('scaleValue');
-
-// Menús Desplegables
-const menuResoluciones = document.getElementById('resolutionSelect');
-const menuAspecto = document.getElementById('aspectSelect');
-const cajaAspecto = document.getElementById('aspectGroup'); // Caja oculta
-const menuSecAspect = document.getElementById('secAspectSelect');
-
-// Paneles Avanzados
-const btnAdvanced = document.getElementById('advancedBtn');
-const groupAdvanced = document.getElementById('advancedGroup');
-const arrow = document.getElementById('arrow');
-const secFrameControls = document.getElementById('secFrameControls');
-
-// ==========================================
-// 2. REFERENCIAS DATOS (INPUTS)
-// ==========================================
-// Usamos una función segura para no romper si falta algún ID
-const getEl = (id) => document.getElementById(id);
-
-const inputs = {
-    w: getEl('width'),
-    h: getEl('height'),
-    aspect: getEl('aspect'),
-    scale: getEl('scaleInput'),
-    opacity: getEl('opacity'),
-    
-    // Advanced
-    color: getEl('lineColor'),
-    thickness: getEl('thickness'),
-    safeActionOn: getEl('safeActionToggle'),
-    safeActionVal: getEl('safeActionVal'),
-    safeTitleOn: getEl('safeTitleToggle'),
-    safeTitleVal: getEl('safeTitleVal'),
-
-    // Second Frameline
-    secOn: getEl('secFrameOn'),
-    secAspect: getEl('secFrameAspect'),
-    secColor: getEl('secFrameColor'),
-    secFit: getEl('secFrameFit') // <--- EL CULPABLE PROBABLE
-};
-
-// ==========================================
-// LÓGICA DE CARGA DE IMAGEN 
-// ==========================================
-
-// 1. Variable Global (Tiene que estar afuera de las funciones)
-let userImage = null;
-
-// 2. Referencias al HTML
-const imageLoader = document.getElementById('imageLoader');
-const showImageToggle = document.getElementById('showImageToggle');
-
-// 3. El "Escuchador" que detecta cuando subes el archivo
-if (imageLoader) {
-    imageLoader.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return; // Si canceló, no hacemos nada
-
-        const reader = new FileReader();
-        
-        // Cuando el archivo se termine de leer...
-        reader.onload = (event) => {
-            const img = new Image();
+    <div class="app-container">
+        <aside class="sidebar">
+            <h1>FrameLine<span>Tool</span></h1>
             
-            // Cuando la imagen interna se termine de crear...
-            img.onload = () => {
-                // Guardamos la imagen en la variable global
-                userImage = img;
-                
-                // OPCIONAL: Ajustar el tamaño del canvas a la foto
-                // Si quieres que el canvas tome el tamaño de la foto, descomenta esto:
-                
-                if(inputs.w) inputs.w.value = img.width;
-                if(inputs.h) inputs.h.value = img.height;
-                if(menuResoluciones) menuResoluciones.value = 'custom';
-                
+            <div class="controls">
 
-                // Redibujamos para que aparezca
-                draw();
-            }
-            // Le asignamos los datos leídos
-            img.src = event.target.result;
-        }
+
+    <div class="input-group">
+        <label>Canvas / Resolution</label>
+        <select id="resolutionSelect">
+            <option value="custom">Custom / Manual</option>
+            <optgroup label="Broadcast & Web">
+                <option value="1920,1080" selected>HD (1920 x 1080)</option>
+                <option value="3840,2160">UHD (3840 x 2160)</option>
+                <option value="1280,720">HD 720p (1280 x 720)</option>
+            </optgroup>
+            <optgroup label="Cinema (DCI)">
+                <option value="2048,1080">DCI 2K FF (2048 x 1080)</option>
+                <option value="1998,1080">DCI 2K Flat (1998 x 1080)</option>
+                <option value="2048,858">DCI 2K Scope (2048 x 858)</option>
+                <option value="4096,2160">DCI 4K FF (4096 x 2160)</option>
+                <option value="3996,2160">DCI 4K Flat (3996 x 2160)</option>
+                <option value="4096,2160">DCI 4K Scope (4096 x 2160)</option>
+            </optgroup>
+            <optgroup label="Social Media">
+                <option value="1080,1920">Vertical (9:16)</option>
+                <option value="1080,1350">Portrait (4:5)</option>
+                <option value="1080,1080">Square (1:1)</option>
+            </optgroup>
+        </select>
+    </div>
+
+     <div class="presets"  id="resBtnContainer">
+                    <button onclick="setPreset(1920, 1080, this)">HD</button>
+                    <button onclick="setPreset(3840, 2160, this)">UHD</button>
+                    <button onclick="setPreset(1998, 1080, this)">DCI 2K Flat</button>
+            </div>    
+
+    <div id="dimensionsGroup"> 
+         <div class="input-group">
+            <label>Width (px)</label>
+          <input type="number" id="width" value="1920" min="1" inputmode="numeric" pattern="[0-9]*">
+       </div>
+    <div class="input-group">
+        <label>Height (px)</label>
+        <input type="number" id="height" value="1080" min="1" inputmode="numeric" pattern="[0-9]*">
+    </div>
+</div>
+                
+  <div class="input-group">
+    <label>Frameline</label>
+    <select id="aspectSelect">
         
-        // Leemos el archivo como una URL de datos
-        reader.readAsDataURL(file);
-    });
-}
+        <option value="custom">Custom / Manual</option>
+        <optgroup label="Cinema">
+            <option value="2.39" selected>2.39:1 (Anamorphic / Scope)</option>
+            <option value="2.0">2:1 (Univisium)</option>
+            <option value="1.9">1.9:1 (Full Container)</option>
+            <option value="1.85">1.85:1 (Cinema Flat)</option>
+            <option value="1.66">1.66:1 (European Flat)</option>
+            <option value="1.37">1.37:1 (Academy Ratio)</option>
+        </optgroup>
+        <optgroup label="TV & Video">
+            <option value="16:9">1.78:1 (16:9 HDTV)</option>
+            <option value="4:3">1.33:1 (4:3 SDTV)</option>
+        </optgroup>
+        <optgroup label="Social Media">
+            <option value="1.00">1:1 (Square)</option>
+            <option value="4:5">4:5 (Portrait)</option>
+            <option value="9:16">9:16 (Vertical)</option>
+        </optgroup>
+    </select>
+</div>
 
-// 4. Lógica para el botón de "Borrar Imagen"
-window.removeImage = function() {
-    userImage = null;
-    if(imageLoader) imageLoader.value = ""; // Resetear el input
-    draw();
-}
 
-// 5. Lógica para el ojito (Show/Hide)
-if (showImageToggle) {
-    showImageToggle.addEventListener('change', draw);
-}
+<div class="presets-mini" id="aspectBtnContainer">
+            <button onclick="setAspect(2.39, this)">2.39</button>
+        <button onclick="setAspect(1.85, this)">1.85</button>
+        <button onclick="setAspect('4:3', this)">4:3</button>
+    </div>
 
-// ==========================================
-// 3. HELPERS VISUALES
-// ==========================================
-function flashInput(element) {
-    if (!element) return;
-    element.classList.add('highlight-change');
-    setTimeout(() => { element.classList.remove('highlight-change'); }, 500);
-}
+<div class="input-group hidden" id="aspectGroup">
+    <label>Manual Aspect Ratio</label>
+<input type="text" id="aspect" value="2.39" placeholder="Ex: 16:9">
 
-function highlightButton(clickedBtn) {
-    if (!clickedBtn) return;
-    const siblings = clickedBtn.parentElement.querySelectorAll('button');
-    siblings.forEach(btn => btn.classList.remove('active'));
-    clickedBtn.classList.add('active');
-}
+<div style="margin-top: 15px;">
+    <label style="display: flex; justify-content: space-between;">
+        <span>Frameline Scale</span>
+        <span id="scaleValue" style="color: #007bff;">100%</span>
+    </label>
+    <input type="range" id="scaleInput" min="65" max="100" value="100" step="1">
+</div>
+</div>
 
-function getAspectRatio(inputValue) {
-    if (!inputValue) return 2.39;
-    let raw = inputValue.toString();
-    if (raw.includes(':')) {
-        const parts = raw.split(':');
-        return parts[1] != 0 ? parts[0] / parts[1] : 1.77;
-    }
-    const val = parseFloat(raw);
-    return (isNaN(val) || val <= 0) ? 2.39 : val;
-}
 
-// Función para apagar botones en un contenedor específico
-function clearActiveButtons(containerSelector) {
-    const container = document.querySelector(containerSelector);
-    if (container) {
-        const buttons = container.querySelectorAll('button');
-        buttons.forEach(btn => btn.classList.remove('active'));
-    }
-}
 
-// ==========================================
-// 4. FUNCIÓN DRAW (CORREGIDA)
-// ==========================================
-function draw() {
-    // Si faltan inputs críticos, no hacemos nada
-    if (!inputs.w || !inputs.h) return;
+       
+<button id="advancedBtn" class="btn-advanced">
+    ⚙️ Advanced Options <span id="arrow">▼</span>
+</button>
 
-    // 1. LEER VALORES (Con protección para evitar errores)
-    const width = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
-    const height = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
-    const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
+        <div id="advancedGroup" class="advanced-content hidden">
 
-    // Escala
-    let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
-    if (isNaN(scaleVal)) scaleVal = 100;
-    const scaleFactor = scaleVal / 100;
-    if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
-    // Opacidad (Arreglado para permitir 0)
-    let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
-    if (isNaN(opacityVal)) opacityVal = 100;
-    const opacity = opacityVal / 100;
-    if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
+                    <div class="input-group">
+    <label>Matte Opacity: <span id="opacityValue" style="color: #007bff;">100%</span></label>
+    <input type="range" id="opacity" min="0" max="100" value="0">
 
-    // Grosor
-    let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
-    if (isNaN(rawThick)) rawThick = 2;
-    const mainThickness = Math.max(0, rawThick);
-    const mainOffset = mainThickness / 2;
+    <div class="presets-mini">
+        <button onclick="setOpacity(25, this)">25%</button>
+        <button onclick="setOpacity(50, this)">50%</button>
+        <button onclick="setOpacity(75, this)">75%</button>
+        <button onclick="setOpacity(100, this)">100%</button>
+    </div>
+</div>
 
-    // 2. PREPARAR CANVAS
-    canvas.width = width;
-    canvas.height = height;
-    ctx.clearRect(0, 0, width, height);
-
-    // --- NUEVO: DIBUJAR FOTO DE FONDO ---
-    // Verificamos si hay foto y si el "ojito" está activado
-    const mostrarImagen = !showImageToggle || showImageToggle.checked;
     
-    if (userImage && mostrarImagen) {
-        try {
-            ctx.drawImage(userImage, 0, 0, width, height);
-        } catch (e) { console.error(e); }
-    }
-    // ------------------------------------
+             <div class="input-group">
+                   <label>Line Color</label>
+                  <input type="color" id="lineColor" value="#00ff00">
+             </div>
 
-    const screenAspect = width / height;
+           <div class="input-group">
+              <label>Line Thickness</label>
+              <input type="number" id="thickness" value="2" min="0" max="10" inputmode="numeric" pattern="[0-9]*">
+          </div>
 
-    // 3. CÁLCULO DE GEOMETRÍA
-    let visibleW, visibleH;
+          <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
 
-    if (targetAspect > screenAspect) {
-        visibleW = width;
-        visibleH = width / targetAspect;
-    } else {
-        visibleH = height;
-        visibleW = height * targetAspect;
-    }
+<div class="input-group checkbox-row">
+    <div style="display: flex; align-items: center;">
+        <input type="checkbox" id="safeActionToggle">
+        <label for="safeActionToggle" style="margin: 0 0 0 8px; cursor: pointer;">Safe Action</label>
+    </div>
+    <div style="display: flex; align-items: center; width: 80px;">
+        <input type="number" id="safeActionVal" value="93" min="50" max="100" inputmode="numeric" pattern="[0-9]*">
+        <span style="font-size: 0.8rem; margin-left: 5px; color: #888;">%</span>
+    </div>
+</div>
 
-    // Aplicar Escala
-    visibleW = visibleW * scaleFactor;
-    visibleH = visibleH * scaleFactor;
+<div class="input-group checkbox-row">
+    <div style="display: flex; align-items: center;">
+        <input type="checkbox" id="safeTitleToggle">
+        <label for="safeTitleToggle" style="margin: 0 0 0 8px; cursor: pointer;">Safe Title</label>
+    </div>
+    <div style="display: flex; align-items: center; width: 80px;">
+        <input type="number" id="safeTitleVal" value="90" min="50" max="100" inputmode="numeric" pattern="[0-9]*">
+        <span style="font-size: 0.8rem; margin-left: 5px; color: #888;">%</span>
+    </div>
+</div>
 
-    // Calcular Matte
-    const barHeight = (height - visibleH) / 2;
-    const barWidth = (width - visibleW) / 2;
-    const offsetX = barWidth;
-    const offsetY = barHeight;
+<hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
 
-    // 4. DIBUJAR MATTE (Barras Negras)
-    ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-    ctx.fillRect(0, 0, width, offsetY); 
-    ctx.fillRect(0, height - offsetY, width, offsetY); 
-    ctx.fillRect(0, offsetY, offsetX, visibleH); 
-    ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
+<div style="margin-bottom: 10px; font-weight: bold; color: #ddd;">
+    Secondary Frameline
+</div>
 
-    // 5. DIBUJAR FRAMELINE 1 (Principal)
-    if (mainThickness > 0) {
-        if (inputs.color) ctx.strokeStyle = inputs.color.value;
-        ctx.lineWidth = mainThickness; 
-        ctx.setLineDash([]); 
-        ctx.beginPath();
-        ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
-        ctx.stroke();
-    }
+<div class="input-group checkbox-row">
+    <div style="display: flex; align-items: center;">
+        <input type="checkbox" id="secFrameOn">
+        <label for="secFrameOn" style="margin: 0 0 0 8px; cursor: pointer;">Enable 2nd Frame</label>
+    </div>
+</div>
 
-    // 6. DIBUJAR FRAMELINE 2 (Secundario)
-    if (inputs.secOn && inputs.secOn.checked) {
-        const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
-        let secW, secH;
+<div id="secFrameControls" class="hidden" style="padding-left: 10px; border-left: 2px solid #444;">
+    
+    <div class="input-group" style="margin-bottom: 15px;">
+        <label>2nd Aspect (e.g. 9:16)</label>
+
+<select id="secAspectSelect" style="margin-bottom: 8px;">
+        <option value="custom">Custom / Manual</option>
+        <optgroup label="Social Media">
+            <option value="9:16" selected>9:16 (Vertical)</option>
+            <option value="4:5">4:5 (Portrait)</option>
+            <option value="1:1">1:1 (Square)</option>
+        </optgroup>
+        <optgroup label="Cinema">
+            <option value="2.39">2.39:1 (Anamorphic / Scope)</option>
+            <option value="2.0">2:1 (Univisium)</option>
+            <option value="1.9">1.9:1 (Full Container)</option>
+            <option value="1.85">1.85:1 (Cinema Flat)</option>
+            <option value="1.66">1.66:1 (European Flat)</option>
+            <option value="1.37">1.37:1 (Academy Ratio)</option>
+        </optgroup>
+            <optgroup label="TV & Video">
+            <option value="16:9">1.78:1 (16:9 HDTV)</option>
+            <option value="4:3">1.33:1 (4:3 SDTV)</option>
+            <option value="14:9">1.55 (14:9 Commercial)</option>
+        </optgroup>
+    </select>
+
+    <label style="display:block; margin-top: 10px; margin-bottom: 5px; font-size: 0.85rem; color: #888;">
+        Manual Aspect Ratio
+    </label>
+    <input type="text" id="secFrameAspect" value="9:16" placeholder="Ex: 1:1">    </div>
+
+<div style="
+        margin-top: 10px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: flex-start; /* Fuerza todo a la izquierda */
+        width: 100%;
+    ">
+        <input type="checkbox" id="secFrameFit" style="width: auto; margin: 0; cursor: pointer;">
         
-        // Protección: verificar si existe el checkbox fit
-        const fitInside = inputs.secFit && inputs.secFit.checked;
+        <label for="secFrameFit" style="margin-left: 8px; font-size: 0.9rem; color: #aaa; cursor: pointer; user-select: none;">
+            Fit inside Main Frameline
+        </label>
+    </div>
 
-        if (fitInside) {
-            const mainFrameAspect = visibleW / visibleH;
-            if (secAspect > mainFrameAspect) {
-                secW = visibleW;
-                secH = visibleW / secAspect;
-            } else {
-                secH = visibleH;
-                secW = visibleH * secAspect;
-            }
-        } else {
-            if (secAspect > screenAspect) {
-                secW = width;
-                secH = width / secAspect;
-            } else {
-                secH = height;
-                secW = height * secAspect;
-            }
-            secW = secW * scaleFactor;
-        }
 
-        const secX = (width - secW) / 2;
-        const secY = (height - secH) / 2;
 
-        if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
-        ctx.lineWidth = 2; 
-        ctx.setLineDash([10, 5]); 
-        ctx.beginPath();
-        ctx.rect(secX, secY, secW, secH);
-        ctx.stroke();
-    }
-
-    // 7. DIBUJAR SAFE AREAS
-    const drawSafe = (pct, dashed) => {
-        const p = pct / 100;
-        const sW = visibleW * p;
-        const sH = visibleH * p;
-        const sX = (width - sW) / 2;
-        const sY = (height - sH) / 2;
-        ctx.lineWidth = 1;
-        if(inputs.color) ctx.strokeStyle = inputs.color.value;
-        ctx.setLineDash(dashed ? [5, 5] : []); 
-        ctx.beginPath();
-        ctx.rect(sX, sY, sW, sH);
-        ctx.stroke();
-    };
-
-    if (inputs.safeActionOn && inputs.safeActionOn.checked) 
-        drawSafe(parseFloat(inputs.safeActionVal.value)||93, false);
-    if (inputs.safeTitleOn && inputs.safeTitleOn.checked) 
-        drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
-}
-
-// ==========================================
-// 5. EVENTOS (CONEXIONES SEGURAS)
-// ==========================================
-
-// Conectar TODOS los inputs que existan
-Object.values(inputs).forEach(input => {
-    if (input) {
-        input.addEventListener('input', draw);
-        input.addEventListener('change', draw); // Importante para checkboxes y selects
+    <div class="input-group" style="margin-bottom: 15px;">
         
-        // Flechas teclado
-     if (input.type === 'text') {
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    
-                    // 1. Calcular Matemática
-                    let val = getAspectRatio(input.value);
-                    val += (e.key === 'ArrowUp' ? 0.01 : -0.01);
-                    if (val < 0.01) val = 0.01;
-                    
-                    // 2. Asignar valor
-                    input.value = val.toFixed(2);
-                    
-                    // --- NUEVO: PARTE VISUAL QUE FALTABA ---
-                    
-                    // A. Si es el input principal de aspecto
-                    if (input === inputs.aspect) {
-                        // Cambiar menú a Custom
-                        if (menuAspecto) menuAspecto.value = 'custom';
+    </div>
+        <label>2nd Line Color</label>
+        <input type="color" id="secFrameColor" value="#ff0000"> </div>
 
-                        // --- CAMBIO AQUÍ ---
-                        // En lugar de buscar en el grupo, buscamos en todo el documento
-                        // pero específicamente los botones de aspect ratio que estén activos.
-                        // (Asumiendo que solo hay unos botones con la función setAspect)
-                        const botonesActivos = document.querySelectorAll('.presets-mini button.active');
-                        
-                        botonesActivos.forEach(b => {
-                            // Verificación extra: solo apagar si NO es de opacidad o resolución
-                            // (O simplemente apagar todo si no te importa)
-                            b.classList.remove('active');
-                });
-                    }
-                    // ---------------------------------------
+</div>
 
-                    draw();
-                }
-            });
-        }
-    }
-});
 
-// ==========================================
-// LÓGICA DEL MENÚ DE RESOLUCIÓN
-// ==========================================
-if (menuResoluciones) {
-    menuResoluciones.addEventListener('change', () => {
-        const val = menuResoluciones.value;
+        </div>
+                
+           <div class="input-group" style="border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 20px; margin-top: 20px;">
+    <label>Background Image (Preview)</label>
+    
+    <div style="display: flex; gap: 5px; align-items: stretch; flex-wrap: wrap;">
+        <input type="file" id="imageLoader" accept="image/*" style="display: none;">
         
-        // Si elige custom o vacío, no hacemos nada con los números
-        if (val === 'custom' || val === '') return;
+        <button onclick="document.getElementById('imageLoader').click()" style="flex: 1; background: #444; color: white; border: 1px solid #555; white-space: nowrap;">
+            △ Load
+        </button>
 
-        // 1. Poner valores en los inputs
-        const [nW, nH] = val.split(',');
-        if(inputs.w) inputs.w.value = nW;
-        if(inputs.h) inputs.h.value = nH;
-        
-        // 2. APAGAR BOTONES (LIMPIEZA)
-        // Buscamos la caja de botones por su ID nuevo
-        const contenedorRes = document.getElementById('resBtnContainer');
-        
-        if (contenedorRes) {
-            // Buscamos solo los botones azules ADENTRO de esa caja
-            const botonesPrendidos = contenedorRes.querySelectorAll('button.active');
-            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
-        }
-        
-        // 3. Redibujar
-        flashInput(inputs.w);
-        flashInput(inputs.h);
-        draw();
-    });
-}
+       <div style="
+    display: flex; 
+    align-items: center;      /* Centra verticalmente el contenido */
+    background: #333; 
+    border: 1px solid #444; 
+    border-radius: 4px; 
+    padding: 5px 10px;        /* Relleno idéntico a los botones vecinos */
+    cursor: pointer;
+">
+    <input type="checkbox" id="showImageToggle" checked style="margin: 0; cursor: pointer;">
+    
+    <label for="showImageToggle" style="
+        margin-left: 6px;     /* Separación entre cajita y texto */
+        font-size: 0.9rem;    /* Tamaño de letra */
+        color: #ddd;          /* Color de texto claro */
+        cursor: pointer; 
+        user-select: none;    /* Evita que se seleccione el texto al hacer clic */
+        line-height: 1;       /* Ayuda al centrado vertical */
+    ">
+        Show 
+    </label>
+</div>
 
-// ==========================================
-// LÓGICA DEL MENÚ DE ASPECTO (FRAMELINE)
-// ==========================================
-if (menuAspecto) {
-    menuAspecto.addEventListener('change', () => {
-        // 1. Mostrar caja oculta (si aplica)
-        if (cajaAspecto) cajaAspecto.classList.remove('hidden');
-        
-        const val = menuAspecto.value;
-        if (val === 'custom' || val === '') return;
-        
-        // 2. Poner el valor en el input
-        if(inputs.aspect) inputs.aspect.value = val;
+        <button onclick="removeImage()" style="background: #333; color: #aaa; border: 1px solid #444;">
+            ✕ Remove
+        </button>
+    </div>
+</div>
 
-        // 3. APAGAR BOTONES (SOLUCIÓN INFALIBLE)
-        // Buscamos directamente el contenedor de los botones por su nuevo ID
-        const contenedorBotones = document.getElementById('aspectBtnContainer');
-        
-        if (contenedorBotones) {
-            const botonesPrendidos = contenedorBotones.querySelectorAll('button.active');
-            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
-        }
-        
-        // 4. Redibujar
-        flashInput(inputs.aspect);
-        draw();
-    });
-}
+<div style="
+        margin-top: -4px; 
+        font-size: 0.75rem; 
+        color: #888; 
+        display: flex; 
+        align-items: flex-start;
+        line-height: 1.3;
+    ">
+        <span style="margin-right: 5px; font-size: 0.9rem; margin-bottom: 30px">🔒</span>
+        <span>
+            <strong>Privacy Note:</strong> Images are processed locally in your browser. 
+            Nothing is uploaded to any server.
+        </span>
+    </div>
 
-// ==========================================
-// LÓGICA DEL MENÚ DE 2nd ASPECTO (NUEVO)
-// ==========================================
-if (menuSecAspect) {
-    menuSecAspect.addEventListener('change', () => {
-        const val = menuSecAspect.value;
-        
-        // Si es custom, no tocamos el input manual
-        if (val === 'custom') return;
+            <button id="downloadBtn" class="btn-primary">Download PNG</button>
 
-        // Actualizamos el input manual del segundo frame
-        if (inputs.secAspect) {
-            inputs.secAspect.value = val;
-            flashInput(inputs.secAspect);
-        }
-        
-        draw();
-    });
-}
+            <div class="monetization">
+                <a href="#" class="coffee-btn">☕ Buy me a Coffee</a>
+       <!-- <div class="ad-placeholder">Google Ads Space</div> -->
+            </div>
+        </aside>
 
-// SINCRONIZACIÓN INVERSA (Si escribes manual -> Menú a Custom)
-if (inputs.secAspect) {
-    inputs.secAspect.addEventListener('input', () => {
-        if (menuSecAspect) menuSecAspect.value = 'custom';
-        draw(); // Aseguramos que se redibuje al escribir
-    });
-}
+        <main class="preview-area">
+            <p class="preview-label">Preview</p>
+            <canvas id="myCanvas"></canvas>
+        </main>
+    </div>
 
-// ==========================================
-// SINCRONIZACIÓN MANUAL (CORREGIDA)
-// ==========================================
+    <script src="script.js"></script>
 
-// 1. Si cambias ANCHO (Width)
-if (inputs.w) {
-    inputs.w.addEventListener('input', () => {
-        // Cambiar menú a Custom
-        if (menuResoluciones) menuResoluciones.value = 'custom';
-        // Apagar botones azules de Resolución
-        clearActiveButtons('.presets'); 
-    });
-}
-
-// 2. Si cambias ALTO (Height)
-if (inputs.h) {
-    inputs.h.addEventListener('input', () => {
-        if (menuResoluciones) menuResoluciones.value = 'custom';
-        clearActiveButtons('.presets');
-    });
-}
-
-// --- SINCRONIZACIÓN MANUAL DE ASPECTO ---
-if (inputs.aspect) {
-    inputs.aspect.addEventListener('input', () => {
-        
-        // 1. Forzar el menú de arriba a "Custom"
-        if (menuAspecto) menuAspecto.value = 'custom';
-
-        // 2. APAGAR LOS BOTONES (Aquí está la solución)
-        const contenedorBotones = document.getElementById('aspectBtnContainer');
-        
-        if (contenedorBotones) {
-            // Buscamos cualquier botón azul dentro del contenedor
-            const botonesPrendidos = contenedorBotones.querySelectorAll('button.active');
-            
-            // Los apagamos todos
-            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
-        }
-    });
-}
-
-// 4. Si cambias OPACIDAD
-if (inputs.opacity) {
-    inputs.opacity.addEventListener('input', () => {
-        // Apagar botones azules de opacidad
-        // Asumiendo que el slider y los botones están en el mismo input-group o cerca
-        // Buscaremos el contenedor que tenga los botones de opacidad
-        const parent = inputs.opacity.parentElement;
-        if(parent) {
-             const btns = parent.querySelectorAll('.presets-mini button');
-             btns.forEach(b => b.classList.remove('active'));
-        }
-    });
-}
-
-
-// Toggles de UI
-if (btnAdvanced) {
-    btnAdvanced.addEventListener('click', () => {
-        groupAdvanced.classList.toggle('hidden');
-        const isHidden = groupAdvanced.classList.contains('hidden');
-        arrow.innerText = isHidden ? "▼" : "▲";
-        btnAdvanced.style.borderBottom = isHidden ? "1px solid #444" : "none";
-    });
-}
-if (inputs.secOn) {
-    inputs.secOn.addEventListener('change', () => {
-        if (inputs.secOn.checked) secFrameControls.classList.remove('hidden');
-        else secFrameControls.classList.add('hidden');
-        draw();
-    });
-}
-
-
-// ==========================================
-// 6. FUNCIONES GLOBALES (PRESETS)
-// ==========================================
-window.setPreset = function(w, h, btn) {
-    if(inputs.w) inputs.w.value = w;
-    if(inputs.h) inputs.h.value = h;
-    const key = `${w},${h}`;
-    if(menuResoluciones) {
-        menuResoluciones.value = key;
-        if(menuResoluciones.value !== key) menuResoluciones.value = 'custom';
-    }
-    flashInput(inputs.w); highlightButton(btn); draw();
-}
-
-window.setAspect = function(val, btn) {
-    if(cajaAspecto) cajaAspecto.classList.remove('hidden');
-    if(inputs.aspect) inputs.aspect.value = val;
-    if(menuAspecto) {
-        menuAspecto.value = val;
-        if(menuAspecto.value != val) menuAspecto.value = 'custom';
-    }
-    flashInput(inputs.aspect); highlightButton(btn); draw();
-}
-
-window.setOpacity = function(val, btn) {
-    if(inputs.opacity) inputs.opacity.value = val;
-    flashInput(inputs.opacity); highlightButton(btn); draw();
-}
-
-// ==========================================
-// 7. DESCARGA & INIT
-// ==========================================
-btnDownload.addEventListener('click', () => {
-    const w = inputs.w ? inputs.w.value : 1920;
-    const h = inputs.h ? inputs.h.value : 1080;
-    const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : '2.39';
-    const a = document.createElement('a');
-    a.download = `Frameline_${w}x${h}_${asp}.png`;
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-});
-
-// Dibujo inicial
-draw();
+</body>
+</html>
