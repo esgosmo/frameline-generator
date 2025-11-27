@@ -261,21 +261,39 @@ button.active {
     overflow: hidden;
 }
 
-/* 2. EL CANVAS (Tu imagen) */
+/* 1. EL ÁREA ALREDEDOR (La "Mesa") -> Sólida */
+.preview-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    /* --- FONDO SÓLIDO --- */
+    background-color: #151515; /* Gris oscuro elegante */
+    background-image: none;    /* Aseguramos que NO haya ajedrez aquí */
+    /* -------------------- */
+    
+    padding: 20px;
+    overflow: hidden;
+}
+
+/* 2. EL CANVAS (Tu imagen) -> Con Ajedrez */
 canvas {
     max-width: 90%;
     max-height: 80vh;
     
-    /* Sombra para que se separe del fondo gris */
-    box-shadow: 0 0 30px rgba(0,0,0,0.7); 
+    /* Sombra para separar el canvas del fondo sólido */
+    box-shadow: 0 0 50px rgba(0,0,0,0.5); 
     
-    /* --- PATRÓN DE AJEDREZ (Solo detrás del dibujo) --- */
-    background-color: #333; /* Color de los cuadros oscuros */
+    /* --- PATRÓN DE AJEDREZ (Solo aquí) --- */
+    /* Esto simula la transparencia detrás de tus líneas */
+    background-color: #2a2a2a; 
     background-image: 
-        linear-gradient(45deg, #444 25%, transparent 25%), 
-        linear-gradient(-45deg, #444 25%, transparent 25%), 
-        linear-gradient(45deg, transparent 75%, #444 75%), 
-        linear-gradient(-45deg, transparent 75%, #444 75%);
+        linear-gradient(45deg, #333 25%, transparent 25%), 
+        linear-gradient(-45deg, #333 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #333 75%), 
+        linear-gradient(-45deg, transparent 75%, #333 75%);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
