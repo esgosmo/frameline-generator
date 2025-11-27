@@ -50,6 +50,66 @@ const inputs = {
 };
 
 // ==========================================
+// LÓGICA DE CARGA DE IMAGEN 
+// ==========================================
+
+// 1. Variable Global (Tiene que estar afuera de las funciones)
+let userImage = null;
+
+// 2. Referencias al HTML
+const imageLoader = document.getElementById('imageLoader');
+const showImageToggle = document.getElementById('showImageToggle');
+
+// 3. El "Escuchador" que detecta cuando subes el archivo
+if (imageLoader) {
+    imageLoader.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return; // Si canceló, no hacemos nada
+
+        const reader = new FileReader();
+        
+        // Cuando el archivo se termine de leer...
+        reader.onload = (event) => {
+            const img = new Image();
+            
+            // Cuando la imagen interna se termine de crear...
+            img.onload = () => {
+                // Guardamos la imagen en la variable global
+                userImage = img;
+                
+                // OPCIONAL: Ajustar el tamaño del canvas a la foto
+                // Si quieres que el canvas tome el tamaño de la foto, descomenta esto:
+                
+                if(inputs.w) inputs.w.value = img.width;
+                if(inputs.h) inputs.h.value = img.height;
+                if(menuResoluciones) menuResoluciones.value = 'custom';
+                
+
+                // Redibujamos para que aparezca
+                draw();
+            }
+            // Le asignamos los datos leídos
+            img.src = event.target.result;
+        }
+        
+        // Leemos el archivo como una URL de datos
+        reader.readAsDataURL(file);
+    });
+}
+
+// 4. Lógica para el botón de "Borrar Imagen"
+window.removeImage = function() {
+    userImage = null;
+    if(imageLoader) imageLoader.value = ""; // Resetear el input
+    draw();
+}
+
+// 5. Lógica para el ojito (Show/Hide)
+if (showImageToggle) {
+    showImageToggle.addEventListener('change', draw);
+}
+
+// ==========================================
 // 3. HELPERS VISUALES
 // ==========================================
 function flashInput(element) {
@@ -89,53 +149,51 @@ function clearActiveButtons(containerSelector) {
 // 4. FUNCIÓN DRAW (CORREGIDA)
 // ==========================================
 function draw() {
-    // Si no existen los inputs principales, abortamos
+    // Si faltan inputs críticos, no hacemos nada
     if (!inputs.w || !inputs.h) return;
 
-    // --- A. VALORES (LECTURA SEGURA) ---
-    
-    // 1. Dimensiones
+    // 1. LEER VALORES (Con protección para evitar errores)
     const width = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
     const height = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
 
-    // 2. Escala
+    // Escala
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
-    if (isNaN(scaleVal)) scaleVal = 100; // Si está vacío, usa 100
+    if (isNaN(scaleVal)) scaleVal = 100;
     const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
-    // 3. OPACIDAD 
+    // Opacidad (Arreglado para permitir 0)
     let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
-    // Permitimos el 0. Solo si es NaN (texto basura) usamos 100.
-    if (isNaN(opacityVal)) opacityVal = 100; 
-    
+    if (isNaN(opacityVal)) opacityVal = 100;
     const opacity = opacityVal / 100;
     if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
-
-   // 4. CORRECCIÓN GROSOR (Permitir 0) ---
-    // Leemos el valor tal cual
+    // Grosor
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
-    
-    // Si no es un número (está vacío), usamos 2. Si es número, usamos el valor (aunque sea 0).
     if (isNaN(rawThick)) rawThick = 2;
-    
-    // Aseguramos que no sea negativo
     const mainThickness = Math.max(0, rawThick);
-    
-    // Calculamos el offset normal
     const mainOffset = mainThickness / 2;
 
-
-    // --- B. CANVAS ---
+    // 2. PREPARAR CANVAS
     canvas.width = width;
     canvas.height = height;
     ctx.clearRect(0, 0, width, height);
+
+    // --- NUEVO: DIBUJAR FOTO DE FONDO ---
+    // Verificamos si hay foto y si el "ojito" está activado
+    const mostrarImagen = !showImageToggle || showImageToggle.checked;
+    
+    if (userImage && mostrarImagen) {
+        try {
+            ctx.drawImage(userImage, 0, 0, width, height);
+        } catch (e) { console.error(e); }
+    }
+    // ------------------------------------
+
     const screenAspect = width / height;
 
-
-    // --- C. CÁLCULO DE GEOMETRÍA ---
+    // 3. CÁLCULO DE GEOMETRÍA
     let visibleW, visibleH;
 
     if (targetAspect > screenAspect) {
@@ -150,44 +208,35 @@ function draw() {
     visibleW = visibleW * scaleFactor;
     visibleH = visibleH * scaleFactor;
 
-    // Calcular Barras Negras (Matte)
+    // Calcular Matte
     const barHeight = (height - visibleH) / 2;
     const barWidth = (width - visibleW) / 2;
     const offsetX = barWidth;
     const offsetY = barHeight;
 
-
-    // --- D. DIBUJAR MATTE (FONDO) ---
+    // 4. DIBUJAR MATTE (Barras Negras)
     ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-    
-    // Dibujamos 4 rectángulos para cubrir el área exterior
-    ctx.fillRect(0, 0, width, offsetY); // Arriba
-    ctx.fillRect(0, height - offsetY, width, offsetY); // Abajo
-    ctx.fillRect(0, offsetY, offsetX, visibleH); // Izquierda
-    ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); // Derecha
+    ctx.fillRect(0, 0, width, offsetY); 
+    ctx.fillRect(0, height - offsetY, width, offsetY); 
+    ctx.fillRect(0, offsetY, offsetX, visibleH); 
+    ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
 
-
-    // --- E. DIBUJAR FRAMELINE 1 ---
-  if (mainThickness > 0) {
+    // 5. DIBUJAR FRAMELINE 1 (Principal)
+    if (mainThickness > 0) {
         if (inputs.color) ctx.strokeStyle = inputs.color.value;
         ctx.lineWidth = mainThickness; 
         ctx.setLineDash([]); 
         ctx.beginPath();
-        ctx.rect(
-            offsetX - mainOffset, 
-            offsetY - mainOffset, 
-            visibleW + (mainOffset * 2), 
-            visibleH + (mainOffset * 2)
-        );
+        ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
         ctx.stroke();
     }
 
-
-    // --- F. DIBUJAR FRAMELINE 2 (SECUNDARIO) ---
+    // 6. DIBUJAR FRAMELINE 2 (Secundario)
     if (inputs.secOn && inputs.secOn.checked) {
         const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
         let secW, secH;
         
+        // Protección: verificar si existe el checkbox fit
         const fitInside = inputs.secFit && inputs.secFit.checked;
 
         if (fitInside) {
@@ -208,7 +257,6 @@ function draw() {
                 secW = height * secAspect;
             }
             secW = secW * scaleFactor;
-            secH = secH * scaleFactor;
         }
 
         const secX = (width - secW) / 2;
@@ -222,8 +270,7 @@ function draw() {
         ctx.stroke();
     }
 
-
-    // --- G. SAFE AREAS ---
+    // 7. DIBUJAR SAFE AREAS
     const drawSafe = (pct, dashed) => {
         const p = pct / 100;
         const sW = visibleW * p;
