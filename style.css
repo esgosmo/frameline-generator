@@ -298,66 +298,81 @@ canvas {
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
-/* =========================================
-   VERSIÓN MOBILE (RESPONSIVE)
-   ========================================= */
-@media (max-width: 768px) {
-    
-    /* 1. Permitir Scroll en toda la página */
+/* =======================================================
+   1. MÓVIL VERTICAL (Portrait) -> APILADO
+   ======================================================= */
+@media (max-width: 768px) and (orientation: portrait) {
     body {
-        height: auto;
-        overflow-y: auto; /* Reactivar scroll vertical */
+        overflow-y: auto; /* Scroll general */
     }
 
-    /* 2. Cambiar la dirección de Fila a Columna Invertida */
-    /* Usamos 'column-reverse' para que el Canvas (que está al final del HTML)
-       aparezca ARRIBA visualmente, y los controles ABAJO. */
     .app-container {
-        flex-direction: column-reverse; 
-        height: auto;
+        flex-direction: column-reverse; /* Canvas arriba, Controles abajo */
     }
 
-    /* 3. Ajustar la Barra de Controles (Ahora estará abajo) */
     .sidebar {
-        width: 100%;          /* Ancho completo */
-        height: auto;         /* Altura automática según contenido */
-        border-right: none;   /* Quitamos borde lateral */
-        border-top: 1px solid #444; /* Ponemos borde superior */
-        padding-bottom: 50px; /* Espacio extra al final para scrollear cómodo */
-        
-        /* Box-sizing asegura que el padding no rompa el ancho */
-        box-sizing: border-box; 
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-top: 1px solid #444;
+        padding-bottom: 80px; /* Espacio extra para scroll */
     }
 
-    /* 4. Ajustar el Área de Previsualización (Ahora estará arriba) */
     .preview-area {
         width: 100%;
-        height: 40vh; /* Que ocupe el 40% de la altura de la pantalla */
-        min-height: 300px; /* Pero que nunca mida menos de 300px */
-        flex: none;   /* Evita que se estire raro */
-        
-        /* Opcional: Hacer que se pegue arriba al scrollear (Sticky) */
-        position: sticky;
+        height: 35vh; /* Ocupa el 35% de la altura */
+        min-height: 250px;
+        position: sticky; /* Se queda pegado arriba */
         top: 0;
-        z-index: 10; /* Para que quede encima de los controles al subir */
+        z-index: 100;
         border-bottom: 1px solid #333;
     }
+}
 
-    /* 5. Ajustar inputs y botones para dedos gordos */
-    input, select, button {
-        font-size: 16px; /* Evita que el iPhone haga zoom al escribir */
-        min-height: 44px; /* Altura mínima táctil recomendada */
+/* =======================================================
+   2. MÓVIL HORIZONTAL (Landscape) -> LADO A LADO
+   ======================================================= */
+@media (max-height: 500px) and (orientation: landscape) {
+    /* Quitamos el scroll del body para que scrollee solo el panel */
+    body {
+        overflow: hidden; 
     }
 
-    /* Ajustar los botones mini de presets para que no se amontonen */
-    .presets-mini button, 
-    .presets button {
-        padding: 10px 5px; /* Más fáciles de tocar */
+    .app-container {
+        flex-direction: row; /* Lado a lado */
+    }
+
+    /* BARRA LATERAL (Izquierda) */
+    .sidebar {
+        width: 45%; /* Ocupa casi la mitad */
+        height: 100vh; /* Altura completa */
+        overflow-y: auto; /* SCROLL INDEPENDIENTE AQUÍ */
+        border-right: 1px solid #333;
+        padding: 15px;
+        padding-bottom: 50px;
+    }
+
+    /* ÁREA DE PREVIEW (Derecha) */
+    .preview-area {
+        width: 55%; /* El resto del espacio */
+        height: 100vh; /* Altura completa */
+        padding: 10px;
+        background-color: #151515; /* Asegurar fondo gris */
+    }
+
+    /* Ajustar el canvas para que quepa en pantallas bajitas */
+    canvas {
+        max-height: 90vh; /* Que no se salga por alto */
+        max-width: 95%;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
     
-    /* Ajuste para los checkbox (Fit Inside, etc) */
-    .checkbox-row {
-        margin-top: 10px;
-        margin-bottom: 10px;
+    /* Hacer los botones un poco más compactos para ahorrar espacio */
+    .input-group {
+        margin-bottom: 15px;
+    }
+    h1 {
+        margin-bottom: 15px;
+        font-size: 1rem;
     }
 }
