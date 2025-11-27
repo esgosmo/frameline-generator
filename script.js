@@ -105,7 +105,7 @@ function draw() {
     const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
-    // 3. OPACIDAD (AQUÍ ESTABA EL ERROR)
+    // 3. OPACIDAD 
     let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
     // Permitimos el 0. Solo si es NaN (texto basura) usamos 100.
     if (isNaN(opacityVal)) opacityVal = 100; 
@@ -113,8 +113,18 @@ function draw() {
     const opacity = opacityVal / 100;
     if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
-    // 4. Grosor
-    const mainThickness = Math.max(1, Math.abs(parseInt(inputs.thickness ? inputs.thickness.value : 2) || 2));
+
+   // 4. CORRECCIÓN GROSOR (Permitir 0) ---
+    // Leemos el valor tal cual
+    let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
+    
+    // Si no es un número (está vacío), usamos 2. Si es número, usamos el valor (aunque sea 0).
+    if (isNaN(rawThick)) rawThick = 2;
+    
+    // Aseguramos que no sea negativo
+    const mainThickness = Math.max(0, rawThick);
+    
+    // Calculamos el offset normal
     const mainOffset = mainThickness / 2;
 
 
@@ -158,12 +168,19 @@ function draw() {
 
 
     // --- E. DIBUJAR FRAMELINE 1 ---
-    if (inputs.color) ctx.strokeStyle = inputs.color.value;
-    ctx.lineWidth = mainThickness; 
-    ctx.setLineDash([]); 
-    ctx.beginPath();
-    ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
-    ctx.stroke();
+  if (mainThickness > 0) {
+        if (inputs.color) ctx.strokeStyle = inputs.color.value;
+        ctx.lineWidth = mainThickness; 
+        ctx.setLineDash([]); 
+        ctx.beginPath();
+        ctx.rect(
+            offsetX - mainOffset, 
+            offsetY - mainOffset, 
+            visibleW + (mainOffset * 2), 
+            visibleH + (mainOffset * 2)
+        );
+        ctx.stroke();
+    }
 
 
     // --- F. DIBUJAR FRAMELINE 2 (SECUNDARIO) ---
