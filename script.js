@@ -394,25 +394,21 @@ if (inputs.h) {
 if (inputs.aspect) {
     inputs.aspect.addEventListener('input', () => {
         
-        // 1. Cambiar menú a Custom
-        if (menuAspecto) {
-            menuAspecto.value = 'custom';
-        }
+        // 1. Forzar el menú de arriba a "Custom"
+        if (menuAspecto) menuAspecto.value = 'custom';
 
-        // 2. APAGAR BOTONES (MÉTODO INFALIBLE)
-        // Buscamos el contenedor por su ID
-        const container = document.getElementById('aspectGroup');
+        // 2. APAGAR LOS BOTONES (Aquí está la solución)
+        const contenedorBotones = document.getElementById('aspectBtnContainer');
         
-        if (container) {
-            // Buscamos TODOS los botones que vivan ahí dentro
-            const buttons = container.querySelectorAll('button');
+        if (contenedorBotones) {
+            // Buscamos cualquier botón azul dentro del contenedor
+            const botonesPrendidos = contenedorBotones.querySelectorAll('button.active');
             
             // Los apagamos todos
-            buttons.forEach(btn => {
-                btn.classList.remove('active');
-            });
+            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
         }
     });
+}
 }
 
 // 4. Si cambias OPACIDAD
