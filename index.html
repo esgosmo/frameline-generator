@@ -175,8 +175,29 @@
     
     <div class="input-group" style="margin-bottom: 15px;">
         <label>2nd Aspect (e.g. 9:16)</label>
-        <input type="text" id="secFrameAspect" value="9:16" placeholder="Ex: 1:1">
-    </div>
+
+<select id="secAspectSelect" style="margin-bottom: 8px;">
+        <option value="custom">Custom / Manual</option>
+        <optgroup label="Social Media">
+            <option value="9:16" selected>9:16 (Vertical)</option>
+            <option value="4:5">4:5 (Portrait / IG)</option>
+            <option value="1:1">1:1 (Square)</option>
+        </optgroup>
+        <optgroup label="TV & Standard">
+            <option value="16:9">16:9 (HDTV)</option>
+            <option value="4:3">4:3 (SDTV)</option>
+            <option value="14:9">14:9 (Commercial)</option>
+        </optgroup>
+        <optgroup label="Cinema">
+            <option value="1.85">1.85:1 (Flat)</option>
+            <option value="2.39">2.39:1 (Scope)</option>
+        </optgroup>
+    </select>
+
+    <label style="display:block; margin-top: 10px; margin-bottom: 5px; font-size: 0.85rem; color: #888;">
+        Manual Aspect Ratio
+    </label>
+    <input type="text" id="secFrameAspect" value="9:16" placeholder="Ex: 1:1">    </div>
 
 <div style="
         margin-top: 10px; 
