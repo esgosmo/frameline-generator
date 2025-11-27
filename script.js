@@ -399,15 +399,17 @@ if (inputs.aspect) {
             menuAspecto.value = 'custom';
         }
 
-// 2. APAGAR LOS BOTONES (Aquí está la solución)
-        const contenedorBotones = document.getElementById('aspectBtnContainer');
+        // 2. APAGAR BOTONES (MÉTODO INFALIBLE)
+        // Buscamos el contenedor por su ID
+        const container = document.getElementById('aspectGroup');
         
-        if (contenedorBotones) {
-            // Buscamos cualquier botón azul dentro del contenedor
-            const botonesPrendidos = contenedorBotones.querySelectorAll('button.active');
+        if (container) {
+            // Buscamos TODOS los botones que vivan ahí dentro
+            const buttons = container.querySelectorAll('button');
             
             // Los apagamos todos
-            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
             });
         }
     });
