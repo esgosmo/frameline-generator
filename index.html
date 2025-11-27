@@ -237,10 +237,10 @@
            <div class="input-group" style="border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 20px; margin-top: 20px;">
     <label>Background Image (Preview)</label>
     
-    <div style="display: flex; gap: 5px;">
+    <div style="display: flex; gap: 5px; align-items: stretch; flex-wrap: wrap;">
         <input type="file" id="imageLoader" accept="image/*" style="display: none;">
         
-        <button onclick="document.getElementById('imageLoader').click()" style="background: #444; color: white; border: 1px solid #555;">
+        <button onclick="document.getElementById('imageLoader').click()" style="flex: 1; background: #444; color: white; border: 1px solid #555;white-space: nowrap;">
             △ Load
         </button>
 
