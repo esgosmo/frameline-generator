@@ -93,14 +93,14 @@
 
 <div class="input-group hidden" id="aspectGroup">
     <label>Manual Aspect Ratio</label>
-<input type="text" id="aspect" value="2.39" placeholder="Ex: 16:9">
+<input type="text" id="aspect" value="2.39" placeholder="Ex: 16:9" inputmode="numeric" pattern="[0-9]*">
 
 <div style="margin-top: 15px;">
     <label style="display: flex; justify-content: space-between;">
         <span>Frameline Scale</span>
         <span id="scaleValue" style="color: #007bff;">100%</span>
     </label>
-    <input type="range" id="scaleInput" min="10" max="100" value="100" step="1">
+    <input type="range" id="scaleInput" min="65" max="100" value="100" step="1">
 </div>
 </div>
 
@@ -134,7 +134,7 @@
 
            <div class="input-group">
               <label>Line Thickness</label>
-              <input type="number" id="thickness" value="2" min="0" max="10">
+              <input type="number" id="thickness" value="2" min="0" max="10" inputmode="numeric" pattern="[0-9]*">
           </div>
 
           <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
@@ -145,7 +145,7 @@
         <label for="safeActionToggle" style="margin: 0 0 0 8px; cursor: pointer;">Safe Action</label>
     </div>
     <div style="display: flex; align-items: center; width: 80px;">
-        <input type="number" id="safeActionVal" value="93" min="50" max="100">
+        <input type="number" id="safeActionVal" value="93" min="50" max="100" inputmode="numeric" pattern="[0-9]*">
         <span style="font-size: 0.8rem; margin-left: 5px; color: #888;">%</span>
     </div>
 </div>
@@ -156,7 +156,7 @@
         <label for="safeTitleToggle" style="margin: 0 0 0 8px; cursor: pointer;">Safe Title</label>
     </div>
     <div style="display: flex; align-items: center; width: 80px;">
-        <input type="number" id="safeTitleVal" value="90" min="50" max="100">
+        <input type="number" id="safeTitleVal" value="90" min="50" max="100" inputmode="numeric" pattern="[0-9]*">
         <span style="font-size: 0.8rem; margin-left: 5px; color: #888;">%</span>
     </div>
 </div>
