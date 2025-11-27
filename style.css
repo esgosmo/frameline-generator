@@ -246,7 +246,7 @@ button.active {
     padding: 5px;
 }
 
-/* ÁREA DE VISUALIZACIÓN (Lado Derecho) */
+/* 1. EL CONTENEDOR (La "mesa" de trabajo) */
 .preview-area {
     flex: 1;
     display: flex;
@@ -254,11 +254,28 @@ button.active {
     align-items: center;
     justify-content: center;
     
-    /* --- AQUÍ ESTÁ EL CAMBIO --- */
-    background-color: #151515; /* Gris oscuro profesional */
-    background-image: none;    /* Quitamos el tablero de ajedrez */
-    /* -------------------------- */
+    /* Fondo Gris Oscuro Plano */
+    background-color: #151515; 
     
     padding: 20px;
-    overflow: hidden; /* Evita barras de scroll si el canvas es gigante */
+    overflow: hidden;
+}
+
+/* 2. EL CANVAS (Tu imagen) */
+canvas {
+    max-width: 90%;
+    max-height: 80vh;
+    
+    /* Sombra para que se separe del fondo gris */
+    box-shadow: 0 0 30px rgba(0,0,0,0.7); 
+    
+    /* --- PATRÓN DE AJEDREZ (Solo detrás del dibujo) --- */
+    background-color: #333; /* Color de los cuadros oscuros */
+    background-image: 
+        linear-gradient(45deg, #444 25%, transparent 25%), 
+        linear-gradient(-45deg, #444 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #444 75%), 
+        linear-gradient(-45deg, transparent 75%, #444 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
