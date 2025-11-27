@@ -245,3 +245,11 @@ button.active {
     text-align: right;
     padding: 5px;
 }
+
+.preview-area {
+    /* ... lo mismo de arriba ... */
+    
+    /* --- CAMBIO DE FONDO AQUÍ --- */
+    background: #151515; /* Gris muy oscuro, casi negro */
+    /* ---------------------------- */
+}
