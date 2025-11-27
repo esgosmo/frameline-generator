@@ -13,6 +13,7 @@ const textoEscala = document.getElementById('scaleValue');
 const menuResoluciones = document.getElementById('resolutionSelect');
 const menuAspecto = document.getElementById('aspectSelect');
 const cajaAspecto = document.getElementById('aspectGroup'); // Caja oculta
+const menuSecAspect = document.getElementById('secAspectSelect');
 
 // Paneles Avanzados
 const btnAdvanced = document.getElementById('advancedBtn');
@@ -340,6 +341,34 @@ if (menuAspecto) {
 }
 
 // ==========================================
+// LÓGICA DEL MENÚ DE 2nd ASPECTO (NUEVO)
+// ==========================================
+if (menuSecAspect) {
+    menuSecAspect.addEventListener('change', () => {
+        const val = menuSecAspect.value;
+        
+        // Si es custom, no tocamos el input manual
+        if (val === 'custom') return;
+
+        // Actualizamos el input manual del segundo frame
+        if (inputs.secAspect) {
+            inputs.secAspect.value = val;
+            flashInput(inputs.secAspect);
+        }
+        
+        draw();
+    });
+}
+
+// SINCRONIZACIÓN INVERSA (Si escribes manual -> Menú a Custom)
+if (inputs.secAspect) {
+    inputs.secAspect.addEventListener('input', () => {
+        if (menuSecAspect) menuSecAspect.value = 'custom';
+        draw(); // Aseguramos que se redibuje al escribir
+    });
+}
+
+// ==========================================
 // SINCRONIZACIÓN MANUAL (CORREGIDA)
 // ==========================================
 
@@ -463,4 +492,3 @@ btnDownload.addEventListener('click', () => {
 
 // Dibujo inicial
 draw();
-
