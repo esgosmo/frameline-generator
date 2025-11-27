@@ -409,7 +409,6 @@ if (inputs.aspect) {
         }
     });
 }
-}
 
 // 4. Si cambias OPACIDAD
 if (inputs.opacity) {
