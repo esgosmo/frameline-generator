@@ -246,10 +246,19 @@ button.active {
     padding: 5px;
 }
 
+/* ÁREA DE VISUALIZACIÓN (Lado Derecho) */
 .preview-area {
-    /* ... lo mismo de arriba ... */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     
-    /* --- CAMBIO DE FONDO AQUÍ --- */
-    background: #151515; /* Gris muy oscuro, casi negro */
-    /* ---------------------------- */
+    /* --- AQUÍ ESTÁ EL CAMBIO --- */
+    background-color: #151515; /* Gris oscuro profesional */
+    background-image: none;    /* Quitamos el tablero de ajedrez */
+    /* -------------------------- */
+    
+    padding: 20px;
+    overflow: hidden; /* Evita barras de scroll si el canvas es gigante */
 }
