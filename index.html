@@ -267,9 +267,21 @@
          onmouseout="this.style.borderColor='#444'; this.style.color='#aaa'"
     >
         <span>△ Select File</span>
-        <span style="font-size: 0.8rem; opacity: 0.7;">Browse</span>
+        <span style="font-size: 0.8rem; opacity: 0.7;"></span>
         <input type="file" id="imageLoader" accept="image/*" style="display: none;">
     </div>
+
+  <div style="display: flex; gap: 15px; margin-top: 10px; margin-bottom: 10px; font-size: 0.85rem; color: #ccc;">
+    <div style="display: flex; align-items: center;">
+        <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" checked style="cursor: pointer;">
+        <label for="scaleFit" style="margin-left: 6px; cursor: pointer;">Scale to fit</label>
+    </div>
+
+    <div style="display: flex; align-items: center;">
+        <input type="radio" id="scaleFill" name="imgScaleMode" value="fill" style="cursor: pointer;">
+        <label for="scaleFill" style="margin-left: 6px; cursor: pointer;">Scale full w/ crop</label>
+    </div>
+</div>
 
     <div class="checkbox-row" style="margin-bottom: 5px;">
         
