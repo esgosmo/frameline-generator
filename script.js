@@ -62,6 +62,7 @@ let userImage = null;
 
 // 2. Referencias al HTML
 const imageLoader = document.getElementById('imageLoader');
+const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 
 // 3. El "Escuchador" que detecta cuando subes el archivo
@@ -80,10 +81,10 @@ if (imageLoader) {
             img.onload = () => {
                 // Guardamos la imagen en la variable global
                 userImage = img;
-                
-                // OPCIONAL: Ajustar el tamaño del canvas a la foto
-                // Si quieres que el canvas tome el tamaño de la foto, descomenta esto:
-                
+
+                // --- MOSTRAR CONTROLES ---
+        if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
+        
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
                 if(menuResoluciones) menuResoluciones.value = 'custom';
@@ -105,6 +106,11 @@ if (imageLoader) {
 window.removeImage = function() {
     userImage = null;
     if(imageLoader) imageLoader.value = ""; // Resetear el input
+
+    // --- OCULTAR CONTROLES ---
+    if (imageOptionsPanel) imageOptionsPanel.classList.add('hidden');
+    // -------------------------
+    
     draw();
 }
 
