@@ -234,8 +234,8 @@
 
         </div>
                 
-  <div class="input-group" style="border-bottom: 1px solid #444; padding-bottom: 20px; margin-bottom: 20px;  margin-top: 20px;">
-    <label>Background Image (Preview)</label>
+  <div class="input-group" style="border-bottom: 1px solid #444; padding-bottom: 20px; margin-bottom: 20px;margin-top: 15px;">
+    <label>Background Image (Your own image)</label>
 
     <div onclick="document.getElementById('imageLoader').click()" 
          style="
@@ -250,44 +250,40 @@
             justify-content: space-between; 
             align-items: center;
             transition: all 0.2s;
+            margin-bottom: 10px; /* Separación con los controles de abajo */
          "
          onmouseover="this.style.borderColor='#666'; this.style.color='#fff'"
          onmouseout="this.style.borderColor='#444'; this.style.color='#aaa'"
     >
-        <span>△ Load</span>
-        <span style="font-size: 0.8rem; opacity: 0.7;"></span>
-        
+        <span>△ Select File</span>
+        <span style="font-size: 0.8rem; opacity: 0.7;">Browse</span>
         <input type="file" id="imageLoader" accept="image/*" style="display: none;">
     </div>
 
-    <div style="
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        margin-top: 8px; 
-        padding: 0 2px;
-    ">
+    <div class="checkbox-row" style="margin-bottom: 5px;">
+        
         <div style="display: flex; align-items: center;">
-            <input type="checkbox" id="showImageToggle" checked style="margin: 0; cursor: pointer;">
-            <label for="showImageToggle" style="margin: 30 0 0 8px; cursor: pointer;">
+            <input type="checkbox" id="showImageToggle" checked>
+            <label for="showImageToggle" style="margin: 0 0 0 8px; cursor: pointer; user-select: none; color: #ddd;">
                 Show Image
             </label>
         </div>
 
+        <div style="display: flex; align-items: center;">
+             <span onclick="removeImage()" style="
+                font-size: 0.8rem; 
+                color: #d9534f; 
+                cursor: pointer; 
+                transition: color 0.2s;
+                padding: 5px;
+            "
+            onmouseover="this.style.color='#ff7b77'"
+            onmouseout="this.style.color='#d9534f'"
+            >
+                ✕ Remove
+            </span>
+        </div>
 
-
-        <span onclick="removeImage()" style="
-            font-size: 0.8rem; 
-            color: #d9534f; 
-            cursor: pointer; 
-            transition: color 0.2s;
-            margin-bottom: 50px;
-        "
-        onmouseover="this.style.color='#ff7b77'"
-        onmouseout="this.style.color='#d9534f'"
-        >
-            ✕ Remove
-        </span>
     </div>
 
 <div style="
@@ -297,8 +293,9 @@
         display: flex; 
         align-items: flex-start;
         line-height: 1.3;
+        margin-top: 10px;
     ">
-        <span style="margin-right: 5px; font-size: 0.9rem; margin-bottom: 30px">🔒</span>
+        <span style="margin-right: 5px; font-size: 0.9rem; margin-bottom: 30px;">🔒</span>
         <span>
             <strong>Privacy Note:</strong> Images are processed locally in your browser. 
             Nothing is uploaded to any server.
