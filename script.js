@@ -618,7 +618,7 @@ btnDownload.addEventListener('click', () => {
         // Mantenemos PNG para la transparencia (Overlay).
         // Nombre estándar.
         a.href = canvas.toDataURL('image/png');
-        a.download = `frame_${w}x${h}_${asp}.png`;
+        a.download = `Frameline_${w}x${h}_${asp}.png`;
     }
 
     // 3. Descargar sin preguntas (Warning eliminado)
