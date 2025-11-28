@@ -273,47 +273,71 @@
 
 <div id="imageOptionsPanel" class="hidden">
 
-<div style="display:flex; flex-direction:column; gap:10px; font-size:0.85rem; color:#ccc;">
+<style>
+/* Ocultar el radio nativo */
+.custom-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+    padding: 0;
+    width: 14px;      /* Tamaño del círculo */
+    height: 14px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    cursor: pointer;
+}
 
-    <!-- Opción 1 -->
-    <label for="scaleFit" style="display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
-        <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" checked
-            style="
-                appearance:none;
-                -webkit-appearance:none;
-                width:15px;
-                height:15px;
-                border:2px solid #ccc;
-                border-radius:50%;
-                margin:0;
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                cursor:pointer;
-            ">
-        <span style="margin-left:6px;">Scale to fit</span>
+/* Cuando está seleccionado */
+.custom-radio:checked {
+    border-color: #2b80ff; /* borde azul */
+}
+
+.custom-radio:checked::after {
+    content: "";
+    width: 8px;    /* círculo interno */
+    height: 8px;
+    background: #2b80ff;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Alineación perfecta */
+.radio-option {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    margin: 6px 0;
+    font-size: 0.85rem;
+    color: #ccc;
+}
+
+.radio-option span {
+    margin-left: 6px;
+    line-height: 1;
+}
+</style>
+
+
+<div class="radio-option">
+    <label style="display:flex; align-items:center; cursor:pointer;">
+        <input type="radio" name="imgScaleMode" value="fit" class="custom-radio" checked>
+        <span>Scale to fit</span>
     </label>
-
-    <!-- Opción 2 -->
-    <label for="scaleFill" style="display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
-        <input type="radio" id="scaleFill" name="imgScaleMode" value="fill"
-            style="
-                appearance:none;
-                -webkit-appearance:none;
-                width:15px;
-                height:15px;
-                border:2px solid #ccc;
-                border-radius:50%;
-                margin:0;
-                display:inline-flex;
-                align-items:center;
-                justify-content:center;
-                cursor:pointer;
-            ">
-        <span style="margin-left:6px;">Scale full w/ crop</span>
-    </label>
-
 </div>
+
+<div class="radio-option">
+    <label style="display:flex; align-items:center; cursor:pointer;">
+        <input type="radio" name="imgScaleMode" value="fill" class="custom-radio">
+        <span>Scale full w/ crop</span>
+    </label>
+</div>
+
 
 
 
