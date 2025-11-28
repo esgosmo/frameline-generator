@@ -273,48 +273,52 @@
 
 <div id="imageOptionsPanel" class="hidden">
 
-   <div style="
-    display: flex; 
-    flex-wrap: wrap;       
-    gap: 0px;             
-    margin-top: 10px; 
-    margin-bottom: 10px; 
-    font-size: 0.85rem; 
-    color: #ccc;
-">
+  <div id="imageOptionsPanel" class="hidden">
 
-    <div style="display: flex; align-items: center; white-space: nowrap;">
-        <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" checked style="cursor: pointer;">
-        <label for="scaleFit" style="margin-left: 6px; cursor: pointer;">Scale to fit</label>
-    </div>
-</div>
-          
-
-<div style="
-    display: flex;
-    flex-wrap: wrap;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    font-size: 0.85rem;
-    color: #ccc;
-    align-items: center;
-">
-    <label for="scaleFill" style="
+    <!-- Opción 1 -->
+    <div style="
         display: flex;
+        flex-wrap: wrap;
+        margin: 10px 0;
+        font-size: 0.85rem;
+        color: #ccc;
         align-items: center;
-        gap: 0px;
-        cursor: pointer;
-        padding: 0;
-        white-space: nowrap;
-        line-height: 1;
     ">
-        <input type="radio" id="scaleFill" name="imgScaleMode" value="fill" style="
+        <label for="scaleFit" style="
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
             cursor: pointer;
-            padding: 0;
         ">
-        <span style="padding: 0;">Scale full w/ crop</span>
-    </label>
+            <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" checked
+                style="margin:0; vertical-align:middle; cursor:pointer;">
+            <span style="margin-left:6px;">Scale to fit</span>
+        </label>
+    </div>
+
+    <!-- Opción 2 -->
+    <div style="
+        display: flex;
+        flex-wrap: wrap;
+        margin: 10px 0;
+        font-size: 0.85rem;
+        color: #ccc;
+        align-items: center;
+    ">
+        <label for="scaleFill" style="
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            cursor: pointer;
+        ">
+            <input type="radio" id="scaleFill" name="imgScaleMode" value="fill"
+                style="margin:0; vertical-align:middle; cursor:pointer;">
+            <span style="margin-left:6px;">Scale full w/ crop</span>
+        </label>
+    </div>
+
 </div>
+
 
 
 
