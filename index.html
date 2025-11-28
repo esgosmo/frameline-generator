@@ -273,7 +273,23 @@
 
 <div id="imageOptionsPanel" class="hidden">
 
-<div style="
+   <div style="
+    display: flex; 
+    flex-wrap: wrap;       /* ESTO ES LA CLAVE: Permite que bajen de línea */
+    gap: 0px;             /* Espacio entre opciones */
+    margin-top: 10px; 
+    margin-bottom: 10px; 
+    font-size: 0.85rem; 
+    color: #ccc;
+">
+
+    <div style="display: flex; align-items: center; white-space: nowrap;">
+        <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" checked style="cursor: pointer;">
+        <label for="scaleFit" style="margin-left: 6px; cursor: pointer;">Scale to fit</label>
+    </div>
+</div>
+
+ <div style="
     display: flex;
     flex-wrap: wrap;
     margin-top: 10px;
@@ -300,6 +316,7 @@
         <span style="margin: 0; padding: 0;">Scale full w/ crop</span>
     </label>
 </div>
+
 
 
 
