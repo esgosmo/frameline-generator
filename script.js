@@ -87,6 +87,9 @@ if (imageLoader) {
         
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
+                // --- NUEVO: ---
+                autoAdjustThickness(img.width);
+                // --------------
                 if(menuResoluciones) menuResoluciones.value = 'custom';
                 
 
@@ -152,6 +155,20 @@ function clearActiveButtons(containerSelector) {
     if (container) {
         const buttons = container.querySelectorAll('button');
         buttons.forEach(btn => btn.classList.remove('active'));
+    }
+}
+
+// --- FUNCIÓN DE GROSOR ADAPTATIVO ---
+function autoAdjustThickness(width) {
+    if (!inputs.thickness) return;
+    
+    const w = parseInt(width);
+    
+    // Si la resolución es mayor a UHD (3840), subimos el grosor
+    if (w > 3840) {
+        inputs.thickness.value = 6; // 6px se ve muy bien en 6K/8K
+    } else {
+        inputs.thickness.value = 2; // 2px es estándar para HD/2K
     }
 }
 
@@ -412,6 +429,10 @@ if (menuResoluciones) {
         const [nW, nH] = val.split(',');
         if(inputs.w) inputs.w.value = nW;
         if(inputs.h) inputs.h.value = nH;
+
+        // --- NUEVO: AJUSTAR GROSOR AUTOMÁTICAMENTE ---
+        autoAdjustThickness(nW); 
+        // --
         
         // 2. APAGAR BOTONES (LIMPIEZA)
         // Buscamos la caja de botones por su ID nuevo
@@ -568,6 +589,9 @@ if (inputs.secOn) {
 window.setPreset = function(w, h, btn) {
     if(inputs.w) inputs.w.value = w;
     if(inputs.h) inputs.h.value = h;
+    // --- NUEVO: AJUSTAR GROSOR AUTOMÁTICAMENTE ---
+    autoAdjustThickness(w);
+    // ------
     const key = `${w},${h}`;
     if(menuResoluciones) {
         menuResoluciones.value = key;
@@ -592,7 +616,7 @@ window.setOpacity = function(val, btn) {
 }
 
 // ==========================================
-// 7. DESCARGA INTELIGENTE (JPG vs PNG)
+// 8. DESCARGA INTELIGENTE (JPG vs PNG)
 // ==========================================
 btnDownload.addEventListener('click', () => {
     // 1. Obtener datos
