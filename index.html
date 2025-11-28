@@ -273,32 +273,20 @@
 
 <div id="imageOptionsPanel" class="hidden">
 
-      <div style="
+   <div style="
     display: flex; 
     flex-wrap: wrap;       
-    gap: 0px;            
-      margin-bottom: 10px;
-    font-size: 0.85rem;
+    gap: 0px;             
+    margin-top: 10px; 
+    margin-bottom: 10px; 
+    font-size: 0.85rem; 
     color: #ccc;
-    align-items: center;
 ">
 
- <label for="scaleFit" style="
-        display: flex;
-        align-items: center;
-        gap: 0;
-        cursor: pointer;
-        padding: 0;
-        white-space: nowrap;
-        line-height: 1;
-    ">
-        <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" style="
-            cursor: pointer;
-            margin: 0;
-            padding: 0;
-        ">
-        <span style="margin: 0; padding: 0;">Scale to fit</span>
-    </label>
+    <div style="display: flex; align-items: center; white-space: nowrap;">
+        <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" checked style="cursor: pointer;">
+        <label for="scaleFit" style="margin-left: 6px; cursor: pointer;">Scale to fit</label>
+    </div>
 </div>
           
 
@@ -314,7 +302,7 @@
     <label for="scaleFill" style="
         display: flex;
         align-items: center;
-        gap: 0;
+        gap: 0px;
         cursor: pointer;
         padding: 0;
         white-space: nowrap;
@@ -325,7 +313,7 @@
             margin: 0;
             padding: 0;
         ">
-        <span style="margin: 0; padding: 0;">Scale full w/ crop</span>
+        <span style="padding: 0;">Scale full w/ crop</span>
     </label>
 </div>
 
