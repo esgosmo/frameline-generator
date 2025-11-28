@@ -1,783 +1,564 @@
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #1a1a1a; /* Gris oscuro estilo cine */
-    color: #eee;
-    height: 100vh;
-    overflow: hidden;
-}
+// ==========================================
+// 1. REFERENCIAS UI (INTERFAZ)
+// ==========================================
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+const btnDownload = document.getElementById('downloadBtn');
 
-.app-container {
-    display: flex;
-    height: 100%;
-}
+// Textos informativos
+const textoOpacidad = document.getElementById('opacityValue');
+const textoEscala = document.getElementById('scaleValue');
 
-/* BARRA LATERAL */
-.sidebar {
-    width: 300px;
-    background-color: #252525;
-    padding: 20px;
-    border-right: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-}
+// Menús Desplegables
+const menuResoluciones = document.getElementById('resolutionSelect');
+const menuAspecto = document.getElementById('aspectSelect');
+const cajaAspecto = document.getElementById('aspectGroup'); // Caja oculta
+const menuSecAspect = document.getElementById('secAspectSelect');
 
-h1 { font-size: 1.2rem; margin-bottom: 30px; }
-h1 span { color: #007bff; }
+// Paneles Avanzados
+const btnAdvanced = document.getElementById('advancedBtn');
+const groupAdvanced = document.getElementById('advancedGroup');
+const arrow = document.getElementById('arrow');
+const secFrameControls = document.getElementById('secFrameControls');
 
-.input-group { margin-bottom: 8px; }
-label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
-input {
-    width: 100%;
-    background: #333;
-    border: 1px solid #444;
-    color: white;
-    padding: 8px;
-    border-radius: 4px;
-}
+// ==========================================
+// 2. REFERENCIAS DATOS (INPUTS)
+// ==========================================
+// Usamos una función segura para no romper si falta algún ID
+const getEl = (id) => document.getElementById(id);
 
-input, select {
-    width: 100%;
-    background: #333;
-    border: 1px solid #444;
-    color: white;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 14px; /* Opcional: ajustar tamaño de letra */
-}
-
-/* Para que las opciones agrupadas se vean bien */
-optgroup {
-    background: #222;
-    color: #888;
-    font-style: normal;
-}
-
-.btn-primary {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    margin-top: 10px;
-}
-.btn-primary:hover { background: #0056b3; }
-
-/* MONETIZACIÓN */
-.monetization { margin-top: auto; padding-top: 20px; border-top: 1px solid #333; }
-.coffee-btn {
-    display: block;
-    text-align: center;
-    background: #FFDD00;
-    color: black;
-    text-decoration: none;
-    padding: 10px;
-    border-radius: 5px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-.ad-placeholder {
-    background: #333;
-    height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #555;
-    font-size: 0.8rem;
-    border: 1px dashed #444;
-}
-
-/* ÁREA DE CANVAS */
-.preview-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-image: linear-gradient(45deg, #222 25%, transparent 25%), 
-                      linear-gradient(-45deg, #222 25%, transparent 25%), 
-                      linear-gradient(45deg, transparent 75%, #222 75%), 
-                      linear-gradient(-45deg, transparent 75%, #222 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    padding: 20px;
-}
-
-canvas {
-    max-width: 90%;
-    max-height: 80vh;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    background: transparent; /* Importante para que sea PNG transparente */
-}
-
-.presets { 
-    display: flex; gap: 5px; margin-bottom: 20px; 
-}
-.presets button { 
-    background: #444; color: #ccc; border: 1px solid #555; 
-    padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;
-}
-.presets button:hover { 
-    background: #007bff; /* Azul al pasar el mouse */
-    color: white;
-    border-color: #007bff; }
-
-/* Animación de "flash" para avisar que cambió el valor */
-@keyframes flash {
-    0% { background-color: #555; }
-    50% { background-color: #007bff; } /* Azul */
-    100% { background-color: #333; }
-}
-
-.highlight-change {
-    animation: flash 0.5s ease-out;
-}
-
-/* Estilo para los botones pequeños debajo del input */
-.presets-mini {
-    display: flex;
-    gap: 5px;       /* Espacio entre botones */
-    margin-top: 8px; /* Espacio con el input de arriba */
-    margin-bottom: 20px /* Espacio con el input de abajo */
-}
-
-
-.presets-mini button {
-    flex: 1;        /* Que ocupen todo el ancho disponible */
-    background: #444;
-    color: #ccc;
-    border: 1px solid #555;
-    padding: 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-}
-
-.presets-mini button:hover {
-    background: #007bff; /* Azul al pasar el mouse */
-    color: white;
-    border-color: #007bff;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Opcional: Una pequeña animación para cuando aparezca */
-#aspectGroup {
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Botón de Advanced (Gris y sutil) */
-.btn-advanced {
-    width: 100%;
-    background: transparent;
-    border: 1px solid #444;
-    color: #aaa;
-    padding: 10px;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 4px;
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-between; /* Para separar texto de la flecha */
-    align-items: center;
-    font-size: 0.9rem;
-    transition: background 0.2s;
-}
-
-.btn-advanced:hover {
-    background: #333;
-    color: white;
-}
-
-/* El contenedor de las opciones */
-.advanced-content {
-    background: #222;
-    border: 1px solid #333;
-    border-top: none; /* Para que parezca unido al botón */
-    padding: 15px;
-    border-radius: 0 0 5px 5px;
-    margin-bottom: 20px;
-}
-
-/* Asegúrate de tener la clase hidden (si no la tienes ya) */
-.hidden {
-    display: none !important;
-}
-
-
-/* Estado activo para los botones seleccionados */
-button.active {
-    background-color: #007bff !important; /* El !important asegura que se quede azul */
-    color: white !important;
-    border-color: #007bff !important;
-    box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); /* Un toque de profundidad */
-}
-
-/* Estilo para las filas de Safe Area */
-.checkbox-row {
-    display: flex;
-    justify-content: space-between; /* Separa el checkbox del número */
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-/* Ajuste para los checkbox */
-.checkbox-row input[type="checkbox"] {
-    width: auto; /* Que no ocupen todo el ancho */
-    margin: 0;
-    cursor: pointer;
-}
-
-/* Ajuste para los inputs de porcentaje pequeños */
-.checkbox-row input[type="number"] {
-    text-align: right;
-    padding: 5px;
-}
-
-/* 1. EL CONTENEDOR (La "mesa" de trabajo) */
-.preview-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+const inputs = {
+    w: getEl('width'),
+    h: getEl('height'),
+    aspect: getEl('aspect'),
+    scale: getEl('scaleInput'),
+    opacity: getEl('opacity'),
     
-    /* Fondo Gris Oscuro Plano */
-    background-color: #151515; 
-    
-    padding: 20px;
-    overflow: hidden;
+    // Advanced
+    color: getEl('lineColor'),
+    thickness: getEl('thickness'),
+    safeActionOn: getEl('safeActionToggle'),
+    safeActionVal: getEl('safeActionVal'),
+    safeTitleOn: getEl('safeTitleToggle'),
+    safeTitleVal: getEl('safeTitleVal'),
+
+    // Second Frameline
+    secOn: getEl('secFrameOn'),
+    secAspect: getEl('secFrameAspect'),
+    secColor: getEl('secFrameColor'),
+    secFit: getEl('secFrameFit'),
+    showLabels: getEl('showLabelsToggle') // NUEVO: Referencia al checkbox de etiquetas
+};
+
+// ==========================================
+// LÓGICA DE CARGA DE IMAGEN 
+// ==========================================
+
+// 1. Variable Global (Tiene que estar afuera de las funciones)
+let userImage = null;
+
+// 2. Referencias al HTML
+const imageLoader = document.getElementById('imageLoader');
+const showImageToggle = document.getElementById('showImageToggle');
+
+// 3. El "Escuchador" que detecta cuando subes el archivo
+if (imageLoader) {
+    imageLoader.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return; // Si canceló, no hacemos nada
+
+        const reader = new FileReader();
+        
+        // Cuando el archivo se termine de leer...
+        reader.onload = (event) => {
+            const img = new Image();
+            
+            // Cuando la imagen interna se termine de crear...
+            img.onload = () => {
+                // Guardamos la imagen en la variable global
+                userImage = img;
+                
+                // OPCIONAL: Ajustar el tamaño del canvas a la foto
+                // Si quieres que el canvas tome el tamaño de la foto, descomenta esto:
+                
+                if(inputs.w) inputs.w.value = img.width;
+                if(inputs.h) inputs.h.value = img.height;
+                if(menuResoluciones) menuResoluciones.value = 'custom';
+                
+
+                // Redibujamos para que aparezca
+                draw();
+            }
+            // Le asignamos los datos leídos
+            img.src = event.target.result;
+        }
+        
+        // Leemos el archivo como una URL de datos
+        reader.readAsDataURL(file);
+    });
 }
 
-/* 1. EL ÁREA ALREDEDOR (La "Mesa") -> Sólida */
-.preview-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    
-    /* --- FONDO SÓLIDO --- */
-    background-color: #151515; /* Gris oscuro elegante */
-    background-image: none;    /* Aseguramos que NO haya ajedrez aquí */
-    /* -------------------- */
-    
-    padding: 20px;
-    overflow: hidden;
+// 4. Lógica para el botón de "Borrar Imagen"
+window.removeImage = function() {
+    userImage = null;
+    if(imageLoader) imageLoader.value = ""; // Resetear el input
+    draw();
 }
 
-/* 2. EL CANVAS (Tu imagen) -> Con Ajedrez */
-canvas {
-    max-width: 90%;
-    max-height: 80vh;
-    
-    /* Sombra para separar el canvas del fondo sólido */
-    box-shadow: 0 0 50px rgba(0,0,0,0.5); 
-    
-    /* --- PATRÓN DE AJEDREZ (Solo aquí) --- */
-    /* Esto simula la transparencia detrás de tus líneas */
-    background-color: #2a2a2a; 
-    background-image: 
-        linear-gradient(45deg, #333 25%, transparent 25%), 
-        linear-gradient(-45deg, #333 25%, transparent 25%), 
-        linear-gradient(45deg, transparent 75%, #333 75%), 
-        linear-gradient(-45deg, transparent 75%, #333 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+// 5. Lógica para el ojito (Show/Hide)
+if (showImageToggle) {
+    showImageToggle.addEventListener('change', draw);
 }
 
-/* =======================================================
-   1. MÓVIL VERTICAL (Portrait) -> APILADO
-   ======================================================= */
-@media (max-width: 768px) and (orientation: portrait) {
-    body {
-        overflow-y: auto; /* Scroll general */
-    }
-
-    .app-container {
-        flex-direction: column-reverse; /* Canvas arriba, Controles abajo */
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-top: 1px solid #444;
-        padding-bottom: 80px; /* Espacio extra para scroll */
-    }
-
-    .preview-area {
-        width: 100%;
-        height: 35vh; /* Ocupa el 35% de la altura */
-        min-height: 250px;
-        position: sticky; /* Se queda pegado arriba */
-        top: 0;
-        z-index: 100;
-        border-bottom: 1px solid #333;
-    }
+// ==========================================
+// 3. HELPERS VISUALES
+// ==========================================
+function flashInput(element) {
+    if (!element) return;
+    element.classList.add('highlight-change');
+    setTimeout(() => { element.classList.remove('highlight-change'); }, 500);
 }
 
-/* =======================================================
-   2. MÓVIL HORIZONTAL (Landscape) -> LADO A LADO
-   ======================================================= */
-@media (max-height: 500px) and (orientation: landscape) {
-    /* Quitamos el scroll del body para que scrollee solo el panel */
-    body {
-        overflow: hidden; 
-    }
+function highlightButton(clickedBtn) {
+    if (!clickedBtn) return;
+    const siblings = clickedBtn.parentElement.querySelectorAll('button');
+    siblings.forEach(btn => btn.classList.remove('active'));
+    clickedBtn.classList.add('active');
+}
 
-    .app-container {
-        flex-direction: row; /* Lado a lado */
+function getAspectRatio(inputValue) {
+    if (!inputValue) return 2.39;
+    let raw = inputValue.toString();
+    if (raw.includes(':')) {
+        const parts = raw.split(':');
+        return parts[1] != 0 ? parts[0] / parts[1] : 1.77;
     }
+    const val = parseFloat(raw);
+    return (isNaN(val) || val <= 0) ? 2.39 : val;
+}
 
-    /* BARRA LATERAL (Izquierda) */
-    .sidebar {
-        width: 45%; /* Ocupa casi la mitad */
-        height: 100vh; /* Altura completa */
-        overflow-y: auto; /* SCROLL INDEPENDIENTE AQUÍ */
-        border-right: 1px solid #333;
-        padding: 15px;
-        padding-bottom: 50px;
-    }
-
-    /* ÁREA DE PREVIEW (Derecha) */
-    .preview-area {
-        width: 55%; /* El resto del espacio */
-        height: 100vh; /* Altura completa */
-        padding: 10px;
-        background-color: #151515; /* Asegurar fondo gris */
-    }
-
-    /* Ajustar el canvas para que quepa en pantallas bajitas */
-    canvas {
-        max-height: 90vh; /* Que no se salga por alto */
-        max-width: 95%;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    
-    /* Hacer los botones un poco más compactos para ahorrar espacio */
-    .input-group {
-        margin-bottom: 15px;
-    }
-    h1 {
-        margin-bottom: 15px;
-        font-size: 1rem;
+// Función para apagar botones en un contenedor específico
+function clearActiveButtons(containerSelector) {
+    const container = document.querySelector(containerSelector);
+    if (container) {
+        const buttons = container.querySelectorAll('button');
+        buttons.forEach(btn => btn.classList.remove('active'));
     }
 }
 
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #1a1a1a; /* Gris oscuro estilo cine */
-    color: #eee;
-    height: 100vh;
-    overflow: hidden;
-}
+// ==========================================
+// 4. FUNCIÓN DRAW (CON TEXTO HUD)
+// ==========================================
+function draw() {
+    if (!inputs.w || !inputs.h) return;
 
-.app-container {
-    display: flex;
-    height: 100%;
-}
+    // A. LEER VALORES
+    const width = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
+    const height = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+    const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
 
-/* BARRA LATERAL */
-.sidebar {
-    width: 300px;
-    background-color: #252525;
-    padding: 20px;
-    border-right: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-}
+    let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
+    if (isNaN(scaleVal)) scaleVal = 100;
+    const scaleFactor = scaleVal / 100;
+    if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
-h1 { font-size: 1.2rem; margin-bottom: 30px; }
-h1 span { color: #007bff; }
+    let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
+    if (isNaN(opacityVal)) opacityVal = 100;
+    const opacity = opacityVal / 100;
+    if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
-.input-group { margin-bottom: 8px; }
-label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
-input {
-    width: 100%;
-    background: #333;
-    border: 1px solid #444;
-    color: white;
-    padding: 8px;
-    border-radius: 4px;
-}
+    let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
+    if (isNaN(rawThick)) rawThick = 2;
+    const mainThickness = Math.max(0, rawThick);
+    const mainOffset = mainThickness / 2;
+    const secThickness = mainThickness; 
+    let safeThickness = 0;
+    if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
 
-input, select {
-    width: 100%;
-    background: #333;
-    border: 1px solid #444;
-    color: white;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 14px; /* Opcional: ajustar tamaño de letra */
-}
+    // B. CANVAS
+    canvas.width = width;
+    canvas.height = height;
+    ctx.clearRect(0, 0, width, height);
+    const screenAspect = width / height;
 
-/* Para que las opciones agrupadas se vean bien */
-optgroup {
-    background: #222;
-    color: #888;
-    font-style: normal;
-}
-
-.btn-primary {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    margin-top: 10px;
-}
-.btn-primary:hover { background: #0056b3; }
-
-/* MONETIZACIÓN */
-.monetization { margin-top: auto; padding-top: 20px; border-top: 1px solid #333; }
-.coffee-btn {
-    display: block;
-    text-align: center;
-    background: #FFDD00;
-    color: black;
-    text-decoration: none;
-    padding: 10px;
-    border-radius: 5px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-.ad-placeholder {
-    background: #333;
-    height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #555;
-    font-size: 0.8rem;
-    border: 1px dashed #444;
-}
-
-/* ÁREA DE CANVAS */
-.preview-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-image: linear-gradient(45deg, #222 25%, transparent 25%), 
-                      linear-gradient(-45deg, #222 25%, transparent 25%), 
-                      linear-gradient(45deg, transparent 75%, #222 75%), 
-                      linear-gradient(-45deg, transparent 75%, #222 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    padding: 20px;
-}
-
-canvas {
-    max-width: 90%;
-    max-height: 80vh;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    background: transparent; /* Importante para que sea PNG transparente */
-}
-
-.presets { 
-    display: flex; gap: 5px; margin-bottom: 20px; 
-}
-.presets button { 
-    background: #444; color: #ccc; border: 1px solid #555; 
-    padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;
-}
-.presets button:hover { 
-    background: #007bff; /* Azul al pasar el mouse */
-    color: white;
-    border-color: #007bff; }
-
-/* Animación de "flash" para avisar que cambió el valor */
-@keyframes flash {
-    0% { background-color: #555; }
-    50% { background-color: #007bff; } /* Azul */
-    100% { background-color: #333; }
-}
-
-.highlight-change {
-    animation: flash 0.5s ease-out;
-}
-
-/* Estilo para los botones pequeños debajo del input */
-.presets-mini {
-    display: flex;
-    gap: 5px;       /* Espacio entre botones */
-    margin-top: 8px; /* Espacio con el input de arriba */
-    margin-bottom: 20px /* Espacio con el input de abajo */
-}
-
-
-.presets-mini button {
-    flex: 1;        /* Que ocupen todo el ancho disponible */
-    background: #444;
-    color: #ccc;
-    border: 1px solid #555;
-    padding: 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-}
-
-.presets-mini button:hover {
-    background: #007bff; /* Azul al pasar el mouse */
-    color: white;
-    border-color: #007bff;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Opcional: Una pequeña animación para cuando aparezca */
-#aspectGroup {
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Botón de Advanced (Gris y sutil) */
-.btn-advanced {
-    width: 100%;
-    background: transparent;
-    border: 1px solid #444;
-    color: #aaa;
-    padding: 10px;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 4px;
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-between; /* Para separar texto de la flecha */
-    align-items: center;
-    font-size: 0.9rem;
-    transition: background 0.2s;
-}
-
-.btn-advanced:hover {
-    background: #333;
-    color: white;
-}
-
-/* El contenedor de las opciones */
-.advanced-content {
-    background: #222;
-    border: 1px solid #333;
-    border-top: none; /* Para que parezca unido al botón */
-    padding: 15px;
-    border-radius: 0 0 5px 5px;
-    margin-bottom: 20px;
-}
-
-/* Asegúrate de tener la clase hidden (si no la tienes ya) */
-.hidden {
-    display: none !important;
-}
-
-
-/* Estado activo para los botones seleccionados */
-button.active {
-    background-color: #007bff !important; /* El !important asegura que se quede azul */
-    color: white !important;
-    border-color: #007bff !important;
-    box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); /* Un toque de profundidad */
-}
-
-/* Estilo para las filas de Safe Area */
-.checkbox-row {
-    display: flex;
-    justify-content: space-between; /* Separa el checkbox del número */
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-/* Ajuste para los checkbox */
-.checkbox-row input[type="checkbox"] {
-    width: auto; /* Que no ocupen todo el ancho */
-    margin: 0;
-    cursor: pointer;
-}
-
-/* Ajuste para los inputs de porcentaje pequeños */
-.checkbox-row input[type="number"] {
-    text-align: right;
-    padding: 5px;
-}
-
-/* 1. EL CONTENEDOR (La "mesa" de trabajo) */
-.preview-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    
-    /* Fondo Gris Oscuro Plano */
-    background-color: #151515; 
-    
-    padding: 20px;
-    overflow: hidden;
-}
-
-/* 1. EL ÁREA ALREDEDOR (La "Mesa") -> Sólida */
-.preview-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    
-    /* --- FONDO SÓLIDO --- */
-    background-color: #151515; /* Gris oscuro elegante */
-    background-image: none;    /* Aseguramos que NO haya ajedrez aquí */
-    /* -------------------- */
-    
-    padding: 20px;
-    overflow: hidden;
-}
-
-/* 2. EL CANVAS (Tu imagen) -> Con Ajedrez */
-canvas {
-    max-width: 90%;
-    max-height: 80vh;
-    
-    /* Sombra para separar el canvas del fondo sólido */
-    box-shadow: 0 0 50px rgba(0,0,0,0.5); 
-    
-    /* --- PATRÓN DE AJEDREZ (Solo aquí) --- */
-    /* Esto simula la transparencia detrás de tus líneas */
-    background-color: #2a2a2a; 
-    background-image: 
-        linear-gradient(45deg, #333 25%, transparent 25%), 
-        linear-gradient(-45deg, #333 25%, transparent 25%), 
-        linear-gradient(45deg, transparent 75%, #333 75%), 
-        linear-gradient(-45deg, transparent 75%, #333 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-}
-
-/* =======================================================
-   1. MÓVIL VERTICAL (Portrait) -> APILADO
-   ======================================================= */
-@media (max-width: 768px) and (orientation: portrait) {
-    body {
-        overflow-y: auto; /* Scroll general */
+    // C. DIBUJAR FOTO DE FONDO
+    const mostrarImagen = !showImageToggle || showImageToggle.checked;
+    if (userImage && mostrarImagen) {
+        try { ctx.drawImage(userImage, 0, 0, width, height); } catch (e) {}
     }
 
-    .app-container {
-        flex-direction: column-reverse; /* Canvas arriba, Controles abajo */
+    // D. GEOMETRÍA
+    let visibleW, visibleH;
+    if (targetAspect > screenAspect) {
+        visibleW = width; visibleH = width / targetAspect;
+    } else {
+        visibleH = height; visibleW = height * targetAspect;
+    }
+    visibleW = visibleW * scaleFactor;
+    visibleH = visibleH * scaleFactor;
+
+    const barHeight = (height - visibleH) / 2;
+    const barWidth = (width - visibleW) / 2;
+    const offsetX = barWidth;
+    const offsetY = barHeight;
+
+    // E. MATTE
+    ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+    ctx.fillRect(0, 0, width, offsetY); 
+    ctx.fillRect(0, height - offsetY, width, offsetY); 
+    ctx.fillRect(0, offsetY, offsetX, visibleH); 
+    ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
+
+    // F. FRAMELINE 1 (Principal)
+    if (mainThickness > 0) {
+        if (inputs.color) ctx.strokeStyle = inputs.color.value;
+        ctx.lineWidth = mainThickness; 
+        ctx.setLineDash([]); 
+        ctx.beginPath();
+        ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
+        ctx.stroke();
     }
 
-    .sidebar {
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-top: 1px solid #444;
-        padding-bottom: 80px; /* Espacio extra para scroll */
+    // G. FRAMELINE 2 (Secundario)
+    // Definimos variables para usarlas luego en el texto
+    let secX = 0, secY = 0, secW = 0, secH = 0;
+    let drawSec = false;
+
+    if (inputs.secOn && inputs.secOn.checked && secThickness > 0) {
+        drawSec = true;
+        const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
+        const fitInside = inputs.secFit && inputs.secFit.checked;
+
+        if (fitInside) {
+            const mainFrameAspect = visibleW / visibleH;
+            if (secAspect > mainFrameAspect) {
+                secW = visibleW; secH = visibleW / secAspect;
+            } else {
+                secH = visibleH; secW = visibleH * secAspect;
+            }
+        } else {
+            if (secAspect > screenAspect) {
+                secW = width; secH = width / secAspect;
+            } else {
+                secH = height; secW = height * secAspect;
+            }
+            secW = secW * scaleFactor;
+        }
+
+        secX = (width - secW) / 2;
+        secY = (height - secH) / 2;
+
+        if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
+        ctx.lineWidth = secThickness; 
+        ctx.setLineDash([10, 5]); 
+        ctx.beginPath();
+        ctx.rect(secX, secY, secW, secH);
+        ctx.stroke();
     }
 
-    .preview-area {
-        width: 100%;
-        height: 35vh; /* Ocupa el 35% de la altura */
-        min-height: 250px;
-        position: sticky; /* Se queda pegado arriba */
-        top: 0;
-        z-index: 100;
-        border-bottom: 1px solid #333;
+    // H. SAFE AREAS
+    if (safeThickness > 0) {
+        const drawSafe = (pct, dashed) => {
+            const p = pct / 100;
+            const sW = visibleW * p;
+            const sH = visibleH * p;
+            const sX = (width - sW) / 2;
+            const sY = (height - sH) / 2;
+            ctx.lineWidth = safeThickness;
+            if(inputs.color) ctx.strokeStyle = inputs.color.value;
+            ctx.setLineDash(dashed ? [5, 5] : []); 
+            ctx.beginPath();
+            ctx.rect(sX, sY, sW, sH);
+            ctx.stroke();
+        };
+        if (inputs.safeActionOn && inputs.safeActionOn.checked) 
+            drawSafe(parseFloat(inputs.safeActionVal.value)||93, false);
+        if (inputs.safeTitleOn && inputs.safeTitleOn.checked) 
+            drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
+    }
+
+    // I. DIBUJAR TEXTO (LABELS) - NUEVO BLOQUE
+    if (inputs.showLabels && inputs.showLabels.checked) {
+        // Configuración de fuente
+        const fontSize = Math.max(14, Math.round(width / 70)); // Tamaño dinámico según resolución
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        ctx.textBaseline = "top";
+
+        // 1. Texto Main Frameline
+        if (inputs.aspect && mainThickness > 0) {
+            const labelMain = inputs.aspect.value;
+            ctx.fillStyle = inputs.color.value;
+            // Dibujamos en la esquina superior izquierda, con un pequeño padding
+            ctx.fillText(labelMain, offsetX + 10, offsetY + 10);
+        }
+
+        // 2. Texto Secondary Frameline
+        if (drawSec && inputs.secAspect) {
+            const labelSec = inputs.secAspect.value;
+            ctx.fillStyle = inputs.secColor.value;
+            // Dibujamos en la esquina superior izquierda del cuadro secundario
+            ctx.fillText(labelSec, secX + 10, secY + 10);
+        }
     }
 }
 
-/* =======================================================
-   2. MÓVIL HORIZONTAL (Landscape) -> LADO A LADO
-   ======================================================= */
-@media (max-height: 500px) and (orientation: landscape) {
-    /* Quitamos el scroll del body para que scrollee solo el panel */
-    body {
-        overflow: hidden; 
-    }
+// ==========================================
+// 5. EVENTOS (CONEXIONES SEGURAS)
+// ==========================================
 
-    .app-container {
-        flex-direction: row; /* Lado a lado */
-    }
+// Conectar TODOS los inputs que existan
+Object.values(inputs).forEach(input => {
+    if (input) {
+        input.addEventListener('input', draw);
+        input.addEventListener('change', draw); // Importante para checkboxes y selects
+        
+        // Flechas teclado
+     if (input.type === 'text') {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    
+                    // 1. Calcular Matemática
+                    let val = getAspectRatio(input.value);
+                    val += (e.key === 'ArrowUp' ? 0.01 : -0.01);
+                    if (val < 0.01) val = 0.01;
+                    
+                    // 2. Asignar valor
+                    input.value = val.toFixed(2);
+                    
+                    // --- NUEVO: PARTE VISUAL QUE FALTABA ---
+                    
+                    // A. Si es el input principal de aspecto
+                    if (input === inputs.aspect) {
+                        // Cambiar menú a Custom
+                        if (menuAspecto) menuAspecto.value = 'custom';
 
-    /* BARRA LATERAL (Izquierda) */
-    .sidebar {
-        width: 45%; /* Ocupa casi la mitad */
-        height: 100vh; /* Altura completa */
-        overflow-y: auto; /* SCROLL INDEPENDIENTE AQUÍ */
-        border-right: 1px solid #333;
-        padding: 15px;
-        padding-bottom: 50px;
-    }
+                        // --- CAMBIO AQUÍ ---
+                        // En lugar de buscar en el grupo, buscamos en todo el documento
+                        // pero específicamente los botones de aspect ratio que estén activos.
+                        // (Asumiendo que solo hay unos botones con la función setAspect)
+                        const botonesActivos = document.querySelectorAll('.presets-mini button.active');
+                        
+                        botonesActivos.forEach(b => {
+                            // Verificación extra: solo apagar si NO es de opacidad o resolución
+                            // (O simplemente apagar todo si no te importa)
+                            b.classList.remove('active');
+                });
+                    }
+                    // ---------------------------------------
 
-    /* ÁREA DE PREVIEW (Derecha) */
-    .preview-area {
-        width: 55%; /* El resto del espacio */
-        height: 100vh; /* Altura completa */
-        padding: 10px;
-        background-color: #151515; /* Asegurar fondo gris */
+                    draw();
+                }
+            });
+        }
     }
+});
 
-    /* Ajustar el canvas para que quepa en pantallas bajitas */
-    canvas {
-        max-height: 90vh; /* Que no se salga por alto */
-        max-width: 95%;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    
-    /* Hacer los botones un poco más compactos para ahorrar espacio */
-    .input-group {
-        margin-bottom: 15px;
-    }
-    h1 {
-        margin-bottom: 15px;
-        font-size: 1rem;
-    }
+// ==========================================
+// LÓGICA DEL MENÚ DE RESOLUCIÓN
+// ==========================================
+if (menuResoluciones) {
+    menuResoluciones.addEventListener('change', () => {
+        const val = menuResoluciones.value;
+        
+        // Si elige custom o vacío, no hacemos nada con los números
+        if (val === 'custom' || val === '') return;
+
+        // 1. Poner valores en los inputs
+        const [nW, nH] = val.split(',');
+        if(inputs.w) inputs.w.value = nW;
+        if(inputs.h) inputs.h.value = nH;
+        
+        // 2. APAGAR BOTONES (LIMPIEZA)
+        // Buscamos la caja de botones por su ID nuevo
+        const contenedorRes = document.getElementById('resBtnContainer');
+        
+        if (contenedorRes) {
+            // Buscamos solo los botones azules ADENTRO de esa caja
+            const botonesPrendidos = contenedorRes.querySelectorAll('button.active');
+            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
+        }
+        
+        // 3. Redibujar
+        flashInput(inputs.w);
+        flashInput(inputs.h);
+        draw();
+    });
 }
 
-/* 1. BOTÓN DE DESCARGA (Download PNG) */
-#downloadBtn {
-    width: 100%;            /* Ocupa todo el ancho disponible */
-    margin-top: 20px;       /* Espacio normal arriba */
-    margin-bottom: 40px;    /* <--- ESPACIO GRANDE ABAJO (antes de la línea) */
-    display: block;
-    box-sizing: border-box; /* Asegura que el padding no aumente el tamaño */
+// ==========================================
+// LÓGICA DEL MENÚ DE ASPECTO (FRAMELINE)
+// ==========================================
+if (menuAspecto) {
+    menuAspecto.addEventListener('change', () => {
+        // 1. Mostrar caja oculta (si aplica)
+        if (cajaAspecto) cajaAspecto.classList.remove('hidden');
+        
+        const val = menuAspecto.value;
+        if (val === 'custom' || val === '') return;
+        
+        // 2. Poner el valor en el input
+        if(inputs.aspect) inputs.aspect.value = val;
+
+        // 3. APAGAR BOTONES (SOLUCIÓN INFALIBLE)
+        // Buscamos directamente el contenedor de los botones por su nuevo ID
+        const contenedorBotones = document.getElementById('aspectBtnContainer');
+        
+        if (contenedorBotones) {
+            const botonesPrendidos = contenedorBotones.querySelectorAll('button.active');
+            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
+        }
+        
+        // 4. Redibujar
+        flashInput(inputs.aspect);
+        draw();
+    });
 }
 
-/* 2. BOTÓN DE CAFÉ (Buy Me a Coffee) */
-.coffee-btn {
-    display: block;         /* Se comporta como bloque para llenar el ancho */
-    width: 100%;            /* Ocupa todo el ancho (Igual que Download) */
-    text-align: center;     /* Texto centrado */
-    box-sizing: border-box; /* Misma lógica de tamaño */
-    margin-bottom: 10px;
+// ==========================================
+// LÓGICA DEL MENÚ DE 2nd ASPECTO (NUEVO)
+// ==========================================
+if (menuSecAspect) {
+    menuSecAspect.addEventListener('change', () => {
+        const val = menuSecAspect.value;
+        
+        // Si es custom, no tocamos el input manual
+        if (val === 'custom') return;
+
+        // Actualizamos el input manual del segundo frame
+        if (inputs.secAspect) {
+            inputs.secAspect.value = val;
+            flashInput(inputs.secAspect);
+        }
+        
+        draw();
+    });
 }
 
-/* 3. LÍNEA SEPARADORA (Monetization) */
-/* Aseguramos que la línea se dibuje correctamente */
-.monetization {
-    border-top: 1px solid #444; /* La línea separadora */
-    padding-top: 20px;          /* Espacio entre la línea y el botón de café */
-    width: 100%;
+// SINCRONIZACIÓN INVERSA (Si escribes manual -> Menú a Custom)
+if (inputs.secAspect) {
+    inputs.secAspect.addEventListener('input', () => {
+        if (menuSecAspect) menuSecAspect.value = 'custom';
+        draw(); // Aseguramos que se redibuje al escribir
+    });
 }
+
+// ==========================================
+// SINCRONIZACIÓN MANUAL (CORREGIDA)
+// ==========================================
+
+// 1. Si cambias ANCHO (Width)
+if (inputs.w) {
+    inputs.w.addEventListener('input', () => {
+        // Cambiar menú a Custom
+        if (menuResoluciones) menuResoluciones.value = 'custom';
+        // Apagar botones azules de Resolución
+        clearActiveButtons('.presets'); 
+    });
+}
+
+// 2. Si cambias ALTO (Height)
+if (inputs.h) {
+    inputs.h.addEventListener('input', () => {
+        if (menuResoluciones) menuResoluciones.value = 'custom';
+        clearActiveButtons('.presets');
+    });
+}
+
+// --- SINCRONIZACIÓN MANUAL DE ASPECTO ---
+if (inputs.aspect) {
+    inputs.aspect.addEventListener('input', () => {
+        
+        // 1. Forzar el menú de arriba a "Custom"
+        if (menuAspecto) menuAspecto.value = 'custom';
+
+        // 2. APAGAR LOS BOTONES (Aquí está la solución)
+        const contenedorBotones = document.getElementById('aspectBtnContainer');
+        
+        if (contenedorBotones) {
+            // Buscamos cualquier botón azul dentro del contenedor
+            const botonesPrendidos = contenedorBotones.querySelectorAll('button.active');
+            
+            // Los apagamos todos
+            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
+        }
+    });
+}
+
+// 4. Si cambias OPACIDAD
+if (inputs.opacity) {
+    inputs.opacity.addEventListener('input', () => {
+        // Apagar botones azules de opacidad
+        // Asumiendo que el slider y los botones están en el mismo input-group o cerca
+        // Buscaremos el contenedor que tenga los botones de opacidad
+        const parent = inputs.opacity.parentElement;
+        if(parent) {
+             const btns = parent.querySelectorAll('.presets-mini button');
+             btns.forEach(b => b.classList.remove('active'));
+        }
+    });
+}
+
+
+// Toggles de UI
+if (btnAdvanced) {
+    btnAdvanced.addEventListener('click', () => {
+        groupAdvanced.classList.toggle('hidden');
+        const isHidden = groupAdvanced.classList.contains('hidden');
+        arrow.innerText = isHidden ? "▼" : "▲";
+        btnAdvanced.style.borderBottom = isHidden ? "1px solid #444" : "none";
+    });
+}
+if (inputs.secOn) {
+    inputs.secOn.addEventListener('change', () => {
+        if (inputs.secOn.checked) secFrameControls.classList.remove('hidden');
+        else secFrameControls.classList.add('hidden');
+        draw();
+    });
+}
+
+
+// ==========================================
+// 6. FUNCIONES GLOBALES (PRESETS)
+// ==========================================
+window.setPreset = function(w, h, btn) {
+    if(inputs.w) inputs.w.value = w;
+    if(inputs.h) inputs.h.value = h;
+    const key = `${w},${h}`;
+    if(menuResoluciones) {
+        menuResoluciones.value = key;
+        if(menuResoluciones.value !== key) menuResoluciones.value = 'custom';
+    }
+    flashInput(inputs.w); highlightButton(btn); draw();
+}
+
+window.setAspect = function(val, btn) {
+    if(cajaAspecto) cajaAspecto.classList.remove('hidden');
+    if(inputs.aspect) inputs.aspect.value = val;
+    if(menuAspecto) {
+        menuAspecto.value = val;
+        if(menuAspecto.value != val) menuAspecto.value = 'custom';
+    }
+    flashInput(inputs.aspect); highlightButton(btn); draw();
+}
+
+window.setOpacity = function(val, btn) {
+    if(inputs.opacity) inputs.opacity.value = val;
+    flashInput(inputs.opacity); highlightButton(btn); draw();
+}
+
+// ==========================================
+// 7. DESCARGA & INIT
+// ==========================================
+btnDownload.addEventListener('click', () => {
+    const w = inputs.w ? inputs.w.value : 1920;
+    const h = inputs.h ? inputs.h.value : 1080;
+    const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : '2.39';
+    const a = document.createElement('a');
+    a.download = `Frameline_${w}x${h}_${asp}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+});
+
+// Dibujo inicial
+draw();
