@@ -46,7 +46,8 @@ const inputs = {
     secOn: getEl('secFrameOn'),
     secAspect: getEl('secFrameAspect'),
     secColor: getEl('secFrameColor'),
-    secFit: getEl('secFrameFit') // <--- EL CULPABLE PROBABLE
+    secFit: getEl('secFrameFit'),
+    showLabels: getEl('showLabelsToggle') // NUEVO: Referencia al checkbox de etiquetas
 };
 
 // ==========================================
@@ -146,7 +147,7 @@ function clearActiveButtons(containerSelector) {
 }
 
 // ==========================================
-// 4. FUNCIÓN DRAW (CON GROSORES RELATIVOS)
+// 4. FUNCIÓN DRAW (CON TEXTO HUD)
 // ==========================================
 function draw() {
     if (!inputs.w || !inputs.h) return;
@@ -166,28 +167,19 @@ function draw() {
     const opacity = opacityVal / 100;
     if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
-    // --- CÁLCULO DE GROSORES RELATIVOS ---
-    
-    // 1. Grosor Principal (Master)
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
-    const mainThickness = Math.max(0, rawThick); // Permitimos 0 para ocultar
+    const mainThickness = Math.max(0, rawThick);
     const mainOffset = mainThickness / 2;
-
-    // 2. Grosor Secundario (Igual al principal, pero si el principal es 0, este también)
     const secThickness = mainThickness; 
-
-    // 3. Grosor Safe Areas (La mitad del principal, mínimo 1px, a menos que sea 0)
     let safeThickness = 0;
-    if (mainThickness > 0) {
-        safeThickness = Math.max(1, Math.round(mainThickness / 2));
-    }
-    // -------------------------------------
+    if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
 
     // B. CANVAS
     canvas.width = width;
     canvas.height = height;
     ctx.clearRect(0, 0, width, height);
+    const screenAspect = width / height;
 
     // C. DIBUJAR FOTO DE FONDO
     const mostrarImagen = !showImageToggle || showImageToggle.checked;
@@ -195,19 +187,13 @@ function draw() {
         try { ctx.drawImage(userImage, 0, 0, width, height); } catch (e) {}
     }
 
-    const screenAspect = width / height;
-
     // D. GEOMETRÍA
     let visibleW, visibleH;
-
     if (targetAspect > screenAspect) {
-        visibleW = width;
-        visibleH = width / targetAspect;
+        visibleW = width; visibleH = width / targetAspect;
     } else {
-        visibleH = height;
-        visibleW = height * targetAspect;
+        visibleH = height; visibleW = height * targetAspect;
     }
-
     visibleW = visibleW * scaleFactor;
     visibleH = visibleH * scaleFactor;
 
@@ -229,15 +215,18 @@ function draw() {
         ctx.lineWidth = mainThickness; 
         ctx.setLineDash([]); 
         ctx.beginPath();
-        // Usamos el offset para crecer hacia afuera
         ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
         ctx.stroke();
     }
 
-    // G. FRAMELINE 2 (Secundario) - HEREDA GROSOR
+    // G. FRAMELINE 2 (Secundario)
+    // Definimos variables para usarlas luego en el texto
+    let secX = 0, secY = 0, secW = 0, secH = 0;
+    let drawSec = false;
+
     if (inputs.secOn && inputs.secOn.checked && secThickness > 0) {
+        drawSec = true;
         const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
-        let secW, secH;
         const fitInside = inputs.secFit && inputs.secFit.checked;
 
         if (fitInside) {
@@ -256,21 +245,18 @@ function draw() {
             secW = secW * scaleFactor;
         }
 
-        const secX = (width - secW) / 2;
-        const secY = (height - secH) / 2;
+        secX = (width - secW) / 2;
+        secY = (height - secH) / 2;
 
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
-        
-        // USAMOS EL GROSOR CALCULADO
         ctx.lineWidth = secThickness; 
         ctx.setLineDash([10, 5]); 
-        
         ctx.beginPath();
         ctx.rect(secX, secY, secW, secH);
         ctx.stroke();
     }
 
-    // H. SAFE AREAS - HEREDAN LA MITAD DEL GROSOR
+    // H. SAFE AREAS
     if (safeThickness > 0) {
         const drawSafe = (pct, dashed) => {
             const p = pct / 100;
@@ -278,21 +264,41 @@ function draw() {
             const sH = visibleH * p;
             const sX = (width - sW) / 2;
             const sY = (height - sH) / 2;
-            
-            // USAMOS EL GROSOR DE SEGURIDAD
             ctx.lineWidth = safeThickness;
-            
             if(inputs.color) ctx.strokeStyle = inputs.color.value;
             ctx.setLineDash(dashed ? [5, 5] : []); 
             ctx.beginPath();
             ctx.rect(sX, sY, sW, sH);
             ctx.stroke();
         };
-
         if (inputs.safeActionOn && inputs.safeActionOn.checked) 
             drawSafe(parseFloat(inputs.safeActionVal.value)||93, false);
         if (inputs.safeTitleOn && inputs.safeTitleOn.checked) 
             drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
+    }
+
+    // I. DIBUJAR TEXTO (LABELS) - NUEVO BLOQUE
+    if (inputs.showLabels && inputs.showLabels.checked) {
+        // Configuración de fuente
+        const fontSize = Math.max(14, Math.round(width / 70)); // Tamaño dinámico según resolución
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        ctx.textBaseline = "top";
+
+        // 1. Texto Main Frameline
+        if (inputs.aspect && mainThickness > 0) {
+            const labelMain = inputs.aspect.value;
+            ctx.fillStyle = inputs.color.value;
+            // Dibujamos en la esquina superior izquierda, con un pequeño padding
+            ctx.fillText(labelMain, offsetX + 10, offsetY + 10);
+        }
+
+        // 2. Texto Secondary Frameline
+        if (drawSec && inputs.secAspect) {
+            const labelSec = inputs.secAspect.value;
+            ctx.fillStyle = inputs.secColor.value;
+            // Dibujamos en la esquina superior izquierda del cuadro secundario
+            ctx.fillText(labelSec, secX + 10, secY + 10);
+        }
     }
 }
 
