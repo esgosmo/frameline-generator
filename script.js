@@ -47,7 +47,10 @@ const inputs = {
     secAspect: getEl('secFrameAspect'),
     secColor: getEl('secFrameColor'),
     secFit: getEl('secFrameFit'),
-    showLabels: getEl('showLabelsToggle') // NUEVO: Referencia al checkbox de etiquetas
+    showLabels: getEl('showLabelsToggle'), // NUEVO: Referencia al checkbox de etiquetas
+    // NUEVO: Referencias a los radios
+    scaleFit: getEl('scaleFit'),
+    scaleFill: getEl('scaleFill')
 };
 
 // ==========================================
@@ -181,11 +184,46 @@ function draw() {
     ctx.clearRect(0, 0, width, height);
     const screenAspect = width / height;
 
-    // C. DIBUJAR FOTO DE FONDO
+  // --- DIBUJAR IMAGEN DE FONDO (CON LÓGICA FIT / FILL) ---
     const mostrarImagen = !showImageToggle || showImageToggle.checked;
+    
     if (userImage && mostrarImagen) {
-        try { ctx.drawImage(userImage, 0, 0, width, height); } catch (e) {}
+        try {
+            // 1. Detectar qué modo eligió el usuario
+            // Si el radio "Fill" está marcado, usamos modo 'max', si no, 'min'.
+            const isFill = inputs.scaleFill && inputs.scaleFill.checked;
+            
+            // 2. Calcular la proporción de escalado (Scale Ratio)
+            // Calculamos cuánto hay que estirar el ancho y el alto
+            const ratioW = width / userImage.width;
+            const ratioH = height / userImage.height;
+            
+            let renderRatio;
+
+            if (isFill) {
+                // FILL: Usamos el ratio MAYOR (Math.max)
+                // Esto hace que la imagen crezca hasta cubrir todo el hueco (recortando lo que sobre)
+                renderRatio = Math.max(ratioW, ratioH);
+            } else {
+                // FIT: Usamos el ratio MENOR (Math.min)
+                // Esto hace que la imagen se detenga en cuanto toque un borde (dejando negro lo demás)
+                renderRatio = Math.min(ratioW, ratioH);
+            }
+
+            // 3. Calcular nuevas dimensiones finales
+            const newW = userImage.width * renderRatio;
+            const newH = userImage.height * renderRatio;
+
+            // 4. Centrar la imagen matemáticamente
+            const posX = (width - newW) / 2;
+            const posY = (height - newH) / 2;
+
+            // 5. Dibujar
+            ctx.drawImage(userImage, posX, posY, newW, newH);
+
+        } catch (e) { console.error(e); }
     }
+    // -------------------------------------------------------
 
     // D. GEOMETRÍA
     let visibleW, visibleH;
