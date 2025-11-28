@@ -273,49 +273,48 @@
 
 <div id="imageOptionsPanel" class="hidden">
 
+<div style="display:flex; flex-direction:column; gap:10px; font-size:0.85rem; color:#ccc;">
+
     <!-- Opción 1 -->
-    <div style="
-        display: flex;
-        flex-wrap: wrap;
-        margin: 10px 0;
-        font-size: 0.85rem;
-        color: #ccc;
-        align-items: center;
-    ">
-        <label for="scaleFit" style="
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            cursor: pointer;
-        ">
-            <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" checked
-                style="margin:0; vertical-align:middle; cursor:pointer;">
-            <span style="margin-left:6px;">Scale to fit</span>
-        </label>
-    </div>
+    <label for="scaleFit" style="display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
+        <input type="radio" id="scaleFit" name="imgScaleMode" value="fit" checked
+            style="
+                appearance:none;
+                -webkit-appearance:none;
+                width:15px;
+                height:15px;
+                border:2px solid #ccc;
+                border-radius:50%;
+                margin:0;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                cursor:pointer;
+            ">
+        <span style="margin-left:6px;">Scale to fit</span>
+    </label>
 
     <!-- Opción 2 -->
-    <div style="
-        display: flex;
-        flex-wrap: wrap;
-        margin: 10px 0;
-        font-size: 0.85rem;
-        color: #ccc;
-        align-items: center;
-    ">
-        <label for="scaleFill" style="
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            cursor: pointer;
-        ">
-            <input type="radio" id="scaleFill" name="imgScaleMode" value="fill"
-                style="margin:0; vertical-align:middle; cursor:pointer;">
-            <span style="margin-left:6px;">Scale full w/ crop</span>
-        </label>
-    </div>
+    <label for="scaleFill" style="display:flex; align-items:center; cursor:pointer; white-space:nowrap;">
+        <input type="radio" id="scaleFill" name="imgScaleMode" value="fill"
+            style="
+                appearance:none;
+                -webkit-appearance:none;
+                width:15px;
+                height:15px;
+                border:2px solid #ccc;
+                border-radius:50%;
+                margin:0;
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                cursor:pointer;
+            ">
+        <span style="margin-left:6px;">Scale full w/ crop</span>
+    </label>
 
 </div>
+
 
 
     <div class="checkbox-row" style="margin-bottom: 5px;">
