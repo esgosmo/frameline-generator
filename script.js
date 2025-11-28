@@ -592,15 +592,36 @@ window.setOpacity = function(val, btn) {
 }
 
 // ==========================================
-// 7. DESCARGA & INIT
+// 7. DESCARGA INTELIGENTE (JPG vs PNG)
 // ==========================================
 btnDownload.addEventListener('click', () => {
-    const w = inputs.w ? inputs.w.value : 1920;
-    const h = inputs.h ? inputs.h.value : 1080;
-    const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : '2.39';
+    // 1. Obtener datos
+    const w = parseInt(inputs.w.value) || 1920;
+    const h = parseInt(inputs.h.value) || 1080;
+    // Limpiamos el nombre del aspecto (cambiamos : por -)
+    const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
+    
+    // 2. Detectar si estamos en "Modo Foto"
+    // (Si hay imagen cargada Y el ojito está activado)
+    const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
+
     const a = document.createElement('a');
-    a.download = `Frameline_${w}x${h}_${asp}.png`;
-    a.href = canvas.toDataURL('image/png');
+
+    if (hasPhoto) {
+        // --- CASO A: CON FOTO (JPG) ---
+        // Usamos JPG calidad 0.9 (90%). Pesa poco y se ve genial.
+        // Agregamos "_preview" al nombre para diferenciarlo.
+        a.href = canvas.toDataURL('image/jpeg', 0.9);
+        a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
+    } else {
+        // --- CASO B: SOLO LÍNEAS (PNG) ---
+        // Mantenemos PNG para la transparencia (Overlay).
+        // Nombre estándar.
+        a.href = canvas.toDataURL('image/png');
+        a.download = `frame_${w}x${h}_${asp}.png`;
+    }
+
+    // 3. Descargar sin preguntas (Warning eliminado)
     a.click();
 });
 
