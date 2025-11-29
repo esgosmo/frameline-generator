@@ -165,7 +165,7 @@ function autoAdjustThickness(width) {
     const w = parseInt(width);
     
     // Si la resolución es mayor a UHD (3840), subimos el grosor
-    if (w > 3840) {
+    if (w > 3500) {
         inputs.thickness.value = 6; // 6px se ve muy bien en 6K/8K
     } else {
         inputs.thickness.value = 2; // 2px es estándar para HD/2K
