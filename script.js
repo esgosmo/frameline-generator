@@ -59,6 +59,7 @@ const inputs = {
 
 // 1. Variable Global (Tiene que estar afuera de las funciones)
 let userImage = null;
+let lastThickness = 2;
 
 // 2. Referencias al HTML
 const imageLoader = document.getElementById('imageLoader');
@@ -158,22 +159,33 @@ function clearActiveButtons(containerSelector) {
     }
 }
 
-// --- FUNCIÓN DE GROSOR ADAPTATIVO ---
+// --- FUNCIÓN DE GROSOR ADAPTATIVO (INTELIGENTE) ---
 function autoAdjustThickness(width) {
     if (!inputs.thickness) return;
     
     const w = parseInt(width);
     
-    // Si la resolución es mayor a UHD (3840), subimos el grosor
-    if (w > 3500) {
-        inputs.thickness.value = 6; // 6px se ve muy bien en 6K/8K
+    // 1. Calculamos cuál DEBERÍA ser el grosor ideal
+    const idealThickness = (w > 3500) ? 6 : 2; // 6px para 4K+, 2px para HD
+    
+    // 2. Revisamos el estado actual
+    const currentVal = parseInt(inputs.thickness.value) || 0;
+
+    if (currentVal === 0) {
+        // CASO A: ESTÁ APAGADO (OFF)
+        // No tocamos el input (lo dejamos en 0 para que siga invisible).
+        // Solo actualizamos la memoria, para que si le das "ON", aparezca con el grosor correcto.
+        lastThickness = idealThickness;
     } else {
-        inputs.thickness.value = 2; // 2px es estándar para HD/2K
+        // CASO B: ESTÁ PRENDIDO (ON)
+        // Actualizamos el input directamente para que se vea el cambio.
+        inputs.thickness.value = idealThickness;
+        lastThickness = idealThickness;
     }
 }
 
 // ==========================================
-// 4. FUNCIÓN DRAW (CON TEXTO HUD)
+// 4. FUNCIÓN DRAW 
 // ==========================================
 function draw() {
     if (!inputs.w || !inputs.h) return;
@@ -691,7 +703,6 @@ btnDownload.addEventListener('click', () => {
 // ==========================================
 const quickFrameBtn = document.getElementById('quickFrameBtn');
 const quickFrameText = document.getElementById('quickFrameText');
-let lastThickness = 4; // Memoria para guardar el grosor
 
 if (quickFrameBtn && inputs.thickness) {
     
