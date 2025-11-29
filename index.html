@@ -132,8 +132,17 @@
                 
   <div class="input-group">
     <label>Frameline</label>
+
+        <div id="quickFrameBtn" 
+             style="cursor: pointer; font-size: 0.9rem; color: #007bff; display: flex; align-items: center; user-select: none;"
+             title="Show/Hide Frameline">
+            <span style="margin-right: 4px;">⍉</span> 
+            <span id="quickFrameText">On</span>
+        </div>
+    </div>
+
+      
     <select id="aspectSelect">
-        
         <option value="custom">Custom / Manual</option>
         <optgroup label="Cinema">
             <option value="2.39" selected>2.39:1 (Anamorphic / Scope)</option>
