@@ -248,18 +248,31 @@ function draw() {
     }
     // -------------------------------------------------------
 
-    // D. GEOMETRÍA
+   // D. CÁLCULO DE GEOMETRÍA (Matemática Pixel-Perfect)
     let visibleW, visibleH;
-    if (targetAspect > screenAspect) {
-        visibleW = width; visibleH = width / targetAspect;
-    } else {
-        visibleH = height; visibleW = height * targetAspect;
-    }
-    visibleW = visibleW * scaleFactor;
-    visibleH = visibleH * scaleFactor;
 
-    const barHeight = (height - visibleH) / 2;
-    const barWidth = (width - visibleW) / 2;
+    // 1. Calcular tamaño base
+    if (targetAspect > screenAspect) {
+        visibleW = width;
+        visibleH = width / targetAspect;
+    } else {
+        visibleH = height;
+        visibleW = height * targetAspect;
+    }
+
+    // 2. Aplicar Escala y REDONDEAR (Vital para evitar bordes borrosos)
+    // Math.round fuerza al pixel entero más cercano
+    visibleW = Math.round(visibleW * scaleFactor);
+    visibleH = Math.round(visibleH * scaleFactor);
+
+    // 3. Asegurar que sean números pares (Opcional, ayuda al centrado perfecto)
+    if (visibleW % 2 !== 0) visibleW--;
+    if (visibleH % 2 !== 0) visibleH--;
+
+    // 4. Calcular Matte (Barras) con enteros
+    // Math.floor asegura que no queden medios píxeles sueltos
+    const barHeight = Math.floor((height - visibleH) / 2);
+    const barWidth = Math.floor((width - visibleW) / 2);
     const offsetX = barWidth;
     const offsetY = barHeight;
 
@@ -276,6 +289,10 @@ function draw() {
         ctx.lineWidth = mainThickness; 
         ctx.setLineDash([]); 
         ctx.beginPath();
+        // TRUCO DE NITIDEZ: 
+        // Si el grosor es impar (1, 3, 5...), desplazamos 0.5px para que caiga en el centro del pixel.
+        // Si es par (2, 4...), no desplazamos.
+        const sharpOffset = (mainThickness % 2 !== 0) ? 0.5 : 0;
         ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
         ctx.stroke();
     }
@@ -579,6 +596,26 @@ if (inputs.secOn) {
         if (inputs.secOn.checked) secFrameControls.classList.remove('hidden');
         else secFrameControls.classList.add('hidden');
         draw();
+    });
+}
+
+// ==========================================
+// LÓGICA BOTÓN INFO / FEEDBACK
+// ==========================================
+const btnInfo = document.getElementById('infoBtn');
+const panelInfo = document.getElementById('infoPanel');
+const arrowInfo = document.getElementById('infoArrow');
+
+if (btnInfo) {
+    btnInfo.addEventListener('click', () => {
+        panelInfo.classList.toggle('hidden');
+        
+        // Cambiar flechita y borde
+        const isHidden = panelInfo.classList.contains('hidden');
+        arrowInfo.innerText = isHidden ? "▼" : "▲";
+        
+        // Truco visual: Si está abierto, quitamos el borde de abajo del botón para que se una al panel
+        btnInfo.style.borderBottom = isHidden ? "1px solid #444" : "none";
     });
 }
 
