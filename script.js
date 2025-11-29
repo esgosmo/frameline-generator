@@ -646,7 +646,9 @@ window.setPreset = function(w, h, btn) {
         menuResoluciones.value = key;
         if(menuResoluciones.value !== key) menuResoluciones.value = 'custom';
     }
-    flashInput(inputs.w); highlightButton(btn); draw();
+    flashInput(inputs.w); 
+    flashInput(inputs.h);
+    highlightButton(btn); draw();
 }
 
 window.setAspect = function(val, btn) {
