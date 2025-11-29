@@ -649,5 +649,55 @@ btnDownload.addEventListener('click', () => {
     a.click();
 });
 
+// ==========================================
+// LOGICA DE VISIBILIDAD RÁPIDA (QUICK TOGGLE)
+// ==========================================
+const quickFrameBtn = document.getElementById('quickFrameBtn');
+const quickFrameText = document.getElementById('quickFrameText');
+let lastThickness = 4; // Memoria para guardar el grosor
+
+if (quickFrameBtn && inputs.thickness) {
+    
+    // Función para actualizar el estado visual del botón
+    function updateQuickBtnState() {
+        const currentThick = parseInt(inputs.thickness.value) || 0;
+        if (currentThick > 0) {
+            // Está visible
+            quickFrameBtn.style.color = "#007bff"; // Azul (Activo)
+            quickFrameBtn.querySelector('span').innerText = "⍉";
+            quickFrameText.innerText = "On";
+            lastThickness = currentThick; // Guardamos el valor
+        } else {
+            // Está oculto
+            quickFrameBtn.style.color = "#666"; // Gris (Apagado)
+            quickFrameBtn.querySelector('span').innerText = "⍉";
+            quickFrameText.innerText = "Off";
+        }
+    }
+
+    // Evento Click
+    quickFrameBtn.addEventListener('click', () => {
+        const currentThick = parseInt(inputs.thickness.value) || 0;
+
+        if (currentThick > 0) {
+            // APAGAR
+            lastThickness = currentThick;
+            inputs.thickness.value = 0;
+        } else {
+            // PRENDER (Restaurar valor anterior o usar 2 por defecto)
+            inputs.thickness.value = lastThickness > 0 ? lastThickness : 2;
+        }
+        
+        updateQuickBtnState();
+        draw();
+    });
+
+    // Sincronización: Si cambias el grosor en Advanced, actualizamos este botón también
+    inputs.thickness.addEventListener('input', updateQuickBtnState);
+    
+    // Inicializar estado visual al cargar
+    updateQuickBtnState();
+}
+
 // Dibujo inicial
 draw();
