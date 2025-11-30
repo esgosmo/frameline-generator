@@ -27,7 +27,7 @@ body {
     overflow-y: auto;
 }
 
-h1 { font-size: 1.2rem; margin-bottom: 30px; }
+h1 { font-size: 1.3rem; margin-bottom: 30px; }
 h1 span { color: #007bff; }
 
 .input-group { margin-bottom: 8px; }
