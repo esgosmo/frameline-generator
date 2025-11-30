@@ -92,7 +92,16 @@ if (imageLoader) {
                 autoAdjustThickness(img.width);
                 // --------------
                 if(menuResoluciones) menuResoluciones.value = 'custom';
+
+                 // --- SOLUCIÓN INFALIBLE: APAGAR BOTONES MANUALMENTE ---
+                // Buscamos la caja de botones por su ID
+                const cajaBotones = document.getElementById('resBtnContainer');
                 
+                if (cajaBotones) {
+                    // Buscamos cualquier botón azul ahí adentro y lo apagamos
+                    const botonesAzules = cajaBotones.querySelectorAll('button.active');
+                    botonesAzules.forEach(btn => btn.classList.remove('active'));
+                }
 
                 // Redibujamos para que aparezca
                 draw();
