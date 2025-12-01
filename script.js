@@ -705,6 +705,15 @@ btnDownload.addEventListener('click', () => {
         a.download = `Frameline_${w}x${h}_${asp}.png`;
     }
 
+    // --- AGREGAR ESTO PARA AVISAR A GOOGLE ---
+    if (typeof gtag === 'function') {
+        gtag('event', 'download_png', {
+            'event_category': 'Engagement',
+            'event_label': `Resolution: ${w}x${h}` // Le enviamos qué resolución bajaron
+        });
+    }
+    // ----------------------------------------
+
     // 3. Descargar sin preguntas (Warning eliminado)
     a.click();
 });
@@ -760,3 +769,17 @@ if (quickFrameBtn && inputs.thickness) {
 
 // Dibujo inicial
 draw();
+
+// RASTREO DE DONACIONES
+const donationBtns = document.querySelectorAll('.coffee-btn, .paypal-btn');
+
+donationBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (typeof gtag === 'function') {
+            gtag('event', 'click_donation', {
+                'event_category': 'Monetization',
+                'event_label': btn.innerText // Dirá si fue PayPal o Coffee
+            });
+        }
+    });
+});
