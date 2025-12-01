@@ -429,3 +429,13 @@ canvas {
     background-color: #005ea6; /* Azul más oscuro al pasar el mouse */
     color: #fff;
 }
+
+/* FORZAR SLIDERS AL ANCHO TOTAL */
+input[type="range"] {
+    width: 100% !important;       /* Obligatorio llenar el espacio */
+    max-width: none !important;   /* Quitar límites de ancho */
+    display: block !important;    /* Comportamiento de bloque */
+    margin: 10px 0 !important;    /* Espacio vertical asegurado */
+    padding: 0 !important;        /* Sin relleno interno */
+    box-sizing: border-box !important;
+}
