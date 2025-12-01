@@ -21,12 +21,15 @@
     <div class="input-group">
         <label>Canvas / Resolution</label>
         <select id="resolutionSelect">
+
             <option value="custom">Custom / Manual</option>
             <optgroup label="Broadcast & Web">
                 <option value="1920,1080" selected>HD (1920 x 1080)</option>
                 <option value="3840,2160">UHD (3840 x 2160)</option>
                 <option value="1280,720">HD 720p (1280 x 720)</option>
             </optgroup>
+
+
             <optgroup label="Cinema (DCI)">
                 <option value="2048,1080">DCI 2K FF (2048 x 1080)</option>
                 <option value="1998,1080">DCI 2K Flat (1998 x 1080)</option>
@@ -40,7 +43,8 @@
                 <option value="1080,1350">Portrait (4:5)</option>
                 <option value="1080,1080">Square (1:1)</option>
             </optgroup>
-                 <optgroup label="Camera">
+
+            <optgroup label="Camera">
     <option value="Arri_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
         <span>▼ </span>Arri
     </option>
@@ -109,7 +113,8 @@
     <option value="4096,2160">Pocket 4K DCI</option>
 
 </optgroup>
-            
+
+
         </select>
     </div>
 
@@ -117,7 +122,7 @@
                     <button onclick="setPreset(1920, 1080, this)">HD</button>
                     <button onclick="setPreset(3840, 2160, this)">UHD</button>
                     <button onclick="setPreset(1998, 1080, this)">DCI 2K Flat</button>
-         </div>    
+            </div>    
 
     <div id="dimensionsGroup"> 
          <div class="input-group">
@@ -131,9 +136,9 @@
 </div>
                 
   <div class="input-group">
-         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-    <label>Frameline</label>
-
+   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <label style="margin: 0;">Frameline</label>
+        
         <div id="quickFrameBtn" 
              style="cursor: pointer; font-size: 0.9rem; color: #007bff; display: flex; align-items: center; user-select: none;"
              title="Show/Hide Frameline">
@@ -142,8 +147,7 @@
         </div>
     </div>
 
-      
-    <select id="aspectSelect">
+    <select id="aspectSelect">    
         <option value="custom">Custom / Manual</option>
         <optgroup label="Cinema">
             <option value="2.39" selected>2.39:1 (Anamorphic / Scope)</option>
@@ -153,16 +157,19 @@
             <option value="1.66">1.66:1 (European Flat)</option>
             <option value="1.37">1.37:1 (Academy Ratio)</option>
         </optgroup>
+
         <optgroup label="TV & Video">
             <option value="16:9">1.78:1 (16:9 HDTV)</option>
             <option value="4:3">1.33:1 (4:3 SDTV)</option>
         </optgroup>
+
         <optgroup label="Social Media">
             <option value="1.00">1:1 (Square)</option>
             <option value="4:5">4:5 (Portrait)</option>
             <option value="9:16">9:16 (Vertical)</option>
         </optgroup>
-        <optgroup label="Camera Sensor Modes">
+
+      <optgroup label="Camera Sensor Modes">
     
     <option value="Arri_Ratio_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
         <span>▼ </span>Arri Sensor Modes
@@ -212,7 +219,7 @@
     <option value="2.76">Ultra Panavision 70 (2.76:1)</option>
 
 </optgroup>
-        
+
     </select>
 </div>
 
@@ -331,7 +338,8 @@
             <option value="4:3">1.33:1 (4:3 SDTV)</option>
             <option value="14:9">1.55 (14:9 Commercial)</option>
         </optgroup>
-<optgroup label="Camera Sensor Modes">
+
+  <optgroup label="Camera Sensor Modes">
     
     <option value="Arri_Ratio_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
         <span>▼ </span>Arri Sensor Modes
@@ -381,7 +389,7 @@
     <option value="2.76">Ultra Panavision 70 (2.76:1)</option>
 
 </optgroup>
-    
+
     </select>
 
     <label style="display:block; margin-top: 10px; margin-bottom: 5px; font-size: 0.85rem; color: #888;">
@@ -570,8 +578,38 @@
 
             <button id="downloadBtn" class="btn-primary">Download Frameline</button>
 
+            <button id="infoBtn" class="btn-advanced" style="margin-top: 30px; margin-bottom: 5px; border-bottom: 1px solid #444;">
+    ⦿ Info & feedback <span id="infoArrow">▼</span>
+</button>
+
+<div id="infoPanel" class="hidden" style="
+    background: #222; 
+    padding: 15px; 
+    border-radius: 0 0 5px 5px; 
+    font-size: 0.85rem; 
+    color: #ccc; 
+    line-height: 1.5; 
+    border: 1px solid #444; 
+    border-top: none; 
+    margin-bottom: 30px;
+">
+    <p style="margin-top: 0; margin-bottom: 12px;">
+        <strong>Frameline Tool</strong><br>
+        Create custom framelines for any NLE. Download transparent PNGs directly to your timeline, or test the look with your own footage first.
+    </p> 
+
+    <p style="margin-bottom: 0;">
+        <strong>Feedback</strong><br>
+        Missing an aspect ratio or resolution?<br> Found a bug? 
+        <br>
+        Please send me 
+        <a href="mailto:hola@frameline-generator.com" style="color: #007bff; text-decoration: none;">an email</a>.
+    </p>
+</div>
+
             <div class="monetization">
-                <a href="#" class="coffee-btn">☕ Buy me a Coffee</a>
+                <a href="https://www.buymeacoffee.com/framelinegenerator" target="_blank" class="coffee-btn">☕ Buy me a Coffee</a>
+                <a href="https://www.paypal.com/donate?business=julianjaquez@gmail.com&item_name=framelinegenerator&currency_code=USD" target="_blank" class="paypal-btn">❤︎ Donate via PayPal</a>
        <!-- <div class="ad-placeholder">Google Ads Space</div> -->
             </div>
         </aside>
