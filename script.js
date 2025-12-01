@@ -378,27 +378,46 @@ function draw() {
     }
 
     // I. DIBUJAR TEXTO (LABELS) - NUEVO BLOQUE
+    // Configuramos la fuente una sola vez
+    const fontSize = Math.max(14, Math.round(width / 70));
+    ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+    ctx.textBaseline = "top";
+    
+ // 1. ASPECT RATIO LABELS (Izquierda)
     if (inputs.showLabels && inputs.showLabels.checked) {
-        // Configuración de fuente
-        const fontSize = Math.max(14, Math.round(width / 70)); // Tamaño dinámico según resolución
-        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-        ctx.textBaseline = "top";
+        ctx.textAlign = "left"; // Alinear a la izquierda
 
-        // 1. Texto Main Frameline
         if (inputs.aspect && mainThickness > 0) {
-            const labelMain = inputs.aspect.value;
             ctx.fillStyle = inputs.color.value;
-            // Dibujamos en la esquina superior izquierda, con un pequeño padding
-            ctx.fillText(labelMain, offsetX + 10, offsetY + 10);
+            ctx.fillText(inputs.aspect.value, offsetX + 10, offsetY + 10);
+        }
+        if (drawSec && inputs.secAspect) {
+            ctx.fillStyle = inputs.secColor.value;
+            ctx.fillText(inputs.secAspect.value, secX + 10, secY + 10);
+        }
+    }
+
+    // 2. RESOLUTION LABELS (Derecha) - NUEVO
+    if (inputs.showResLabels && inputs.showResLabels.checked) {
+        ctx.textAlign = "right"; // Alinear a la derecha (Esquina opuesta)
+
+        // Resolución del Frame Principal
+        if (mainThickness > 0) {
+            const labelRes = `${visibleW} x ${visibleH}`;
+            ctx.fillStyle = inputs.color.value;
+            // Dibujamos en (Borde Derecho - 10px)
+            ctx.fillText(labelRes, offsetX + visibleW - 10, offsetY + 10);
         }
 
-        // 2. Texto Secondary Frameline
-        if (drawSec && inputs.secAspect) {
-            const labelSec = inputs.secAspect.value;
+ // Resolución del Frame Secundario
+        if (drawSec) {
+            const labelSecRes = `${Math.round(secW)} x ${Math.round(secH)}`;
             ctx.fillStyle = inputs.secColor.value;
-            // Dibujamos en la esquina superior izquierda del cuadro secundario
-            ctx.fillText(labelSec, secX + 10, secY + 10);
+            ctx.fillText(labelSecRes, secX + secW - 10, secY + 10);
         }
+        
+        // Restaurar alineación por si acaso
+        ctx.textAlign = "left"; 
     }
 }
 
