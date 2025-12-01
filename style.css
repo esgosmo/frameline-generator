@@ -79,7 +79,7 @@ optgroup {
     background: #FFDD00;
     color: black;
     text-decoration: none;
-    padding: 10px;
+    padding: 3px;
     border-radius: 5px;
     font-weight: bold;
     margin-bottom: 10px;
@@ -405,4 +405,27 @@ canvas {
     border-top: 1px solid #444; /* La línea separadora */
     padding-top: 20px;          /* Espacio entre la línea y el botón de café */
     width: 100%;
+}
+
+/* BOTÓN PAYPAL (Estilo Donate) */
+.paypal-btn {
+    display: block;           /* Ocupa todo el ancho disponible */
+    width: 100%;
+    background-color: #0070ba; /* Azul oficial de PayPal */
+    color: white;
+    text-align: center;
+    padding: 5px 20px;       /* Mismo relleno que el botón de café */
+    border-radius: 5px;       /* Mismos bordes redondeados */
+    text-decoration: none;    /* Sin subrayado */
+    font-weight: bold;
+    font-size: 1rem;          /* Tamaño de letra legible */
+    margin-top: 10px;         /* Separación con el elemento de arriba */
+    transition: background-color 0.3s ease;
+    border: 1px solid #005ea6; /* Borde sutil */
+    box-sizing: border-box;
+}
+
+.paypal-btn:hover {
+    background-color: #005ea6; /* Azul más oscuro al pasar el mouse */
+    color: #fff;
 }
