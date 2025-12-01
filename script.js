@@ -48,6 +48,7 @@ const inputs = {
     secColor: getEl('secFrameColor'),
     secFit: getEl('secFrameFit'),
     showLabels: getEl('showLabelsToggle'), // NUEVO: Referencia al checkbox de etiquetas
+    showResLabels: getEl('showResLabelsToggle'),
     // NUEVO: Referencias a los radios
     scaleFit: getEl('scaleFit'),
     scaleFill: getEl('scaleFill')
