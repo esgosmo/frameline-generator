@@ -92,8 +92,8 @@ if (imageLoader) {
                 autoAdjustThickness(img.width);
                 // --------------
                 if(menuResoluciones) menuResoluciones.value = 'custom';
-
-                 // --- SOLUCIÓN INFALIBLE: APAGAR BOTONES MANUALMENTE ---
+                
+           // --- SOLUCIÓN INFALIBLE: APAGAR BOTONES MANUALMENTE ---
                 // Buscamos la caja de botones por su ID
                 const cajaBotones = document.getElementById('resBtnContainer');
                 
