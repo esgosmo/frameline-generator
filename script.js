@@ -381,47 +381,94 @@ function draw() {
             drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
     }
 
-    // I. DIBUJAR TEXTO (LABELS) - NUEVO BLOQUE
-    // Configuramos la fuente una sola vez
-    const fontSize = Math.max(14, Math.round(width / 70));
-    ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-    ctx.textBaseline = "top";
+ // ===============================================
+    // I. LABELS (HUD INTELIGENTE: MAIN VS SECONDARY)
+    // ===============================================
     
- // 1. ASPECT RATIO LABELS (Izquierda)
-    if (inputs.showLabels && inputs.showLabels.checked) {
-        ctx.textAlign = "left"; // Alinear a la izquierda
+    const showAspect = inputs.showLabels && inputs.showLabels.checked;
+    const showRes = inputs.showResLabels && inputs.showResLabels.checked;
 
-        if (inputs.aspect && mainThickness > 0) {
+    if (showAspect || showRes) {
+        // 1. Configuración de Fuente
+        const fontSize = Math.max(12, Math.round(width / 80)); 
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        ctx.textBaseline = "top";
+        const padding = 10; 
+        const lineHeight = fontSize + 6; 
+
+        // --- A. DIBUJAR MAIN FRAMELINE TEXT ---
+        // Este siempre manda y se queda fijo arriba
+        if (mainThickness > 0) {
             ctx.fillStyle = inputs.color.value;
-            ctx.fillText(inputs.aspect.value, offsetX + 10, offsetY + 10);
+            const txtAsp = inputs.aspect ? inputs.aspect.value : "";
+            const txtRes = `${visibleW} x ${visibleH}`;
+            
+            // Check colisión horizontal (Aspecto vs Resolución en la misma línea)
+            const wAsp = ctx.measureText(txtAsp).width;
+            const wRes = ctx.measureText(txtRes).width;
+            const isTightHoriz = (wAsp + wRes + (padding * 4)) > visibleW;
+
+            // 1. Aspecto Main
+            if (showAspect) {
+                ctx.textAlign = "left";
+                ctx.fillText(txtAsp, offsetX + padding, offsetY + padding);
+            }
+            // 2. Resolución Main
+            if (showRes) {
+                if (isTightHoriz && showAspect) {
+                    ctx.textAlign = "left";
+                    ctx.fillText(txtRes, offsetX + padding, offsetY + padding + lineHeight);
+                } else {
+                    ctx.textAlign = showAspect ? "right" : "left";
+                    const posX = showAspect ? (offsetX + visibleW - padding) : (offsetX + padding);
+                    ctx.fillText(txtRes, posX, offsetY + padding);
+                }
+            }
         }
+
+        // --- B. DIBUJAR SECONDARY FRAMELINE TEXT ---
         if (drawSec && inputs.secAspect) {
             ctx.fillStyle = inputs.secColor.value;
-            ctx.fillText(inputs.secAspect.value, secX + 10, secY + 10);
-        }
-    }
 
- // 2. RESOLUTION LABELS (Derecha) - NUEVO
-    if (inputs.showResLabels && inputs.showResLabels.checked) {
-        ctx.textAlign = "right"; // Alinear a la derecha (Esquina opuesta)
+            const txtSecAsp = inputs.secAspect.value;
+            const txtSecRes = `${Math.round(secW)} x ${Math.round(secH)}`;
 
-        // Resolución del Frame Principal
-        if (mainThickness > 0) {
-            const labelRes = `${visibleW} x ${visibleH}`;
-            ctx.fillStyle = inputs.color.value;
-            // Dibujamos en (Borde Derecho - 10px)
-            ctx.fillText(labelRes, offsetX + visibleW - 10, offsetY + 10);
-        }
+            // --- LÓGICA DE ANTICOLISIÓN VERTICAL (Main vs Secondary) ---
+            // Calculamos dónde empezaría el texto secundario normalmente
+            let textY = secY + padding;
 
- // Resolución del Frame Secundario
-        if (drawSec) {
-            const labelSecRes = `${Math.round(secW)} x ${Math.round(secH)}`;
-            ctx.fillStyle = inputs.secColor.value;
-            ctx.fillText(labelSecRes, secX + secW - 10, secY + 10);
+            // ¿Está el borde secundario muy pegado al borde principal?
+            // Si la distancia vertical es menor a 2 líneas de texto, empujamos el texto secundario
+            const verticalGap = Math.abs(offsetY - secY);
+            if (verticalGap < (lineHeight * 1.5)) {
+                textY += lineHeight; // Lo bajamos un renglón para que no choque
+            }
+            // -----------------------------------------------------------
+
+            // Check colisión horizontal interna
+            const wSecAsp = ctx.measureText(txtSecAsp).width;
+            const wSecRes = ctx.measureText(txtSecRes).width;
+            const isSecTight = (wSecAsp + wSecRes + (padding * 4)) > secW;
+
+            // 1. Aspecto Secundario
+            if (showAspect) {
+                ctx.textAlign = "left";
+                ctx.fillText(txtSecAsp, secX + padding, textY);
+            }
+
+            // 2. Resolución Secundaria
+            if (showRes) {
+                if (isSecTight && showAspect) {
+                    ctx.textAlign = "left";
+                    // Si ya está apretado horizontalmente, bajamos otro renglón más
+                    ctx.fillText(txtSecRes, secX + padding, textY + lineHeight);
+                } else {
+                    ctx.textAlign = showAspect ? "right" : "left";
+                    const posX = showAspect ? (secX + secW - padding) : (secX + padding);
+                    ctx.fillText(txtSecRes, posX, textY);
+                }
+            }
         }
-        
-        // Restaurar alineación por si acaso
-        ctx.textAlign = "left"; 
     }
 }
 
