@@ -794,6 +794,109 @@ if (quickFrameBtn && inputs.thickness) {
 // Dibujo inicial
 draw();
 
+// ==========================================
+// LÓGICA DE RESET TOTAL (CORREGIDA)
+// ==========================================
+const resetBtn = document.getElementById('resetAllBtn');
+
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      //  if(!confirm("Reset all settings to default?")) return;
+
+        // 1. Restaurar Valores Numéricos
+        if(inputs.w) inputs.w.value = 1920;
+        if(inputs.h) inputs.h.value = 1080;
+        if(inputs.aspect) inputs.aspect.value = 2.39;
+        
+        if(inputs.opacity) inputs.opacity.value = 0;
+        if(textoOpacidad) textoOpacidad.innerText = "100%";
+        if(inputs.scale) inputs.scale.value = 100;
+        if(textoEscala) textoEscala.innerText = "100%";
+
+        // A. Color Principal (Verde)
+        if(inputs.color) inputs.color.value = "#00ff00";
+
+        if(inputs.thickness) inputs.thickness.value = 2;
+
+        // C. Color Secundario (Rojo)
+        // Buscamos el elemento directamente para asegurar
+        const secColorInput = document.getElementById('secFrameColor');
+        if (secColorInput) secColorInput.value = "#0000FF";
+        
+        // 2. Ocultar Paneles y Checkboxes
+        const hideById = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        };
+        const uncheckById = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = false;
+        };
+
+        
+
+        // --- AQUÍ ESTÁ EL CAMBIO QUE PEDISTE ---
+        hideById('aspectGroup'); // Oculta Manual Ratio y Frameline Scale
+        hideById('secFrameControls'); // Oculta opciones secundarias
+        hideById('advancedGroup'); // Oculta Advanced
+        hideById('infoPanel'); // Oculta Info
+        // ---------------------------------------
+
+        uncheckById('secFrameOn');
+        uncheckById('safeActionToggle');
+        uncheckById('safeTitleToggle');
+        if(inputs.safeActionVal) inputs.safeActionVal.value = 93; // Volver a 93%
+        if(inputs.safeTitleVal) inputs.safeTitleVal.value = 90;   // Volver a 90%
+        uncheckById('showLabelsToggle');
+        uncheckById('showResLabelsToggle');
+        uncheckById('secFrameFit');
+        uncheckById('scaleFill');
+        const fitRadio = document.getElementById('scaleFit');
+        if(fitRadio) fitRadio.checked = true;
+
+        // Resetear flechas de paneles
+        const arrowEl = document.getElementById('arrow');
+        if(arrowEl) arrowEl.innerText = "▼";
+        const infoArrow = document.getElementById('infoArrow');
+        if(infoArrow) infoArrow.innerText = "▼";
+
+        // Limpiar imagen
+        if (typeof removeImage === "function") removeImage();
+
+        // 3. Resetear Menús
+        if(menuResoluciones) menuResoluciones.value = "1920,1080"; 
+        if(menuAspecto) menuAspecto.value = "2.39";
+        if(menuSecAspect) menuSecAspect.value = "9:16";
+        if (inputs.secAspect) inputs.secAspect.value = "9:16";
+
+        // 4. Limpiar Botones Azules (Resolución y Aspecto)
+        const clearContainer = (id) => {
+            const cont = document.getElementById(id);
+            if(cont) {
+                const btns = cont.querySelectorAll('button.active');
+                btns.forEach(b => b.classList.remove('active'));
+            }
+        };
+        
+        clearContainer('resBtnContainer');    // Reset Resolución
+        clearContainer('aspectBtnContainer'); // Reset Aspecto
+        clearContainer('opacityBtnContainer');
+        // 5. Restaurar Toggle "On/Off"
+        const qBtn = document.getElementById('quickFrameBtn');
+        const qTxt = document.getElementById('quickFrameText');
+        if(qBtn) {
+             qBtn.style.color = "#007bff"; 
+             qBtn.querySelector('span').innerText = "⍉";
+             if(qTxt) qTxt.innerText = "On";
+        }
+
+        // 6. Dibujar
+        flashInput(inputs.w);
+        flashInput(inputs.h);
+        draw();
+    });
+}
+
 // RASTREO DE DONACIONES
 const donationBtns = document.querySelectorAll('.coffee-btn, .paypal-btn');
 
