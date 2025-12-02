@@ -217,6 +217,10 @@ function draw() {
 
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
+    if (rawThick > 10) {
+        rawThick = 10;
+        if(inputs.thickness) inputs.thickness.value = 10; // Reescribe el input para que el usuario vea el cambio
+    }
     const mainThickness = Math.max(0, rawThick);
     const mainOffset = mainThickness / 2;
     const secThickness = mainThickness; 
