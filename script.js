@@ -169,6 +169,30 @@ function clearActiveButtons(containerSelector) {
     }
 }
 
+// --- FUNCIÓN PARA LIMPIAR TEXTO DEL HUD ---
+function getCleanLabel(val) {
+    if (!val) return "";
+    
+    // 1. Si es formato "16:9", lo devolvemos tal cual
+    if (val.toString().includes(':')) return val;
+
+    // 2. Si es número, lo convertimos a Float
+    const num = parseFloat(val);
+    
+    // 3. Detectar estándares conocidos (opcional, para forzar exactitud)
+    // Si está muy cerca de 2.39, escribimos "2.39" a la fuerza
+    if (Math.abs(num - 2.39) < 0.01) return "2.39";
+    if (Math.abs(num - 1.85) < 0.01) return "1.85";
+    if (Math.abs(num - 1.66) < 0.01) return "1.66";
+    if (Math.abs(num - 2.0) < 0.01) return "2.0";
+    if (Math.abs(num - 1.0) < 0.01) return "1.0";
+    if (Math.abs(num - 1.33) < 0.02) return "1.33"; // Cubre 1.33333
+
+    // 4. Para cualquier otro caso, cortar a 2 decimales
+    // parseFloat elimina ceros innecesarios (ej: "2.50" -> 2.5)
+    return parseFloat(num.toFixed(2)).toString();
+}
+
 // --- FUNCIÓN DE GROSOR ADAPTATIVO (INTELIGENTE) ---
 function autoAdjustThickness(width) {
     if (!inputs.thickness) return;
