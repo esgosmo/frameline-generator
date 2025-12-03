@@ -406,7 +406,7 @@ function draw() {
     }
 
  // ===============================================
-    // I. LABELS (HUD INTELIGENTE: MAIN VS SECONDARY)
+    // I. LABELS (HUD INTELIGENTE + TEXTO LIMPIO)
     // ===============================================
     
     const showAspect = inputs.showLabels && inputs.showLabels.checked;
@@ -421,13 +421,14 @@ function draw() {
         const lineHeight = fontSize + 6; 
 
         // --- A. DIBUJAR MAIN FRAMELINE TEXT ---
-        // Este siempre manda y se queda fijo arriba
         if (mainThickness > 0) {
             ctx.fillStyle = inputs.color.value;
-            const txtAsp = inputs.aspect ? inputs.aspect.value : "";
+            
+            // CAMBIO AQUÍ: Usamos getCleanLabel para limpiar el número feo
+            const txtAsp = inputs.aspect ? getCleanLabel(inputs.aspect.value) : "";
             const txtRes = `${visibleW} x ${visibleH}`;
             
-            // Check colisión horizontal (Aspecto vs Resolución en la misma línea)
+            // Check colisión horizontal
             const wAsp = ctx.measureText(txtAsp).width;
             const wRes = ctx.measureText(txtRes).width;
             const isTightHoriz = (wAsp + wRes + (padding * 4)) > visibleW;
@@ -454,20 +455,16 @@ function draw() {
         if (drawSec && inputs.secAspect) {
             ctx.fillStyle = inputs.secColor.value;
 
-            const txtSecAsp = inputs.secAspect.value;
+            // CAMBIO AQUÍ: Usamos getCleanLabel también
+            const txtSecAsp = getCleanLabel(inputs.secAspect.value);
             const txtSecRes = `${Math.round(secW)} x ${Math.round(secH)}`;
 
-            // --- LÓGICA DE ANTICOLISIÓN VERTICAL (Main vs Secondary) ---
-            // Calculamos dónde empezaría el texto secundario normalmente
+            // --- LÓGICA DE ANTICOLISIÓN VERTICAL ---
             let textY = secY + padding;
-
-            // ¿Está el borde secundario muy pegado al borde principal?
-            // Si la distancia vertical es menor a 2 líneas de texto, empujamos el texto secundario
             const verticalGap = Math.abs(offsetY - secY);
             if (verticalGap < (lineHeight * 1.5)) {
-                textY += lineHeight; // Lo bajamos un renglón para que no choque
+                textY += lineHeight; 
             }
-            // -----------------------------------------------------------
 
             // Check colisión horizontal interna
             const wSecAsp = ctx.measureText(txtSecAsp).width;
@@ -484,7 +481,6 @@ function draw() {
             if (showRes) {
                 if (isSecTight && showAspect) {
                     ctx.textAlign = "left";
-                    // Si ya está apretado horizontalmente, bajamos otro renglón más
                     ctx.fillText(txtSecRes, secX + padding, textY + lineHeight);
                 } else {
                     ctx.textAlign = showAspect ? "right" : "left";
@@ -494,7 +490,7 @@ function draw() {
             }
         }
     }
-}
+    }
 
 // ==========================================
 // 5. EVENTOS (CONEXIONES SEGURAS)
