@@ -67,53 +67,108 @@ const imageLoader = document.getElementById('imageLoader');
 const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 
-// 3. El "Escuchador" que detecta cuando subes el archivo
+// ==========================================
+// 3. LÓGICA DE CARGA DE IMAGEN (DOBLE ADVERTENCIA)
+// ==========================================
 if (imageLoader) {
     imageLoader.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (!file) return; // Si canceló, no hacemos nada
+        if (!file) return;
+
+        // --- ALERTA 1: PESO DEL ARCHIVO (> 20MB) ---
+        const limitMB = 20;
+        if (file.size > limitMB * 1024 * 1024) {
+            const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+            const riskAccepted = confirm(`⚠️ WARNING: Large File Detected (${sizeMB}MB)\n\nProcessing files larger than ${limitMB}MB might crash your browser or freeze your device.\n\nDo you want to proceed at your own risk?`);
+            
+            if (!riskAccepted) {
+                imageLoader.value = ""; // Cancelar y limpiar input
+                return; 
+            }
+        }
 
         const reader = new FileReader();
         
-        // Cuando el archivo se termine de leer...
         reader.onload = (event) => {
-            const img = new Image();
+            const tempImg = new Image();
             
-            // Cuando la imagen interna se termine de crear...
-            img.onload = () => {
-                // Guardamos la imagen en la variable global
-                userImage = img;
+            tempImg.onload = () => {
+                const MAX_SIDE = 4096; // 4K
+                let w = tempImg.width;
+                let h = tempImg.height;
 
-                // --- MOSTRAR CONTROLES ---
-        if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
-        
-                if(inputs.w) inputs.w.value = img.width;
-                if(inputs.h) inputs.h.value = img.height;
-                // --- NUEVO: ---
-                autoAdjustThickness(img.width);
-                // --------------
-                if(menuResoluciones) menuResoluciones.value = 'custom';
-                
-           // --- SOLUCIÓN INFALIBLE: APAGAR BOTONES MANUALMENTE ---
-                // Buscamos la caja de botones por su ID
-                const cajaBotones = document.getElementById('resBtnContainer');
-                
-                if (cajaBotones) {
-                    // Buscamos cualquier botón azul ahí adentro y lo apagamos
-                    const botonesAzules = cajaBotones.querySelectorAll('button.active');
-                    botonesAzules.forEach(btn => btn.classList.remove('active'));
+                // --- ALERTA 2: DIMENSIONES GIGANTES (> 4K) ---
+                if (w > MAX_SIDE || h > MAX_SIDE) {
+                    const doResize = confirm(`⚠️ High Resolution Detected (${w}x${h})\n\nThis image is larger than 4K. Resizing it will improve performance and prevent lag.\n\nOK = Resize to 4K (Recommended)\nCancel = Load Original (Might be slow)`);
+
+                    if (doResize) {
+                        // --- OPCIÓN A: REDIMENSIONAR (Optimizado) ---
+                        if (w > h) {
+                            if (w > MAX_SIDE) { h *= MAX_SIDE / w; w = MAX_SIDE; }
+                        } else {
+                            if (h > MAX_SIDE) { w *= MAX_SIDE / h; h = MAX_SIDE; }
+                        }
+
+                        // Crear canvas temporal para comprimir
+                        const canvasCopy = document.createElement("canvas");
+                        canvasCopy.width = w;
+                        canvasCopy.height = h;
+                        const ctxCopy = canvasCopy.getContext("2d");
+                        ctxCopy.drawImage(tempImg, 0, 0, w, h);
+
+                        // Crear nueva imagen optimizada
+                        const optimizedImg = new Image();
+                        optimizedImg.onload = () => {
+                            userImage = optimizedImg;
+                            applyImageToCanvas(optimizedImg);
+                        };
+                        optimizedImg.src = canvasCopy.toDataURL("image/jpeg", 0.9);
+
+                    } else {
+                        // --- OPCIÓN B: CARGAR ORIGINAL (Riesgoso) ---
+                        userImage = tempImg;
+                        applyImageToCanvas(tempImg);
+                    }
+
+                } else {
+                    // --- CASO NORMAL: IMAGEN PEQUEÑA ---
+                    userImage = tempImg;
+                    applyImageToCanvas(tempImg);
                 }
-
-                // Redibujamos para que aparezca
-                draw();
             }
-            // Le asignamos los datos leídos
-            img.src = event.target.result;
+            tempImg.src = event.target.result;
         }
-        
-        // Leemos el archivo como una URL de datos
         reader.readAsDataURL(file);
     });
+}
+
+// Función auxiliar para actualizar la interfaz después de cargar (sea cual sea el método)
+function applyImageToCanvas(img) {
+    // 1. Mostrar Panel
+    if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
+
+    // 2. Ajustar inputs al tamaño final de la imagen
+    if(inputs.w) inputs.w.value = img.width;
+    if(inputs.h) inputs.h.value = img.height;
+    
+    // 3. Ajustar grosor
+    if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
+    
+    // 4. Resetear UI
+    if(menuResoluciones) menuResoluciones.value = 'custom';
+    
+    // Limpiar botones usando la función segura
+    const clearContainer = (id) => {
+        const cont = document.getElementById(id);
+        if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
+    };
+    clearContainer('resBtnContainer');
+
+    // 5. Visual
+    flashInput(inputs.w);
+    flashInput(inputs.h);
+    
+    draw();
 }
 
 // 4. Lógica para el botón de "Borrar Imagen"
