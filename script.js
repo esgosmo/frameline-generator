@@ -932,7 +932,7 @@ if (resetBtn) {
 
         // 3. Resetear Menús
         if(menuResoluciones) menuResoluciones.value = "1920,1080"; 
-        if(menuAspecto) menuAspecto.value = "2.39";
+        if(menuAspecto) menuAspecto.value = "2.38695";
         if(menuSecAspect) menuSecAspect.value = "9:16";
         if (inputs.secAspect) inputs.secAspect.value = "9:16";
 
