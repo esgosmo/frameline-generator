@@ -535,8 +535,10 @@ function draw() {
             ctx.fillStyle = inputs.secColor.value;
 
             // CAMBIO AQUÍ: Usamos getCleanLabel también
-            const txtSecAsp = getCleanLabel(inputs.secAspect.value);
+           // const txtSecAsp = getCleanLabel(inputs.secAspect.value);
+           const txtSecAsp = obtenerRatioTexto(Math.round(secW), Math.round(secH));
             const txtSecRes = `${Math.round(secW)} x ${Math.round(secH)}`;
+
 
             // --- LÓGICA DE ANTICOLISIÓN VERTICAL ---
             let textY = secY + padding;
