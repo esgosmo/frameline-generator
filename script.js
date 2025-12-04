@@ -169,7 +169,6 @@ window.removeImage = function() {
 if (showImageToggle) showImageToggle.addEventListener('change', draw);
 if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', draw);
 if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', draw);
-
 // 5. Lógica para el ojito (Show/Hide)
 if (showImageToggle) {
     showImageToggle.addEventListener('change', draw);
