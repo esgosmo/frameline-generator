@@ -68,12 +68,32 @@ const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 
 // ==========================================
-// 3. LÓGICA DE CARGA DE IMAGEN 
+// 3. IMAGE LOADING LOGIC (WITH SIZE & RES WARNING)
 // ==========================================
+const sizeWarning = document.getElementById('sizeWarning'); 
+
 if (imageLoader) {
     imageLoader.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // ------------------------------------------------
+        // 1. DETECT FILE SIZE (> 20MB)
+        // ------------------------------------------------
+        const limitBytes = 20 * 1024 * 1024; // 20MB
+        let isHeavyFile = false; // Flag to remember state
+        
+        if (file.size > limitBytes) {
+            isHeavyFile = true;
+            if(sizeWarning) {
+                // English Warning 1
+                sizeWarning.innerText = "⚠️ Large file size (>20MB) Performance may lag"; 
+                sizeWarning.classList.remove('hidden');
+            }
+        } else {
+            // Hide for now if size is okay
+            if(sizeWarning) sizeWarning.classList.add('hidden');
+        }
 
         const reader = new FileReader();
         
@@ -81,20 +101,36 @@ if (imageLoader) {
             const img = new Image();
             
             img.onload = () => {
-                // 1. Guardar la imagen original tal cual es
                 userImage = img;
                 
-                // 2. Mostrar el panel de opciones oculto
+                // ------------------------------------------------
+                // 2. DETECT RESOLUTION (> 6K)
+                // ------------------------------------------------
+                const limitRes = 6000; 
+
+                if (img.width > limitRes || img.height > limitRes) {
+                    if (sizeWarning) {
+                        // English Warning 2 (Combined or Res only)
+                        const msg = isHeavyFile 
+                            ? "⚠️ Large file & Large resolution (>6K) Performance may lag."
+                            : "⚠️ Large resolution (>6K) Performance may lag.";
+                        
+                        sizeWarning.innerText = msg;
+                        sizeWarning.classList.remove('hidden');
+                    }
+                }
+                
+                // Show controls
                 if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
 
-                // 3. Adaptar el Canvas al tamaño de la foto (Auto-resize)
+                // Adapt Canvas
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
                 
-                // 4. Ajustar grosor de línea automáticamente (Si la foto es 4K, línea gruesa)
+                // Adjust thickness
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
                 
-                // 5. Resetear Menús y Botones
+                // Reset Menu
                 if(menuResoluciones) menuResoluciones.value = 'custom';
                 
                 const clearContainer = (id) => {
@@ -103,11 +139,9 @@ if (imageLoader) {
                 };
                 clearContainer('resBtnContainer');
                 
-                // 6. Feedback Visual (Flash)
                 flashInput(inputs.w);
                 flashInput(inputs.h);
 
-                // 7. Dibujar
                 draw();
             }
             img.src = event.target.result;
@@ -116,18 +150,25 @@ if (imageLoader) {
     });
 }
 
-// 4. Lógica para el botón de "Borrar Imagen"
+// Clear Function
 window.removeImage = function() {
     userImage = null;
-    if(imageLoader) imageLoader.value = ""; // Resetear el input
-
-    // --- OCULTAR CONTROLES ---
+    if(imageLoader) imageLoader.value = "";
+    
+    // Hide panel and warning
     if (imageOptionsPanel) imageOptionsPanel.classList.add('hidden');
-    // -------------------------
+    if (sizeWarning) {
+        sizeWarning.classList.add('hidden');
+        sizeWarning.innerText = ""; // Reset text
+    }
     
     draw();
 }
 
+// Listeners
+if (showImageToggle) showImageToggle.addEventListener('change', draw);
+if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', draw);
+if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', draw);
 // 5. Lógica para el ojito (Show/Hide)
 if (showImageToggle) {
     showImageToggle.addEventListener('change', draw);
