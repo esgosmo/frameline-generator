@@ -112,7 +112,7 @@ if (imageLoader) {
                     if (sizeWarning) {
                         // English Warning 2 (Combined or Res only)
                         const msg = isHeavyFile 
-                            ? "⚠️ Large file & Large resolution (>6K) Performance may lag."
+                            ? "⚠️ Large file & large resolution (>6K) Performance may lag."
                             : "⚠️ Large resolution (>6K) Performance may lag.";
                         
                         sizeWarning.innerText = msg;
