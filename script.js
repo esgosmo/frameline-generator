@@ -198,6 +198,7 @@ function obtenerRatioTexto(w, h) {
     // A. EXCEPCIONES VIP (Formatos de Cine/Estándares que queremos fijos)
     // ---------------------------------------------------------
     if (Math.abs(ratio - (5/3)) < 0.02) return "1.66";  // Europeo
+    if (Math.abs(ratio - (9/16)) < 0.02) return "9:16"; 
     if (Math.abs(ratio - 2.40) < 0.01) return "2.40"; 
     if (Math.abs(ratio - 2.39) < 0.01) return "2.39";  // Scope Moderno
     if (Math.abs(ratio - 2.35) < 0.02) return "2.35";  // Scope Viejo
