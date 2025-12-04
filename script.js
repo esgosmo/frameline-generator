@@ -68,107 +68,52 @@ const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 
 // ==========================================
-// 3. LÓGICA DE CARGA DE IMAGEN (DOBLE ADVERTENCIA)
+// 3. LÓGICA DE CARGA DE IMAGEN 
 // ==========================================
 if (imageLoader) {
     imageLoader.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // --- ALERTA 1: PESO DEL ARCHIVO (> 20MB) ---
-        const limitMB = 20;
-        if (file.size > limitMB * 1024 * 1024) {
-            const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-            const riskAccepted = confirm(`⚠️ WARNING: Large File Detected (${sizeMB}MB)\n\nProcessing files larger than ${limitMB}MB might crash your browser or freeze your device.\n\nDo you want to proceed at your own risk?`);
-            
-            if (!riskAccepted) {
-                imageLoader.value = ""; // Cancelar y limpiar input
-                return; 
-            }
-        }
-
         const reader = new FileReader();
         
         reader.onload = (event) => {
-            const tempImg = new Image();
+            const img = new Image();
             
-            tempImg.onload = () => {
-                const MAX_SIDE = 4096; // 4K
-                let w = tempImg.width;
-                let h = tempImg.height;
+            img.onload = () => {
+                // 1. Guardar la imagen original tal cual es
+                userImage = img;
+                
+                // 2. Mostrar el panel de opciones oculto
+                if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
 
-                // --- ALERTA 2: DIMENSIONES GIGANTES (> 4K) ---
-                if (w > MAX_SIDE || h > MAX_SIDE) {
-                    const doResize = confirm(`⚠️ High Resolution Detected (${w}x${h})\n\nThis image is larger than 4K. Resizing it will improve performance and prevent lag.\n\nOK = Resize to 4K (Recommended)\nCancel = Load Original (Might be slow)`);
+                // 3. Adaptar el Canvas al tamaño de la foto (Auto-resize)
+                if(inputs.w) inputs.w.value = img.width;
+                if(inputs.h) inputs.h.value = img.height;
+                
+                // 4. Ajustar grosor de línea automáticamente (Si la foto es 4K, línea gruesa)
+                if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
+                
+                // 5. Resetear Menús y Botones
+                if(menuResoluciones) menuResoluciones.value = 'custom';
+                
+                const clearContainer = (id) => {
+                    const cont = document.getElementById(id);
+                    if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
+                };
+                clearContainer('resBtnContainer');
+                
+                // 6. Feedback Visual (Flash)
+                flashInput(inputs.w);
+                flashInput(inputs.h);
 
-                    if (doResize) {
-                        // --- OPCIÓN A: REDIMENSIONAR (Optimizado) ---
-                        if (w > h) {
-                            if (w > MAX_SIDE) { h *= MAX_SIDE / w; w = MAX_SIDE; }
-                        } else {
-                            if (h > MAX_SIDE) { w *= MAX_SIDE / h; h = MAX_SIDE; }
-                        }
-
-                        // Crear canvas temporal para comprimir
-                        const canvasCopy = document.createElement("canvas");
-                        canvasCopy.width = w;
-                        canvasCopy.height = h;
-                        const ctxCopy = canvasCopy.getContext("2d");
-                        ctxCopy.drawImage(tempImg, 0, 0, w, h);
-
-                        // Crear nueva imagen optimizada
-                        const optimizedImg = new Image();
-                        optimizedImg.onload = () => {
-                            userImage = optimizedImg;
-                            applyImageToCanvas(optimizedImg);
-                        };
-                        optimizedImg.src = canvasCopy.toDataURL("image/jpeg", 0.9);
-
-                    } else {
-                        // --- OPCIÓN B: CARGAR ORIGINAL (Riesgoso) ---
-                        userImage = tempImg;
-                        applyImageToCanvas(tempImg);
-                    }
-
-                } else {
-                    // --- CASO NORMAL: IMAGEN PEQUEÑA ---
-                    userImage = tempImg;
-                    applyImageToCanvas(tempImg);
-                }
+                // 7. Dibujar
+                draw();
             }
-            tempImg.src = event.target.result;
+            img.src = event.target.result;
         }
         reader.readAsDataURL(file);
     });
-}
-
-// Función auxiliar para actualizar la interfaz después de cargar (sea cual sea el método)
-function applyImageToCanvas(img) {
-    // 1. Mostrar Panel
-    if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
-
-    // 2. Ajustar inputs al tamaño final de la imagen
-    if(inputs.w) inputs.w.value = img.width;
-    if(inputs.h) inputs.h.value = img.height;
-    
-    // 3. Ajustar grosor
-    if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
-    
-    // 4. Resetear UI
-    if(menuResoluciones) menuResoluciones.value = 'custom';
-    
-    // Limpiar botones usando la función segura
-    const clearContainer = (id) => {
-        const cont = document.getElementById(id);
-        if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
-    };
-    clearContainer('resBtnContainer');
-
-    // 5. Visual
-    flashInput(inputs.w);
-    flashInput(inputs.h);
-    
-    draw();
 }
 
 // 4. Lógica para el botón de "Borrar Imagen"
