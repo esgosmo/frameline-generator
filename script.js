@@ -502,8 +502,9 @@ function draw() {
         if (mainThickness > 0) {
             ctx.fillStyle = inputs.color.value;
             
-            // CAMBIO AQUÍ: Usamos getCleanLabel para limpiar el número feo
-            const txtAsp = inputs.aspect ? getCleanLabel(inputs.aspect.value) : "";
+          // CAMBIO AQUÍ: Usamos getCleanLabel para limpiar el número feo
+           // const txtAsp = inputs.aspect ? getCleanLabel(inputs.aspect.value) : "";
+           const txtAsp = obtenerRatioTexto(visibleW, visibleH);
             const txtRes = `${visibleW} x ${visibleH}`;
             
             // Check colisión horizontal
