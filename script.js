@@ -190,6 +190,43 @@ function highlightButton(clickedBtn) {
     clickedBtn.classList.add('active');
 }
 
+function obtenerRatioTexto(w, h) {
+    // 1. Cálculo decimal básico
+    const ratio = w / h;
+
+    // ---------------------------------------------------------
+    // A. EXCEPCIONES VIP (Formatos de Cine/Estándares que queremos fijos)
+    // ---------------------------------------------------------
+    if (Math.abs(ratio - (5/3)) < 0.02) return "1.66";  // Europeo
+    if (Math.abs(ratio - 2.40) < 0.01) return "2.40"; 
+    if (Math.abs(ratio - 2.39) < 0.01) return "2.39";  // Scope Moderno
+    if (Math.abs(ratio - 2.35) < 0.02) return "2.35";  // Scope Viejo
+    if (Math.abs(ratio - 1.85) < 0.02) return "1.85";  // Flat / Americano
+    if (Math.abs(ratio - 1.37) < 0.02) return "1.37";  // Academy
+    if (Math.abs(ratio - 1.43) < 0.02) return "1.43";  // IMAX
+
+    // ---------------------------------------------------------
+    // B. CÁLCULO DE FRACCIÓN (Para 16:9, 4:3, 1:1, etc.)
+    // ---------------------------------------------------------
+    const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+    const divisor = gcd(w, h);
+    
+    const num = w / divisor;
+    const den = h / divisor;
+
+    // ---------------------------------------------------------
+    // C. LA REGLA DE LIMPIEZA (¡Aquí está el truco!)
+    // ---------------------------------------------------------
+    // Si los números de la fracción son pequeños (ej: 16 y 9), es un estándar bonito.
+    // Si son gigantes (ej: 1577 y 1080), es "basura matemática", así que mejor mostramos decimales.
+    
+    if (num <= 20 && den <= 20) {
+        return `${num}:${den}`; // Devuelve "16:9", "4:3", "1:1"
+    } else {
+        return ratio.toFixed(2); // Devuelve "1.46", "2.00", "0.85"
+    }
+}
+
 function getAspectRatio(inputValue) {
     if (!inputValue) return 2.39;
     let raw = inputValue.toString();
