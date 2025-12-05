@@ -307,7 +307,7 @@ canvas {
    ======================================================= */
 @media (max-width: 768px) and (orientation: portrait) {
     body {
-        overflow-y: auto; /* Scroll general */
+        overflow-y: scroll; /* Scroll general */
     }
 
     .app-container {
