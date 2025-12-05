@@ -339,7 +339,7 @@ canvas {
 @media (max-height: 500px) and (orientation: landscape) {
     /* Quitamos el scroll del body para que scrollee solo el panel */
     body {
-        overflow: hidden; 
+        overflow: auto; 
     }
 
     .app-container {
