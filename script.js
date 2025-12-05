@@ -351,7 +351,7 @@ function draw() {
             if (window.innerWidth < 768) {
                 isFill = false; 
             }
-            }
+            
             // 2. Calcular la proporción de escalado (Scale Ratio)
             // Calculamos cuánto hay que estirar el ancho y el alto
             const ratioW = width / userImage.width;
