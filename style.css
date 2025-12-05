@@ -326,7 +326,7 @@ canvas {
         width: 100%;
         height: 35vh; /* Ocupa el 35% de la altura */
         min-height: 250px;
-        position: sticky; /* Se queda pegado arriba */
+       /* position: sticky; /* Se queda pegado arriba */
         top: 0;
         z-index: 100;
         border-bottom: 1px solid #333;
@@ -337,7 +337,7 @@ canvas {
    2. MÓVIL HORIZONTAL (Landscape) -> LADO A LADO
    ======================================================= */
 @media (max-height: 500px) and (orientation: landscape) {
-    /* Quitamos el scroll del body para que scrollee solo el panel */
+    
     body {
         overflow: auto; 
     }
