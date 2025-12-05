@@ -344,13 +344,6 @@ function draw() {
             // 1. Detectar qué modo eligió el usuario
             // Si el radio "Fill" está marcado, usamos modo 'max', si no, 'min'.
             const isFill = inputs.scaleFill && inputs.scaleFill.checked;
-
-           // 🔥 NUEVO: FORZAR 'FIT' EN MÓVILES
-            // Si la pantalla es pequeña (celular), ignoramos el 'Fill' y forzamos false (Fit)
-            // para asegurar que la imagen se vea completa.
-            if (window.innerWidth < 768) {
-                isFill = false; 
-            }
             
             // 2. Calcular la proporción de escalado (Scale Ratio)
             // Calculamos cuánto hay que estirar el ancho y el alto
