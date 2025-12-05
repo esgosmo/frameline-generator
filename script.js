@@ -1059,3 +1059,32 @@ donationBtns.forEach(btn => {
         }
     });
 });
+
+// ==========================================
+// AUTO-AJUSTE PARA MÓVILES (Force Fit on Mobile)
+// ==========================================
+function aplicarModoMobile() {
+    // Detectamos si el ancho de pantalla es menor a 768px (celulares y tablets verticales)
+    const esCelular = window.innerWidth < 768;
+
+    if (esCelular) {
+        // Referencias a tus botones de radio (Fit / Fill)
+        const fitRadio = document.getElementById('scaleFit');
+        const fillRadio = document.getElementById('scaleFill');
+
+        if (fitRadio && fillRadio) {
+            // Forzamos la selección de "Fit" (Ajustar)
+            fitRadio.checked = true;
+            fillRadio.checked = false;
+            
+            console.log("Modo móvil detectado: Ajustando imagen a Fit.");
+        }
+    }
+}
+
+// Ejecutamos esto apenas carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    aplicarModoMobile();
+    // Si ya tienes una llamada a draw() al inicio, esto asegurará que arranque bien
+    if (typeof draw === 'function') draw(); 
+});
