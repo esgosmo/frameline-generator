@@ -331,7 +331,15 @@ canvas {
         top: 0;
         z-index: 100;
         border-bottom: 1px solid #333;
-    }
+        background-color: #1a1a1a; /* Fondo oscuro para ver el frame */
+    
+        /* 🔥 NUEVO: Usar Flexbox para centrar el contenido */
+        display: flex;
+        justify-content: center; /* Centrar horizontalmente */
+        align-items: center;     /* Centrar verticalmente */
+        overflow: hidden;        /* Evitar que nada se salga */
+
+       }
 }
 
 /* =======================================================
