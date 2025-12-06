@@ -388,6 +388,7 @@ canvas {
         height: 100vh; /* Altura completa */
         padding: 10px;
         background-color: #151515; /* Asegurar fondo gris */
+        padding: 30px; /* Un poco de aire */
     }
 
     /* Ajustar el canvas para que quepa en pantallas bajitas */
