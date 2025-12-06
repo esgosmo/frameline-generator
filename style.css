@@ -303,7 +303,7 @@ canvas {
 }
 
 /* =======================================================
-   1. MÓVIL VERTICAL (Portrait) -> APILADO
+   1. MÓVIL VERTICAL (Portrait) -> CORREGIDO
    ======================================================= */
 @media (max-width: 768px) and (orientation: portrait) {
     body {
@@ -331,15 +331,32 @@ canvas {
         top: 0;
         z-index: 100;
         border-bottom: 1px solid #333;
-        background-color: #1a1a1a; /* Fondo oscuro para ver el frame */
+        background-color: #1a1a1a; 
     
-        /* 🔥 NUEVO: Usar Flexbox para centrar el contenido */
+        /* Flexbox para centrar el canvas */
         display: flex;
-        justify-content: center; /* Centrar horizontalmente */
-        align-items: center;     /* Centrar verticalmente */
-        overflow: hidden;        /* Evitar que nada se salga */
+        justify-content: center; 
+        align-items: center;      
+        overflow: hidden;         
+        padding: 10px; /* Un poco de aire */
+    }
 
-       }
+    /* 🔥 AQUÍ ESTABA EL FALTANTE: REGLAS PARA EL CANVAS EN MÓVIL */
+    .preview-area canvas {
+        /* Regla de oro: Nunca ser más alto que el contenedor (35vh) */
+        max-height: 100% !important; 
+        max-width: 100% !important;
+        
+        /* Dejar que el navegador calcule las dimensiones para mantener el ratio */
+        height: auto !important;
+        width: auto !important;
+        
+        /* Asegura que no se deforme */
+        object-fit: contain; 
+        
+        /* Quitar sombras exageradas en móvil si molestan */
+        box-shadow: 0 0 10px rgba(0,0,0,0.5); 
+    }
 }
 
 /* =======================================================
