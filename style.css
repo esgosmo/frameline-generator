@@ -338,7 +338,7 @@ canvas {
         justify-content: center; 
         align-items: center;      
         overflow: hidden;         
-        padding: 10px; /* Un poco de aire */
+        padding: 30px; /* Un poco de aire */
     }
 
     /* 🔥 AQUÍ ESTABA EL FALTANTE: REGLAS PARA EL CANVAS EN MÓVIL */
