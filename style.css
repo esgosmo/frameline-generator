@@ -360,54 +360,62 @@ canvas {
 }
 
 /* =======================================================
-   2. MÓVIL HORIZONTAL (Landscape) -> LADO A LADO
+   2. MÓVIL HORIZONTAL (Landscape) -> CORREGIDO
    ======================================================= */
 @media (max-height: 500px) and (orientation: landscape) {
     
     body {
-        overflow: auto; 
+        /* Evitamos el scroll en el cuerpo para que parezca una App */
+        overflow: hidden; 
     }
 
     .app-container {
         flex-direction: row; /* Lado a lado */
+        height: 100vh;       /* Aseguramos altura completa */
     }
 
-    /* BARRA LATERAL (Izquierda) */
+    /* BARRA LATERAL (Izquierda - Scrollable) */
     .sidebar {
-        width: 45%; /* Ocupa casi la mitad */
-        height: 100vh; /* Altura completa */
-        overflow-y: auto; /* SCROLL INDEPENDIENTE AQUÍ */
+        width: 45%;      /* Casi la mitad */
+        height: 100vh;   /* Altura completa */
+        overflow-y: auto; /* AQUÍ SÍ permitimos scroll para ver los botones */
         border-right: 1px solid #333;
         padding: 15px;
-        padding-bottom: 50px;
+        padding-bottom: 50px; /* Espacio extra al final */
+        border-top: none;     /* Quitamos bordes innecesarios */
     }
 
-    /* ÁREA DE PREVIEW (Derecha) */
+    /* ÁREA DE PREVIEW (Derecha - Fija) */
     .preview-area {
-        width: 55%; /* El resto del espacio */
-        height: 100vh; /* Altura completa */
+        width: 55%;      /* El resto del espacio */
+        height: 100vh;   /* Altura completa */
         padding: 10px;
-        background-color: #151515; /* Asegurar fondo gris */
-        padding: 30px; /* Un poco de aire */
+        background-color: #1a1a1a; 
+
+        /* 🔥 LA MAGIA DEL CENTRADO (Igual que en Portrait) */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden; /* Importante: Nada se sale de aquí */
     }
 
-    /* Ajustar el canvas para que quepa en pantallas bajitas */
-    canvas {
-        max-height: 90vh; /* Que no se salga por alto */
-        max-width: 95%;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    /* EL CANVAS (La Imagen) */
+    .preview-area canvas {
+        /* Reglas para que quepa perfecto en la parte derecha */
+        max-width: 100% !important;  /* No te salgas de ancho */
+        max-height: 95vh !important; /* No te salgas de alto (95% para margen) */
+        
+        /* Auto-ajuste para no deformarse */
+        width: auto !important;
+        height: auto !important;
+        
+        object-fit: contain;
     }
     
-    /* Hacer los botones un poco más compactos para ahorrar espacio */
-    .input-group {
-        margin-bottom: 15px;
-    }
-    h1 {
-        margin-bottom: 15px;
-        font-size: 1rem;
-    }
+    /* Ajustes visuales menores para ahorrar espacio */
+    .input-group { margin-bottom: 15px; }
+    h1 { margin-bottom: 10px; font-size: 1rem; }
 }
-
 /* 1. BOTÓN DE DESCARGA (Download PNG) */
 #downloadBtn {
     width: 100%;            /* Ocupa todo el ancho disponible */
