@@ -389,14 +389,14 @@ canvas {
     .preview-area {
         width: 55%;      /* El resto del espacio */
         height: 100vh;   /* Altura completa */
-        padding: 10px;
+        padding: 30px;
         background-color: #1a1a1a; 
 
         /* 🔥 LA MAGIA DEL CENTRADO (Igual que en Portrait) */
         display: flex;
         justify-content: center;
         align-items: center;
-        overflow: hidden; /* Importante: Nada se sale de aquí */
+        overflow-y: auto; /* Importante: Nada se sale de aquí */
     }
 
     /* EL CANVAS (La Imagen) */
