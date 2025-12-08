@@ -190,6 +190,21 @@ function highlightButton(clickedBtn) {
     clickedBtn.classList.add('active');
 }
 
+// ==========================================
+// OPTIMIZACIÓN DE RENDIMIENTO (SEMÁFORO)
+// ==========================================
+let isTicking = false;
+
+function requestDraw() {
+    if (!isTicking) {
+        window.requestAnimationFrame(() => {
+            draw();
+            isTicking = false;
+        });
+        isTicking = true;
+    }
+}
+
 function obtenerRatioTexto(w, h) {
     // 1. Cálculo decimal básico
     const ratio = w / h;
@@ -331,8 +346,8 @@ function draw() {
     if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
 
     // B. CANVAS
-    canvas.width = width;
-    canvas.height = height;
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
     ctx.clearRect(0, 0, width, height);
     const screenAspect = width / height;
 
@@ -581,8 +596,8 @@ function draw() {
 // Conectar TODOS los inputs que existan
 Object.values(inputs).forEach(input => {
     if (input) {
-        input.addEventListener('input', draw);
-        input.addEventListener('change', draw); // Importante para checkboxes y selects
+        input.addEventListener('input', requestDraw);
+        input.addEventListener('change', requestDraw); // Importante para checkboxes y selects
         
         // Flechas teclado
      if (input.type === 'text') {
@@ -619,7 +634,7 @@ Object.values(inputs).forEach(input => {
                     }
                     // ---------------------------------------
 
-                    draw();
+                    requestDraw();
                 }
             });
         }
@@ -658,7 +673,7 @@ if (menuResoluciones) {
         // 3. Redibujar
         flashInput(inputs.w);
         flashInput(inputs.h);
-        draw();
+        requestDraw();
     });
 }
 
@@ -687,7 +702,7 @@ if (menuAspecto) {
         
         // 4. Redibujar
         flashInput(inputs.aspect);
-        draw();
+        requestDraw();
     });
 }
 
@@ -707,7 +722,7 @@ if (menuSecAspect) {
             flashInput(inputs.secAspect);
         }
         
-        draw();
+        requestDraw();
     });
 }
 
@@ -830,7 +845,7 @@ window.setPreset = function(w, h, btn) {
     }
     flashInput(inputs.w); 
     flashInput(inputs.h);
-    highlightButton(btn); draw();
+    highlightButton(btn); requestDraw();
 }
 
 window.setAspect = function(val, btn) {
@@ -840,12 +855,12 @@ window.setAspect = function(val, btn) {
         menuAspecto.value = val;
         if(menuAspecto.value != val) menuAspecto.value = 'custom';
     }
-    flashInput(inputs.aspect); highlightButton(btn); draw();
+    flashInput(inputs.aspect); highlightButton(btn); requestDraw();
 }
 
 window.setOpacity = function(val, btn) {
     if(inputs.opacity) inputs.opacity.value = val;
-    flashInput(inputs.opacity); highlightButton(btn); draw();
+    flashInput(inputs.opacity); highlightButton(btn); requestDraw();
 }
 
 // ==========================================
@@ -1042,7 +1057,7 @@ if (resetBtn) {
         // 6. Dibujar
         flashInput(inputs.w);
         flashInput(inputs.h);
-        draw();
+        requestDraw();
     });
 }
 
