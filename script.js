@@ -210,8 +210,10 @@ function obtenerRatioTexto(w, h) {
     const ratio = w / h;
 
     // ---------------------------------------------------------
-    // A. EXCEPCIONES VIP (Formatos de Cine/Estándares que queremos fijos)
+    // A. EXCEPCIONES VIP (Cine & Redes Sociales)
     // ---------------------------------------------------------
+
+    // --- Cine ---
     if (Math.abs(ratio - (5/3)) < 0.02) return "1.66";  // Europeo
     if (Math.abs(ratio - (9/16)) < 0.02) return "9:16"; 
     if (Math.abs(ratio - 2.40) < 0.01) return "2.40"; 
@@ -220,6 +222,17 @@ function obtenerRatioTexto(w, h) {
     if (Math.abs(ratio - 1.85) < 0.02) return "1.85";  // Flat / Americano
     if (Math.abs(ratio - 1.37) < 0.02) return "1.37";  // Academy
     if (Math.abs(ratio - 1.43) < 0.02) return "1.43";  // IMAX
+
+    // --- Redes Sociales / Verticales (NUEVO) ---
+    // 9:16 (Stories/TikTok) = 0.5625
+    if (Math.abs(ratio - 0.5625) < 0.01) return "9:16"; 
+    
+    // 4:5 (Instagram Portrait) = 0.8
+    if (Math.abs(ratio - 0.8) < 0.01) return "4:5"; 
+
+    // --- Fotografía / Monitores ---
+    if (Math.abs(ratio - 1.6) < 0.01) return "1.60"; // 16:10
+    if (Math.abs(ratio - 1.5) < 0.01) return "1.50"; // 3:2
 
     // ---------------------------------------------------------
     // B. CÁLCULO DE FRACCIÓN (Para 16:9, 4:3, 1:1, etc.)
@@ -467,6 +480,14 @@ function draw() {
             secW = secW * scaleFactor;
         }
 
+       // 2. 🔥 CORRECCIÓN: REDONDEAR Y FORZAR PARES (Igual que Main Frame)
+        secW = Math.round(secW);
+        secH = Math.round(secH);
+
+        if (secW % 2 !== 0) secW--; // Si es 1215 -> 1214
+        if (secH % 2 !== 0) secH--; // Si es impar -> par
+
+        // 3. CALCULAR POSICIÓN
         secX = (width - secW) / 2;
         secY = (height - secH) / 2;
 
@@ -520,8 +541,8 @@ function draw() {
             
           // CAMBIO AQUÍ: Usamos getCleanLabel para limpiar el número feo
            // const txtAsp = inputs.aspect ? getCleanLabel(inputs.aspect.value) : "";
-           const txtAsp = obtenerRatioTexto(visibleW, visibleH);
-            const txtRes = `${visibleW} x ${visibleH}`;
+           const txtAsp = obtenerRatioTexto(Math.round(visibleW), Math.round(visibleH));
+            const txtRes = `${Math.round(visibleW)} x ${Math.round(visibleH)}`;
             
             // Check colisión horizontal
             const wAsp = ctx.measureText(txtAsp).width;
