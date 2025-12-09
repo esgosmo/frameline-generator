@@ -55,6 +55,48 @@ const inputs = {
 };
 
 // ==========================================
+// LÓGICA DE DRAG & DROP 
+// ==========================================
+const dropZone = document.querySelector('.upload-zone');
+const fileInput = document.getElementById('imageLoader');
+
+if (dropZone && fileInput) {
+
+    // 1. Cuando entras o mueves el archivo sobre la zona
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault(); // OBLIGATORIO: Evita que el navegador abra la foto
+        dropZone.classList.add('drag-over'); // Activa el estilo visual
+    });
+
+    // 2. Cuando te sales de la zona sin soltar
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over'); // Quita el estilo
+    });
+
+    // 3. Cuando SUELTAS el archivo
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault(); // OBLIGATORIO
+        dropZone.classList.remove('drag-over'); // Quita el estilo
+        
+        // A. Obtener los archivos soltados
+        const files = e.dataTransfer.files;
+
+        if (files.length > 0) {
+            // B. EL TRUCO MAESTRO:
+            // Asignamos los archivos soltados al input invisible
+            fileInput.files = files; 
+
+            // C. Disparamos manualmente el evento "change"
+            // Esto hace que tu código anterior crea que el usuario hizo clic y seleccionó
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        }
+    });
+}
+
+
+// ==========================================
 // LÓGICA DE CARGA DE IMAGEN 
 // ==========================================
 
@@ -68,7 +110,7 @@ const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 
 // ==========================================
-// 3. LÓGICA DE CARGA DE IMAGEN (SOPORTE TIFF + 6K)
+// 3. LÓGICA DE CARGA (VALIDACIÓN + UI + TIFF + 6K)
 // ==========================================
 const sizeWarning = document.getElementById('sizeWarning'); 
 
@@ -77,7 +119,46 @@ if (imageLoader) {
         const file = e.target.files[0];
         if (!file) return;
 
-        // 1. DETECTAR PESO (> 20MB)
+        // ------------------------------------------------
+        // 1. FASE DE VALIDACIÓN (El filtro de seguridad)
+        // ------------------------------------------------
+        const fileName = file.name.toLowerCase();
+        const fileType = file.type.toLowerCase();
+
+        // Permitimos: Cualquier tipo "image/..." O extensiones explícitas de TIFF
+        // Esto bloquea .mov, .mp4, .pdf, .txt, etc.
+        const isValid = fileType.startsWith('image/') || 
+                        fileName.endsWith('.tiff') || 
+                        fileName.endsWith('.tif');
+
+        if (!isValid) {
+            alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF.");
+            
+            // IMPORTANTE: Resetear el input para que no se quede "enganchado" con el archivo malo
+            imageLoader.value = ""; 
+            
+            // DETENER TODO AQUÍ: No cambiamos el texto, no leemos nada.
+            return; 
+        }
+
+        // ------------------------------------------------
+        // 2. ACTUALIZAR UI (Solo si pasó la validación)
+        // ------------------------------------------------
+        const zone = document.querySelector('.upload-zone');
+        const textSpan = zone ? zone.querySelector('.upload-text') : null;
+
+        if (zone && textSpan) {
+            let name = file.name;
+            if (name.length > 20) name = name.substring(0, 18) + "...";
+            
+            textSpan.innerText = name;      // Cambiar texto
+            zone.classList.add('has-file'); // Poner estilo activo
+            zone.style.borderColor = "#007bff"; 
+        }
+
+        // ------------------------------------------------
+        // 3. DETECTAR PESO (> 20MB)
+        // ------------------------------------------------
         const limitBytes = 20 * 1024 * 1024; 
         let isHeavyFile = false;
         
@@ -91,38 +172,38 @@ if (imageLoader) {
             if(sizeWarning) sizeWarning.classList.add('hidden');
         }
 
-        // 2. DETECTAR TIPO DE ARCHIVO
-        const fileType = file.type.toLowerCase();
-        const fileName = file.name.toLowerCase();
-        const isTiff = fileType.includes('tiff') || fileName.endsWith('.tif') || fileName.endsWith('.tiff');
-
+        // ------------------------------------------------
+        // 4. PROCESAMIENTO (Reader / TIFF / JPG)
+        // ------------------------------------------------
         const reader = new FileReader();
+        const isTiff = fileName.endsWith('.tiff') || fileName.endsWith('.tif'); // Doble check por extensión
 
-        // --- FUNCIÓN COMÚN PARA PROCESAR LA IMAGEN FINAL ---
+        // Función interna para procesar el resultado final (sea cual sea el origen)
         const procesarImagenFinal = (src) => {
             const img = new Image();
             img.onload = () => {
                 userImage = img;
                 
-                // Reset Pan
-                imgPanX = 0; imgPanY = 0;
+                // Reset Pan y Zoom
+                if (typeof imgPanX !== 'undefined') { imgPanX = 0; imgPanY = 0; }
 
-                // Detectar Resolución Extrema
+                // Detectar Resolución Extrema (> 6K)
                 const limitRes = 6000; 
                 if (img.width > limitRes || img.height > limitRes) {
                     if (sizeWarning) {
                         const msg = isHeavyFile 
                             ? "⚠️ Large file & large resolution (>6K) Performance may lag."
-                            : "⚠️ Large resolution (>6K) Performance may lag.";
+                            : "⚠️ Large resolution (>6K). Performance may lag.";
                         sizeWarning.innerText = msg;
                         sizeWarning.classList.remove('hidden');
                     }
                 }
 
-                // Mostrar controles y resetear UI
+                // Mostrar panel y setear valores
                 if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
+                
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
                 if(menuResoluciones) menuResoluciones.value = 'custom';
                 
@@ -136,55 +217,49 @@ if (imageLoader) {
                 flashInput(inputs.w);
                 flashInput(inputs.h);
                 
-                // Aplicar modo móvil si es necesario
+                // Aplicar modo móvil
                 if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
 
-                // Optimización draw
+                // Dibujar
                 if(typeof requestDraw === 'function') requestDraw(); else draw();
             }
             img.src = src;
         };
 
-        // --- RAMA A: ES UN TIFF (Requiere decodificación) ---
+        // --- RAMA A: ES UN TIFF ---
         if (isTiff) {
             reader.onload = (event) => {
                 try {
+                    // Asegurarnos que UTIF existe
+                    if (typeof UTIF === 'undefined') {
+                        throw new Error("UTIF library not loaded");
+                    }
                     const buffer = event.target.result;
                     const ifds = UTIF.decode(buffer);
-                    
-                    // Decodificar la primera página del TIFF
                     UTIF.decodeImage(buffer, ifds[0]);
-                    
-                    // Convertir a array RGBA
                     const rgba = UTIF.toRGBA8(ifds[0]); 
                     
-                    // Crear un Canvas temporal para convertir los datos crudos a una URL
                     const tempCanvas = document.createElement('canvas');
                     tempCanvas.width = ifds[0].width;
                     tempCanvas.height = ifds[0].height;
                     const tempCtx = tempCanvas.getContext('2d');
                     
-                    // Poner los datos en el canvas
                     const imageData = tempCtx.createImageData(ifds[0].width, ifds[0].height);
                     imageData.data.set(rgba);
                     tempCtx.putImageData(imageData, 0, 0);
                     
-                    // Obtener URL (convertimos el TIFF a PNG en memoria)
-                    const pngURL = tempCanvas.toDataURL('image/png');
-                    
-                    // Mandar a la función principal
-                    procesarImagenFinal(pngURL);
-
+                    procesarImagenFinal(tempCanvas.toDataURL('image/png'));
                 } catch (err) {
-                    console.error("Error leyendo TIFF:", err);
-                    alert("Error reading TIFF file. It might be corrupted or incompatible.");
+                    console.error(err);
+                    alert("Error reading TIFF. Ensure UTIF.js is imported.");
+                    // Si falla, reseteamos la UI también
+                    if(window.removeImage) window.removeImage();
                 }
             };
-            // IMPORTANTE: TIFFs se leen como Buffer, no como URL
             reader.readAsArrayBuffer(file);
 
         } else {
-            // --- RAMA B: ES JPG/PNG (Estándar) ---
+            // --- RAMA B: ES JPG/PNG ---
             reader.onload = (event) => {
                 procesarImagenFinal(event.target.result);
             }
@@ -192,6 +267,7 @@ if (imageLoader) {
         }
     });
 }
+
 // Clear Function
 window.removeImage = function() {
     userImage = null;
@@ -203,6 +279,23 @@ window.removeImage = function() {
         sizeWarning.classList.add('hidden');
         sizeWarning.innerText = ""; // Reset text
     }
+
+    // ======================================================
+    // 🔥 NUEVO: RESETEAR LA UI DEL DROPZONE
+    // ======================================================
+    const zone = document.querySelector('.upload-zone');
+    // Buscamos el span del texto dentro de la zona
+    const textSpan = zone ? zone.querySelector('.upload-text') : null;
+
+    if (zone && textSpan) {
+        // A. Restaurar texto original
+        textSpan.innerText = "Choose or drop image"; 
+        
+        // B. Quitar clases y estilos de "archivo cargado"
+        zone.classList.remove('has-file'); 
+        zone.style.borderColor = ""; // Quitar el borde azul forzado
+    }
+    // ======================================================
     
     draw();
 }
