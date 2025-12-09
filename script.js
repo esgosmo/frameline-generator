@@ -712,18 +712,41 @@ if (menuAspecto) {
         // 2. Poner el valor en el input
         if(inputs.aspect) inputs.aspect.value = val;
 
-        // 3. APAGAR BOTONES (SOLUCIÓN INFALIBLE)
-        // Buscamos directamente el contenedor de los botones por su nuevo ID
+        // 3. APAGAR BOTONES (Limpieza)
         const contenedorBotones = document.getElementById('aspectBtnContainer');
-        
         if (contenedorBotones) {
             const botonesPrendidos = contenedorBotones.querySelectorAll('button.active');
             botonesPrendidos.forEach(btn => btn.classList.remove('active'));
         }
+
+        // ======================================================
+        // 🔥 CORRECCIÓN AQUÍ: AUTO-ON FORZADO
+        // ======================================================
+        const currentThick = parseInt(inputs.thickness ? inputs.thickness.value : 0) || 0;
+        
+        if (currentThick === 0) {
+            // A. Calculamos el grosor ideal manualmente
+            const currentW = parseInt(inputs.w.value) || 1920;
+            const idealThickness = (currentW > 3500) ? 6 : 2;
+
+            // B. ¡OBLIGAMOS AL INPUT A CAMBIAR! (Esto faltaba)
+            inputs.thickness.value = idealThickness;
+            
+            // C. Actualizamos la variable global de memoria
+            if (typeof lastThickness !== 'undefined') lastThickness = idealThickness;
+
+            // D. Actualizamos el botón visual del Ojito
+            if (typeof updateQuickBtnState === 'function') {
+                updateQuickBtnState();
+            }
+        }
+        // ======================================================
         
         // 4. Redibujar
         flashInput(inputs.aspect);
-        requestDraw();
+        
+        // Usamos requestDraw si ya implementaste la optimización, si no, usa draw()
+        if (typeof requestDraw === 'function') requestDraw(); else draw();
     });
 }
 
@@ -876,6 +899,30 @@ window.setAspect = function(val, btn) {
         menuAspecto.value = val;
         if(menuAspecto.value != val) menuAspecto.value = 'custom';
     }
+    
+// ======================================================
+    // 🔥 CORRECCIÓN: AUTO-ON FORZADO (Igual que en el menú)
+    // ======================================================
+    const currentThick = parseInt(inputs.thickness ? inputs.thickness.value : 0) || 0;
+
+    if (currentThick === 0) {
+        // A. Calculamos grosor ideal (6px para 4K, 2px para HD)
+        const currentW = parseInt(inputs.w.value) || 1920;
+        const idealThickness = (currentW > 3500) ? 6 : 2;
+
+        // B. ¡OBLIGAMOS AL INPUT A CAMBIAR!
+        if (inputs.thickness) inputs.thickness.value = idealThickness;
+
+        // C. Actualizamos memoria global
+        if (typeof lastThickness !== 'undefined') lastThickness = idealThickness;
+
+        // D. Prendemos el botón visual del ojito
+        if (typeof updateQuickBtnState === 'function') {
+            updateQuickBtnState();
+        }
+    }
+    // ======================================================
+
     flashInput(inputs.aspect); highlightButton(btn); requestDraw();
 }
 
