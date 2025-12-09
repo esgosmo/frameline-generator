@@ -885,45 +885,72 @@ window.setOpacity = function(val, btn) {
 }
 
 // ==========================================
-// 8. DESCARGA INTELIGENTE (JPG vs PNG)
+// 8. DESCARGA INTELIGENTE (MARCA DE AGUA ABAJO A LA DERECHA)
 // ==========================================
 btnDownload.addEventListener('click', () => {
-    // 1. Obtener datos
+    // 1. Obtener datos actuales
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
-    // Limpiamos el nombre del aspecto (cambiamos : por -)
     const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
     
-    // 2. Detectar si estamos en "Modo Foto"
-    // (Si hay imagen cargada Y el ojito está activado)
+    // 2. Detectar si estamos en "Modo Foto" (JPG)
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
 
     const a = document.createElement('a');
 
     if (hasPhoto) {
-        // --- CASO A: CON FOTO (JPG) ---
-        // Usamos JPG calidad 0.9 (90%). Pesa poco y se ve genial.
-        // Agregamos "_preview" al nombre para diferenciarlo.
+        // --- CASO A: CON FOTO (JPG) -> LLEVA MARCA DE AGUA ---
+        
+        // 1. DIBUJAR LA MARCA DE AGUA (Temporalmente)
+        ctx.save(); // Guardar estado actual del canvas
+        
+        // Configuración Sutil (Dinámica según el tamaño de la imagen)
+        const fontSize = Math.max(10, Math.round(w * 0.012)); // 1.5% del ancho
+        const margin = fontSize; // Margen proporcional al tamaño de letra
+
+        ctx.font = `500 ${fontSize}px Arial, sans-serif`;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; // Blanco al 50%
+        
+        // 🔥 CAMBIO CLAVE 1: Alineación a la derecha
+        ctx.textAlign = "right";
+        // 🔥 CAMBIO CLAVE 2: Línea base abajo
+        ctx.textBaseline = "bottom";
+        
+        // Sombra suave para legibilidad
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        ctx.shadowBlur = 4;
+        
+        // 🔥 CAMBIO CLAVE 3: Coordenadas (Ancho total menos margen, Alto total menos margen)
+        ctx.fillText("frameline-generator.com", w - margin, h - margin);
+        
+        ctx.restore(); // Soltar configuración para no afectar nada más
+
+        // 2. GENERAR EL ARCHIVO JPG CON LA MARCA
         a.href = canvas.toDataURL('image/jpeg', 0.9);
         a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
+
+        // 3. LIMPIEZA INMEDIATA
+        // Volvemos a llamar a draw() (o requestDraw si usaste la optimización)
+        // para borrar la marca de la pantalla del usuario.
+        setTimeout(() => {
+             if(typeof requestDraw === 'function') requestDraw(); else draw();
+        }, 0); 
+
     } else {
-        // --- CASO B: SOLO LÍNEAS (PNG) ---
-        // Mantenemos PNG para la transparencia (Overlay).
-        // Nombre estándar.
+        // --- CASO B: SOLO LÍNEAS (PNG) -> SIN MARCA DE AGUA ---
         a.href = canvas.toDataURL('image/png');
         a.download = `Frameline_${w}x${h}_${asp}.png`;
     }
 
-    // --- AGREGAR ESTO PARA AVISAR A GOOGLE ---
+    // --- TRACKING ---
     if (typeof gtag === 'function') {
         gtag('event', 'download_png', {
             'event_category': 'Engagement',
-            'event_label': `Resolution: ${w}x${h}` // Le enviamos qué resolución bajaron
+            'event_label': `Resolution: ${w}x${h}`
         });
     }
-    // ----------------------------------------
 
-    // 3. Descargar sin preguntas (Warning eliminado)
+    // 4. Descargar
     a.click();
 });
 
