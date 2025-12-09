@@ -68,7 +68,7 @@ const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 
 // ==========================================
-// 3. IMAGE LOADING LOGIC (WITH SIZE & RES WARNING)
+// 3. LÓGICA DE CARGA DE IMAGEN (SOPORTE TIFF + 6K)
 // ==========================================
 const sizeWarning = document.getElementById('sizeWarning'); 
 
@@ -77,62 +77,56 @@ if (imageLoader) {
         const file = e.target.files[0];
         if (!file) return;
 
-        // ------------------------------------------------
-        // 1. DETECT FILE SIZE (> 20MB)
-        // ------------------------------------------------
-        const limitBytes = 20 * 1024 * 1024; // 20MB
-        let isHeavyFile = false; // Flag to remember state
+        // 1. DETECTAR PESO (> 20MB)
+        const limitBytes = 20 * 1024 * 1024; 
+        let isHeavyFile = false;
         
         if (file.size > limitBytes) {
             isHeavyFile = true;
             if(sizeWarning) {
-                // English Warning 1
                 sizeWarning.innerText = "⚠️ Large file size (>20MB) Performance may lag"; 
                 sizeWarning.classList.remove('hidden');
             }
         } else {
-            // Hide for now if size is okay
             if(sizeWarning) sizeWarning.classList.add('hidden');
         }
 
+        // 2. DETECTAR TIPO DE ARCHIVO
+        const fileType = file.type.toLowerCase();
+        const fileName = file.name.toLowerCase();
+        const isTiff = fileType.includes('tiff') || fileName.endsWith('.tif') || fileName.endsWith('.tiff');
+
         const reader = new FileReader();
-        
-        reader.onload = (event) => {
+
+        // --- FUNCIÓN COMÚN PARA PROCESAR LA IMAGEN FINAL ---
+        const procesarImagenFinal = (src) => {
             const img = new Image();
-            
             img.onload = () => {
                 userImage = img;
                 
-                // ------------------------------------------------
-                // 2. DETECT RESOLUTION (> 6K)
-                // ------------------------------------------------
-                const limitRes = 6000; 
+                // Reset Pan
+                imgPanX = 0; imgPanY = 0;
 
+                // Detectar Resolución Extrema
+                const limitRes = 6000; 
                 if (img.width > limitRes || img.height > limitRes) {
                     if (sizeWarning) {
-                        // English Warning 2 (Combined or Res only)
                         const msg = isHeavyFile 
                             ? "⚠️ Large file & large resolution (>6K) Performance may lag."
                             : "⚠️ Large resolution (>6K) Performance may lag.";
-                        
                         sizeWarning.innerText = msg;
                         sizeWarning.classList.remove('hidden');
                     }
                 }
-                
-                // Show controls
-                if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
 
-                // Adapt Canvas
+                // Mostrar controles y resetear UI
+                if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
-                
-                // Adjust thickness
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
-                
-                // Reset Menu
                 if(menuResoluciones) menuResoluciones.value = 'custom';
                 
+                // Limpiar botones
                 const clearContainer = (id) => {
                     const cont = document.getElementById(id);
                     if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
@@ -141,15 +135,63 @@ if (imageLoader) {
                 
                 flashInput(inputs.w);
                 flashInput(inputs.h);
+                
+                // Aplicar modo móvil si es necesario
+                if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
 
-                draw();
+                // Optimización draw
+                if(typeof requestDraw === 'function') requestDraw(); else draw();
             }
-            img.src = event.target.result;
+            img.src = src;
+        };
+
+        // --- RAMA A: ES UN TIFF (Requiere decodificación) ---
+        if (isTiff) {
+            reader.onload = (event) => {
+                try {
+                    const buffer = event.target.result;
+                    const ifds = UTIF.decode(buffer);
+                    
+                    // Decodificar la primera página del TIFF
+                    UTIF.decodeImage(buffer, ifds[0]);
+                    
+                    // Convertir a array RGBA
+                    const rgba = UTIF.toRGBA8(ifds[0]); 
+                    
+                    // Crear un Canvas temporal para convertir los datos crudos a una URL
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = ifds[0].width;
+                    tempCanvas.height = ifds[0].height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    // Poner los datos en el canvas
+                    const imageData = tempCtx.createImageData(ifds[0].width, ifds[0].height);
+                    imageData.data.set(rgba);
+                    tempCtx.putImageData(imageData, 0, 0);
+                    
+                    // Obtener URL (convertimos el TIFF a PNG en memoria)
+                    const pngURL = tempCanvas.toDataURL('image/png');
+                    
+                    // Mandar a la función principal
+                    procesarImagenFinal(pngURL);
+
+                } catch (err) {
+                    console.error("Error leyendo TIFF:", err);
+                    alert("Error reading TIFF file. It might be corrupted or incompatible.");
+                }
+            };
+            // IMPORTANTE: TIFFs se leen como Buffer, no como URL
+            reader.readAsArrayBuffer(file);
+
+        } else {
+            // --- RAMA B: ES JPG/PNG (Estándar) ---
+            reader.onload = (event) => {
+                procesarImagenFinal(event.target.result);
+            }
+            reader.readAsDataURL(file);
         }
-        reader.readAsDataURL(file);
     });
 }
-
 // Clear Function
 window.removeImage = function() {
     userImage = null;
