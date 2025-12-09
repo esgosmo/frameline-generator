@@ -474,3 +474,61 @@ input[type="range"] {
     padding: 0 !important;        /* Sin relleno interno */
     box-sizing: border-box !important;
 }
+
+/* 1. Esconder el input nativo feo */
+.hidden-input {
+    display: none;
+}
+
+/* 2. La Zona de Carga (Estilo "Dropzone") */
+.upload-zone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Espacio entre icono y texto */
+    
+    width: 100%;
+    padding: 20px 10px; /* Un poco más alto que un botón normal */
+    
+    /* EL TRUCO VISUAL: */
+    background-color: #1e1e1e; /* Un poco más oscuro que el fondo */
+    border: 2px dashed #444;   /* Borde punteado = "Aquí va algo" */
+    border-radius: 6px;
+    
+    color: #777; /* Texto apagado por defecto */
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+/* 3. Efecto Hover (Cuando pasas el mouse) */
+.upload-zone:hover {
+    background-color: #252525;
+    border-color: #666;       /* El borde se aclara */
+    color: #fff;              /* El texto se ilumina */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* Sutil profundidad */
+}
+
+/* 4. Estilo del Icono */
+.upload-icon {
+    font-size: 1.2rem;
+    opacity: 0.7;
+}
+
+/* 5. Estado "Activo" (Opcional: Si quieres indicar que ya hay foto) */
+.upload-zone.has-file {
+    border-style: solid;
+    border-color: #007bff;
+    color: #fff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Estado cuando tienes un archivo arrastrando encima */
+.upload-zone.drag-over {
+    background-color: #2a2a2a; /* Fondo más claro */
+    border-color: #007bff;     /* Borde azul activo */
+    border-style: solid;       /* Borde sólido indicando "suelta aquí" */
+    color: white;
+    transform: scale(1.02);    /* Pequeño efecto de "crecer" */
+}
