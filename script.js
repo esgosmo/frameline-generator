@@ -676,6 +676,24 @@ function draw() {
     let safeThickness = 0;
      if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
 
+    
+// =====================================================
+    // 🔥 LÓGICA DE CROP (Aquí definimos width/height finales)
+    // =====================================================
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
+
+     // Definimos las dimensiones finales (width y height que usará el canvas)
+    let width = rawW;
+    let height = rawH;
+
+    if (isCropMode) {
+        // ...pero si es CROP, calculamos la altura exacta matemática
+        height = Math.round(width / targetAspect);
+        
+        // Regla de Video: Siempre números pares para evitar problemas de códec
+        if (height % 2 !== 0) height--;
+    }
+
     // B. CANVAS
     if (canvas.width !== width) canvas.width = width;
     if (canvas.height !== height) canvas.height = height;
@@ -719,14 +737,25 @@ function draw() {
     if (isCropMode) {
         visibleW = width; visibleH = height; offsetX = 0; offsetY = 0;
     } else {
-        if (targetAspect > screenAspect) { visibleW = width; visibleH = width / targetAspect; } 
-        else { visibleH = height; visibleW = height * targetAspect; }
-        visibleW = Math.round(visibleW * scaleFactor);
-        visibleH = Math.round(visibleH * scaleFactor);
-        const barHeight = Math.floor((height - visibleH) / 2);
-        const barWidth = Math.floor((width - visibleW) / 2);
-        offsetX = barWidth; offsetY = barHeight;
+        visibleH = height;
+        visibleW = height * targetAspect;
     }
+
+    // 2. Aplicar Escala y REDONDEAR (Vital para evitar bordes borrosos)
+    // Math.round fuerza al pixel entero más cercano
+    visibleW = Math.round(visibleW * scaleFactor);
+    visibleH = Math.round(visibleH * scaleFactor);
+
+    // 3. Asegurar que sean números pares (Opcional, ayuda al centrado perfecto)
+    if (visibleW % 2 !== 0) visibleW--;
+    if (visibleH % 2 !== 0) visibleH--;
+
+    // 4. Calcular Matte (Barras) con enteros
+    // Math.floor asegura que no queden medios píxeles sueltos
+    const barHeight = Math.floor((height - visibleH) / 2);
+    const barWidth = Math.floor((width - visibleW) / 2);
+    const offsetX = barWidth;
+    const offsetY = barHeight;
 
     // E. MATTE
     ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
@@ -761,8 +790,17 @@ function draw() {
             else { secH = height; secW = height * secAspect; }
             secW = secW * scaleFactor;
         }
-        secW = Math.round(secW); secH = Math.round(secH);
-        secX = (width - secW) / 2; secY = (height - secH) / 2;
+
+       // 2. 🔥 CORRECCIÓN: REDONDEAR Y FORZAR PARES (Igual que Main Frame)
+        secW = Math.round(secW);
+        secH = Math.round(secH);
+
+        if (secW % 2 !== 0) secW--; // Si es 1215 -> 1214
+        if (secH % 2 !== 0) secH--; // Si es impar -> par
+
+        // 3. CALCULAR POSICIÓN
+        secX = (width - secW) / 2;
+        secY = (height - secH) / 2;
 
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
         ctx.lineWidth = secThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
