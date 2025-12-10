@@ -657,7 +657,7 @@ function draw() {
     // --- ESCALA ---
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
-     const scaleFactor = scaleVal / 100;
+    const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
     // --- OPACIDAD ---
@@ -1051,16 +1051,36 @@ if (resetBtn) {
         const secColorInput = document.getElementById('secFrameColor');
         if (secColorInput) secColorInput.value = "#0000FF";
         
-        const hideById = (id) => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); };
-        const uncheckById = (id) => { const el = document.getElementById(id); if (el) el.checked = false; };
-        hideById('aspectGroup'); hideById('secFrameControls'); hideById('advancedGroup'); hideById('infoPanel');
+        // 2. Ocultar Paneles y Checkboxes
+        const hideById = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        };
+        const uncheckById = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = false;
+        };
+
         
-        uncheckById('secFrameOn'); uncheckById('safeActionToggle'); uncheckById('safeTitleToggle');
-        if(inputs.safeActionVal) inputs.safeActionVal.value = 93;
-        if(inputs.safeTitleVal) inputs.safeTitleVal.value = 90;
-        uncheckById('showLabelsToggle'); uncheckById('showResLabelsToggle');
-        uncheckById('secFrameFit'); uncheckById('scaleFill');
-        const fitRadio = document.getElementById('scaleFit'); if(fitRadio) fitRadio.checked = true;
+
+        // --- AQUÍ ESTÁ EL CAMBIO QUE PEDISTE ---
+        hideById('aspectGroup'); // Oculta Manual Ratio y Frameline Scale
+        hideById('secFrameControls'); // Oculta opciones secundarias
+        hideById('advancedGroup'); // Oculta Advanced
+        hideById('infoPanel'); // Oculta Info
+        // ---------------------------------------
+
+        uncheckById('secFrameOn');
+        uncheckById('safeActionToggle');
+        uncheckById('safeTitleToggle');
+        if(inputs.safeActionVal) inputs.safeActionVal.value = 93; // Volver a 93%
+        if(inputs.safeTitleVal) inputs.safeTitleVal.value = 90;   // Volver a 90%
+        uncheckById('showLabelsToggle');
+        uncheckById('showResLabelsToggle');
+        uncheckById('secFrameFit');
+        uncheckById('scaleFill');
+        const fitRadio = document.getElementById('scaleFit');
+        if(fitRadio) fitRadio.checked = true;
 
         const arrowEl = document.getElementById('arrow'); if(arrowEl) arrowEl.innerText = "▼";
         const infoArrow = document.getElementById('infoArrow'); if(infoArrow) infoArrow.innerText = "▼";
