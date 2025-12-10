@@ -496,7 +496,7 @@ function draw() {
     // --- ESCALA ---
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
-    // const scaleFactor = scaleVal / 100;
+     const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
     // --- OPACIDAD ---
