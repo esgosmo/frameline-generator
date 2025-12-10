@@ -128,50 +128,6 @@ if (imageLoader) {
         // ------------------------------------------------
         // 1. VALIDACIÓN Y NOMBRE
         // ------------------------------------------------
-        const fileName = file.name.toLowerCase();
-        const fileType = file.type.toLowerCase();
-
-        // Permitimos: Cualquier tipo "image/..." O extensiones explícitas de TIFF
-        // Esto bloquea .mov, .mp4, .pdf, .txt, etc.
-        const isValid = fileType.startsWith('image/') || 
-                        fileName.endsWith('.tiff') || 
-                        fileName.endsWith('.tif');
-
-        if (!isValid) {
-            alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF.");
-            
-            // IMPORTANTE: Resetear el input para que no se quede "enganchado" con el archivo malo
-            imageLoader.value = ""; 
-            
-            // DETENER TODO AQUÍ: No cambiamos el texto, no leemos nada.
-            return; 
-        }
-
-        // ------------------------------------------------
-        // 2. ACTUALIZAR UI (Solo si pasó la validación)
-        // ------------------------------------------------
-        const zone = document.querySelector('.upload-zone');
-        const textSpan = zone ? zone.querySelector('.upload-text') : null;
-
-        if (zone && textSpan) {
-            let name = file.name;
-            if (name.length > 20) name = name.substring(0, 18) + "...";
-            
-            textSpan.innerText = name;      // Cambiar texto
-            zone.classList.add('has-file'); // Poner estilo activo
-            zone.style.borderColor = "#007bff"; 
-        }
-
-        // ------------------------------------------------
-        // 3. DETECTAR PESO (> 20MB)
-        // ------------------------------------------------
-        const limitBytes = 20 * 1024 * 1024; 
-        let isHeavyFile = false;
-        
-        if (file.size > limitBytes) {
-            isHeavyFile = true;
-            if(sizeWarning) {
-                sizeWarning.innerText = "⚠️ Large file size (>20MB) Performance may lag"; 
         let fileName = file.name;
         const fileType = file.type.toLowerCase();
         
@@ -221,25 +177,15 @@ if (imageLoader) {
                 sizeWarning.innerText = "⚠️ Large file size (>20MB)";
                 sizeWarning.classList.remove('hidden');
             }
-        } else {
-            // Hide for now if size is okay
-            if(sizeWarning) sizeWarning.classList.add('hidden');
         }
 
-        // ------------------------------------------------
-        // 4. PROCESAMIENTO (Reader / TIFF / JPG)
-        // ------------------------------------------------
-        const reader = new FileReader();
-        const isTiff = fileName.endsWith('.tiff') || fileName.endsWith('.tif'); // Doble check por extensión
-
-        reader.onload = (event) => {
         // ------------------------------------------------
         // 4. FUNCIÓN MAESTRA DE PROCESAMIENTO
         // ------------------------------------------------
         const finalizarCarga = (blobUrl) => {
             currentObjectUrl = blobUrl; // Guardar referencia
             const img = new Image();
-
+            
             img.onload = () => {
                 userImage = img;
                 
