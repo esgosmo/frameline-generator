@@ -1145,6 +1145,9 @@ btnDownload.addEventListener('click', () => {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
     const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
+
+    // Nuevo - Detectar si es Crop
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     
     // 2. Detectar si estamos en "Modo Foto" (JPG)
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
@@ -1202,9 +1205,16 @@ btnDownload.addEventListener('click', () => {
         }, 0); 
 
     } else {
-        // --- CASO B: SOLO LÍNEAS (PNG) -> SIN MARCA DE AGUA ---
-        a.href = canvas.toDataURL('image/png');
-        a.download = `Frameline_${w}x${h}_${asp}.png`;
+        // ... (CASO B: PNG o CROP MODE) -> SIN MARCA ...
+        // Al ser Crop Mode, el canvas YA tiene el tamaño recortado gracias al draw()
+        // así que solo lo descargamos tal cual.
+        
+        const ext = hasPhoto ? 'jpg' : 'png'; // Si es crop con foto, mejor jpg
+        const type = hasPhoto ? 'image/jpeg' : 'image/png';
+        const quality = hasPhoto ? 0.9 : undefined;
+
+        a.href = canvas.toDataURL(type, quality);
+        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
     }
 
     // --- TRACKING ---
