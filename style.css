@@ -533,6 +533,7 @@ input[type="range"] {
     transform: scale(1.02);    /* Pequeño efecto de "crecer" */
 }
 
+<<<<<<< HEAD
 .btn-crop-style {
     /* 1. Copia exacta de tus estilos de input/select */
     width: 100%;
@@ -562,4 +563,20 @@ input[type="range"] {
 .btn-crop-style:active {
     background: #222;
     transform: translateY(1px); /* Sensación de presión */
+=======
+.btn-secondary {
+    background-color: #333;
+    color: #ddd;
+    border: 1px solid #555;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+.btn-secondary:hover {
+    background-color: #444;
+    color: white;
+    border-color: #777;
+>>>>>>> 422c138 (Estilo del nuevo botón de crop to aspect ratio)
 }
