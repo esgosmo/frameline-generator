@@ -111,7 +111,7 @@ const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 
 // ==========================================
-// 3. LÓGICA DE CARGA (VALIDACIÓN + UI + TIFF + 6K)
+// 3. LÓGICA DE CARGA BLINDADA (PERFORMANCE 6K+ & TIFF)
 // ==========================================
 const sizeWarning = document.getElementById('sizeWarning'); 
 
@@ -127,71 +127,70 @@ if (imageLoader) {
         if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
 
         // ------------------------------------------------
-        // 1. FASE DE VALIDACIÓN (El filtro de seguridad)
+        // 1. VALIDACIÓN Y NOMBRE
         // ------------------------------------------------
-        const fileName = file.name.toLowerCase();
+        let fileName = file.name;
         const fileType = file.type.toLowerCase();
+        
+        // Corrección de nombre "temp"
+        // Si el nombre parece basura temporal, intentamos limpiarlo o dejarlo genérico
+        if (fileName.toLowerCase().includes('temp') || fileName.length > 50) {
+             // Intentar sacar extensión
+             const ext = fileName.split('.').pop();
+             if(ext) fileName = `Image_Loaded.${ext}`;
+             else fileName = "Image_Loaded";
+        }
 
-        // Permitimos: Cualquier tipo "image/..." O extensiones explícitas de TIFF
-        // Esto bloquea .mov, .mp4, .pdf, .txt, etc.
         const isValid = fileType.startsWith('image/') || 
-                        fileName.endsWith('.tiff') || 
-                        fileName.endsWith('.tif');
+                        fileName.toLowerCase().endsWith('.tiff') || 
+                        fileName.toLowerCase().endsWith('.tif');
 
         if (!isValid) {
             alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF.");
-            
-            // IMPORTANTE: Resetear el input para que no se quede "enganchado" con el archivo malo
             imageLoader.value = ""; 
-            
-            // DETENER TODO AQUÍ: No cambiamos el texto, no leemos nada.
             return; 
         }
 
         // ------------------------------------------------
-        // 2. ACTUALIZAR UI (Solo si pasó la validación)
+        // 2. ACTUALIZAR UI (Inmediato)
         // ------------------------------------------------
         const zone = document.querySelector('.upload-zone');
         const textSpan = zone ? zone.querySelector('.upload-text') : null;
 
         if (zone && textSpan) {
-            let name = file.name;
-            if (name.length > 20) name = name.substring(0, 18) + "...";
-            
-            textSpan.innerText = name;      // Cambiar texto
-            zone.classList.add('has-file'); // Poner estilo activo
+            let displayName = fileName;
+            if (displayName.length > 25) displayName = displayName.substring(0, 22) + "...";
+            textSpan.innerText = displayName;      
+            zone.classList.add('has-file'); 
             zone.style.borderColor = "#007bff"; 
         }
 
         // ------------------------------------------------
-        // 3. DETECTAR PESO (> 20MB)
+        // 3. AVISOS DE PESO / RESOLUCIÓN
         // ------------------------------------------------
-        const limitBytes = 20 * 1024 * 1024; 
-        let isHeavyFile = false;
+        const limitBytes = 20 * 1024 * 1024; // 20MB
+        let isHeavyFile = (file.size > limitBytes);
         
-        if (file.size > limitBytes) {
-            isHeavyFile = true;
-            if(sizeWarning) {
-                sizeWarning.innerText = "⚠️ Large file size (>20MB) Performance may lag"; 
+        // Reset warning state
+        if(sizeWarning) {
+            sizeWarning.classList.add('hidden');
+            if (isHeavyFile) {
+                sizeWarning.innerText = "⚠️ Large file size (>20MB)";
                 sizeWarning.classList.remove('hidden');
             }
-        } else {
-            if(sizeWarning) sizeWarning.classList.add('hidden');
         }
 
         // ------------------------------------------------
-        // 4. PROCESAMIENTO (Reader / TIFF / JPG)
+        // 4. FUNCIÓN MAESTRA DE PROCESAMIENTO
         // ------------------------------------------------
-        const reader = new FileReader();
-        const isTiff = fileName.endsWith('.tiff') || fileName.endsWith('.tif'); // Doble check por extensión
-
-        // Función interna para procesar el resultado final (sea cual sea el origen)
-        const procesarImagenFinal = (src) => {
+        const finalizarCarga = (blobUrl) => {
+            currentObjectUrl = blobUrl; // Guardar referencia
             const img = new Image();
+            
             img.onload = () => {
                 userImage = img;
                 
-                // Reset Pan y Zoom
+                // Reset Pan
                 if (typeof imgPanX !== 'undefined') { imgPanX = 0; imgPanY = 0; }
 
                 // Detectar Resolución Extrema (> 6K)
@@ -206,7 +205,7 @@ if (imageLoader) {
                     }
                 }
 
-                // Mostrar panel y setear valores
+                // Activar Interfaz
                 if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
@@ -214,7 +213,7 @@ if (imageLoader) {
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
                 if(menuResoluciones) menuResoluciones.value = 'custom';
                 
-                // Limpiar botones
+                // Limpiar botones azules
                 const clearContainer = (id) => {
                     const cont = document.getElementById(id);
                     if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
@@ -224,23 +223,33 @@ if (imageLoader) {
                 flashInput(inputs.w);
                 flashInput(inputs.h);
                 
-                // Aplicar modo móvil
+                // Forzar Fit en móviles
                 if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
 
                 // Dibujar
                 if(typeof requestDraw === 'function') requestDraw(); else draw();
-            }
-            img.src = src;
+            };
+
+            img.onerror = () => {
+                alert("Error loading image data. The file might be corrupted.");
+                if(window.removeImage) window.removeImage();
+            };
+
+            img.src = blobUrl;
         };
 
-        // --- RAMA A: ES UN TIFF ---
+        // ------------------------------------------------
+        // 5. RUTAS DE CARGA (Aquí está la optimización)
+        // ------------------------------------------------
+        const isTiff = fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
+
         if (isTiff) {
+            // --- RUTA TIFF (Lenta pero necesaria) ---
+            const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    // Asegurarnos que UTIF existe
-                    if (typeof UTIF === 'undefined') {
-                        throw new Error("UTIF library not loaded");
-                    }
+                    if (typeof UTIF === 'undefined') throw new Error("UTIF library missing");
+                    
                     const buffer = event.target.result;
                     const ifds = UTIF.decode(buffer);
                     UTIF.decodeImage(buffer, ifds[0]);
@@ -255,22 +264,26 @@ if (imageLoader) {
                     imageData.data.set(rgba);
                     tempCtx.putImageData(imageData, 0, 0);
                     
-                    procesarImagenFinal(tempCanvas.toDataURL('image/png'));
+                    // OPTIMIZACIÓN: Usar toBlob en lugar de toDataURL para ahorrar RAM
+                    tempCanvas.toBlob((blob) => {
+                        const tiffUrl = URL.createObjectURL(blob);
+                        finalizarCarga(tiffUrl);
+                    }, 'image/png');
+
                 } catch (err) {
                     console.error(err);
-                    alert("Error reading TIFF. Ensure UTIF.js is imported.");
-                    // Si falla, reseteamos la UI también
+                    alert("Error processing TIFF file.");
                     if(window.removeImage) window.removeImage();
                 }
             };
             reader.readAsArrayBuffer(file);
 
         } else {
-            // --- RAMA B: ES JPG/PNG ---
-            reader.onload = (event) => {
-                procesarImagenFinal(event.target.result);
-            }
-            reader.readAsDataURL(file);
+            // --- RUTA JPG/PNG (TURBO MODE) ---
+            // 🔥 No usamos FileReader. Usamos ObjectURL directo.
+            // Esto carga 8K instantáneo sin leer bytes.
+            const objectUrl = URL.createObjectURL(file);
+            finalizarCarga(objectUrl);
         }
     });
 }
