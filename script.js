@@ -1117,82 +1117,95 @@ window.setOpacity = function(val, btn) {
 }
 
 // ==========================================
-// 8. DESCARGA INTELIGENTE (MARCA DE AGUA ABAJO A LA DERECHA)
+// 8. DESCARGA INTELIGENTE (CORREGIDA)
 // ==========================================
 btnDownload.addEventListener('click', () => {
     // 1. Obtener datos actuales
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
-    const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
-
-    // Nuevo - Detectar si es Crop
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     
-    // 2. Detectar si estamos en "Modo Foto" (JPG)
+    // Obtener aspecto limpio para el nombre
+    let asp = "ratio";
+    if (inputs.aspect) {
+        // Limpiamos caracteres raros y dos puntos
+        asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
+    }
+
+    // 2. Detectar Estados
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
 
+    // Creamos el elemento de descarga
     const a = document.createElement('a');
 
-    if (hasPhoto) {
-        // --- CASO A: CON FOTO (JPG) -> LLEVA MARCA DE AGUA ---
+    // =========================================================
+    // RUTA A: MODO CROP (Prioridad Máxima)
+    // =========================================================
+    if (isCropMode) {
+        // En modo Crop, el canvas YA tiene el tamaño recortado físicamente.
+        // No dibujamos marca de agua.
         
-        // 1. DIBUJAR LA MARCA DE AGUA (Temporalmente)
-        ctx.save(); // Guardar estado actual del canvas
-        
-        // Configuración Sutil (Dinámica según el tamaño de la imagen)
-        const fontSize = Math.max(10, Math.round(w * 0.012)); // 1.5% del ancho
-        const margin = fontSize; // Margen proporcional al tamaño de letra
-
-        ctx.font = `500 ${fontSize}px Arial, sans-serif`;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; // Blanco al 50%
-        
-        // 🔥 CAMBIO CLAVE 1: Alineación a la derecha
-        ctx.textAlign = "right";
-        // 🔥 CAMBIO CLAVE 2: Línea base abajo
-        ctx.textBaseline = "bottom";
-        
-        // Sombra suave para legibilidad
-        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-        ctx.shadowBlur = 4;
-        
-        // 🔥 CAMBIO CLAVE 3: Coordenadas (Ancho total menos margen, Alto total menos margen)
-        ctx.fillText("frameline-generator.com", w - margin, h - margin);
-        
-        ctx.restore(); // Soltar configuración para no afectar nada más
-
-        // 2. GENERAR EL ARCHIVO JPG CON LA MARCA
-        a.href = canvas.toDataURL('image/jpeg', 0.9);
-        a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
-
-        // 3. LIMPIEZA INMEDIATA
-        // Volvemos a llamar a draw() (o requestDraw si usaste la optimización)
-        // para borrar la marca de la pantalla del usuario.
-        setTimeout(() => {
-             if(typeof requestDraw === 'function') requestDraw(); else draw();
-        }, 0); 
-
-    } else {
-        // ... (CASO B: PNG o CROP MODE) -> SIN MARCA ...
-        // Al ser Crop Mode, el canvas YA tiene el tamaño recortado gracias al draw()
-        // así que solo lo descargamos tal cual.
-        
-        const ext = hasPhoto ? 'jpg' : 'png'; // Si es crop con foto, mejor jpg
+        // Usamos PNG para máxima calidad en el recorte, o JPG 100%
+        // Si hay foto, mejor JPG high quality para que no pese 50MB
         const type = hasPhoto ? 'image/jpeg' : 'image/png';
-        const quality = hasPhoto ? 0.9 : undefined;
+        const quality = hasPhoto ? 1.0 : undefined;
+        const ext = hasPhoto ? 'jpg' : 'png';
 
         a.href = canvas.toDataURL(type, quality);
         a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
     }
+    
+    // =========================================================
+    // RUTA B: MODO PREVIEW (Foto + Barras Negras)
+    // =========================================================
+    else if (hasPhoto) {
+        // Aquí SÍ dibujamos marca de agua porque es un preview
+        
+        ctx.save(); 
+        
+        // Configuración de Marca de Agua
+        const fontSize = Math.max(10, Math.round(w * 0.012)); 
+        const margin = fontSize; 
+
+        ctx.font = `500 ${fontSize}px Arial, sans-serif`;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
+        ctx.textAlign = "right";
+        ctx.textBaseline = "bottom";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        ctx.shadowBlur = 4;
+        
+        ctx.fillText("frameline-generator.com", w - margin, h - margin);
+        
+        ctx.restore(); 
+
+        // Generar JPG
+        a.href = canvas.toDataURL('image/jpeg', 0.9);
+        a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
+
+        // Borrar marca de agua visualmente (Redibujar rápido)
+        setTimeout(() => {
+             if(typeof requestDraw === 'function') requestDraw(); else draw();
+        }, 0); 
+    }
+    
+    // =========================================================
+    // RUTA C: MODO TEMPLATE (Solo Líneas / PNG Transparente)
+    // =========================================================
+    else {
+        // PNG Transparente sin fondo ni marca
+        a.href = canvas.toDataURL('image/png');
+        a.download = `Frameline_${w}x${h}_${asp}.png`;
+    }
 
     // --- TRACKING ---
     if (typeof gtag === 'function') {
-        gtag('event', 'download_png', {
+        gtag('event', 'download_file', {
             'event_category': 'Engagement',
-            'event_label': `Resolution: ${w}x${h}`
+            'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template')
         });
     }
 
-    // 4. Descargar
+    // Ejecutar descarga
     a.click();
 });
 
