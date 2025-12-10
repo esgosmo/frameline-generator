@@ -531,7 +531,8 @@ function draw() {
         height = Math.round(width / targetAspect);
         
         // Regla de Video: Siempre números pares para evitar problemas de códec
-        if (height % 2 !== 0) height--;
+        // Lo voy a quitar, prefiero la precisión matemática
+        // if (height % 2 !== 0) height--;
     }
 
     // B. CANVAS
@@ -599,8 +600,9 @@ function draw() {
     visibleH = Math.round(visibleH * scaleFactor);
 
     // 3. Asegurar que sean números pares (Opcional, ayuda al centrado perfecto)
-    if (visibleW % 2 !== 0) visibleW--;
-    if (visibleH % 2 !== 0) visibleH--;
+    // Voy a comentarlas, prefiero la precisión matemática
+    //if (visibleW % 2 !== 0) visibleW--;
+    // if (visibleH % 2 !== 0) visibleH--;
 
     // 4. Calcular Matte (Barras) con enteros
     // Math.floor asegura que no queden medios píxeles sueltos
@@ -666,11 +668,13 @@ function draw() {
         }
 
        // 2. 🔥 CORRECCIÓN: REDONDEAR Y FORZAR PARES (Igual que Main Frame)
+       
         secW = Math.round(secW);
         secH = Math.round(secH);
 
-        if (secW % 2 !== 0) secW--; // Si es 1215 -> 1214
-        if (secH % 2 !== 0) secH--; // Si es impar -> par
+        // Voy a comentarlas, prefiero la precisión matemática
+       // if (secW % 2 !== 0) secW--; // Si es 1215 -> 1214
+       // if (secH % 2 !== 0) secH--; // Si es impar -> par
 
         // 3. CALCULAR POSICIÓN
         secX = (width - secW) / 2;
