@@ -533,18 +533,33 @@ input[type="range"] {
     transform: scale(1.02);    /* Pequeño efecto de "crecer" */
 }
 
-.btn-secondary {
-    background-color: #333;
-    color: #ddd;
-    border: 1px solid #555;
+.btn-crop-style {
+    /* 1. Copia exacta de tus estilos de input/select */
+    width: 100%;
+    background: #333;
+    border: 1px solid #444;
+    color: #ccc; /* Un poco más claro para que se lea bien */
     padding: 8px;
     border-radius: 4px;
+    font-size: 14px; /* Igual que tus inputs */
+    
+    /* 2. Comportamiento de botón */
     cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 500;
+    margin-top: 5px; /* Un pequeño respiro con lo de arriba */
+    text-align: center;
+    transition: all 0.2s ease;
+    font-family: 'Segoe UI', sans-serif;
 }
-.btn-secondary:hover {
-    background-color: #444;
-    color: white;
-    border-color: #777;
+
+/* Efecto al pasar el mouse (Hover) */
+.btn-crop-style:hover {
+    background: #444;     /* Se aclara un poco */
+    color: white;         /* Texto blanco brillante */
+    border-color: #007bff; /* Borde azul sutil (como tus otros botones) */
+}
+
+/* Efecto al hacer clic (Active) */
+.btn-crop-style:active {
+    background: #222;
+    transform: translateY(1px); /* Sensación de presión */
 }
