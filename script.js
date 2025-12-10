@@ -367,6 +367,10 @@ let lastThickness = 2;
 const imageLoader = document.getElementById('imageLoader');
 const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
+
+// ==========================================
+// 3. LÓGICA DE CARGA (VALIDACIÓN + UI + TIFF + 6K)
+// ==========================================
 const sizeWarning = document.getElementById('sizeWarning'); 
 
 if (imageLoader) {
@@ -374,87 +378,163 @@ if (imageLoader) {
     imageLoader.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
 
-        let fileName = file.name;
-        if (fileName.toLowerCase().includes('temp') || fileName.length > 50) {
-             const ext = fileName.split('.').pop();
-             fileName = ext ? `Image_Loaded.${ext}` : "Image_Loaded";
+        // ------------------------------------------------
+        // 1. FASE DE VALIDACIÓN (El filtro de seguridad)
+        // ------------------------------------------------
+        const fileName = file.name.toLowerCase();
+        const fileType = file.type.toLowerCase();
+
+        // Permitimos: Cualquier tipo "image/..." O extensiones explícitas de TIFF
+        // Esto bloquea .mov, .mp4, .pdf, .txt, etc.
+        const isValid = fileType.startsWith('image/') || 
+                        fileName.endsWith('.tiff') || 
+                        fileName.endsWith('.tif');
+
+        if (!isValid) {
+            alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF.");
+            
+            // IMPORTANTE: Resetear el input para que no se quede "enganchado" con el archivo malo
+            imageLoader.value = ""; 
+            
+            // DETENER TODO AQUÍ: No cambiamos el texto, no leemos nada.
+            return; 
         }
 
-        const isValid = file.type.startsWith('image/') || fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
-        if (!isValid) { alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF."); imageLoader.value = ""; return; }
-
+        // ------------------------------------------------
+        // 2. ACTUALIZAR UI (Solo si pasó la validación)
+        // ------------------------------------------------
         const zone = document.querySelector('.upload-zone');
         const textSpan = zone ? zone.querySelector('.upload-text') : null;
+
         if (zone && textSpan) {
-            textSpan.innerText = "Image Loaded"; 
-            zone.classList.add('has-file'); 
+            let name = file.name;
+            if (name.length > 20) name = name.substring(0, 18) + "...";
+            
+            textSpan.innerText = name;      // Cambiar texto
+            zone.classList.add('has-file'); // Poner estilo activo
             zone.style.borderColor = "#007bff"; 
         }
 
-        const limitBytes = 20 * 1024 * 1024;
-        let isHeavyFile = (file.size > limitBytes);
-        if(sizeWarning) {
-            sizeWarning.classList.add('hidden');
-            if (isHeavyFile) { sizeWarning.innerText = "⚠️ Large file size (>20MB)"; sizeWarning.classList.remove('hidden'); }
+        // ------------------------------------------------
+        // 3. DETECTAR PESO (> 20MB)
+        // ------------------------------------------------
+        const limitBytes = 20 * 1024 * 1024; 
+        let isHeavyFile = false;
+        
+        if (file.size > limitBytes) {
+            isHeavyFile = true;
+            if(sizeWarning) {
+                sizeWarning.innerText = "⚠️ Large file size (>20MB) Performance may lag"; 
+                sizeWarning.classList.remove('hidden');
+            }
+        } else {
+            if(sizeWarning) sizeWarning.classList.add('hidden');
         }
 
-        const finalizarCarga = (blobUrl) => {
-            currentObjectUrl = blobUrl;
+        // ------------------------------------------------
+        // 4. PROCESAMIENTO (Reader / TIFF / JPG)
+        // ------------------------------------------------
+        const reader = new FileReader();
+        const isTiff = fileName.endsWith('.tiff') || fileName.endsWith('.tif'); // Doble check por extensión
+
+        // Función interna para procesar el resultado final (sea cual sea el origen)
+        const procesarImagenFinal = (src) => {
             const img = new Image();
+
             img.onload = () => {
                 userImage = img;
+                
+                // Reset Pan y Zoom
+                if (typeof imgPanX !== 'undefined') { imgPanX = 0; imgPanY = 0; }
+
+                // Detectar Resolución Extrema (> 6K)
                 const limitRes = 6000; 
+
                 if (img.width > limitRes || img.height > limitRes) {
                     if (sizeWarning) {
-                        const msg = isHeavyFile ? "⚠️ Large file & large resolution (>6K) Performance may lag." : "⚠️ Large resolution (>6K). Performance may lag.";
+                        const msg = isHeavyFile 
+                            ? "⚠️ Large file & large resolution (>6K) Performance may lag."
+                            : "⚠️ Large resolution (>6K). Performance may lag.";
                         sizeWarning.innerText = msg;
                         sizeWarning.classList.remove('hidden');
                     }
                 }
+
+                // Mostrar panel y setear valores
                 if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
+
+                // Adapt Canvas
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
+                
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
+
+                // Reset Menu
                 if(menuResoluciones) menuResoluciones.value = 'custom';
-                const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
+                
+                // Limpiar botones
+                const clearContainer = (id) => {
+                    const cont = document.getElementById(id);
+                    if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
+                };
                 clearContainer('resBtnContainer');
-                flashInput(inputs.w); flashInput(inputs.h);
+                
+                flashInput(inputs.w);
+                flashInput(inputs.h);
+                
+                // Aplicar modo móvil
                 if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
+
+                // Dibujar
                 if(typeof requestDraw === 'function') requestDraw(); else draw();
-            };
-            img.onerror = () => { alert("Error loading image."); if(window.removeImage) window.removeImage(); };
-            img.src = blobUrl;
+            }
+            img.src = src;
         };
 
-        const isTiff = fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
+        // --- RAMA A: ES UN TIFF ---
         if (isTiff) {
-            const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    if (typeof UTIF === 'undefined') throw new Error("UTIF missing");
+                    // Asegurarnos que UTIF existe
+                    if (typeof UTIF === 'undefined') {
+                        throw new Error("UTIF library not loaded");
+                    }
                     const buffer = event.target.result;
                     const ifds = UTIF.decode(buffer);
                     UTIF.decodeImage(buffer, ifds[0]);
                     const rgba = UTIF.toRGBA8(ifds[0]); 
+                    
                     const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = ifds[0].width; tempCanvas.height = ifds[0].height;
+                    tempCanvas.width = ifds[0].width;
+                    tempCanvas.height = ifds[0].height;
                     const tempCtx = tempCanvas.getContext('2d');
+                    
                     const imageData = tempCtx.createImageData(ifds[0].width, ifds[0].height);
                     imageData.data.set(rgba);
                     tempCtx.putImageData(imageData, 0, 0);
-                    tempCanvas.toBlob((blob) => { const tiffUrl = URL.createObjectURL(blob); finalizarCarga(tiffUrl); }, 'image/png');
-                } catch (err) { console.error(err); alert("Error processing TIFF."); if(window.removeImage) window.removeImage(); }
+                    
+                    procesarImagenFinal(tempCanvas.toDataURL('image/png'));
+                } catch (err) {
+                    console.error(err);
+                    alert("Error reading TIFF. Ensure UTIF.js is imported.");
+                    // Si falla, reseteamos la UI también
+                    if(window.removeImage) window.removeImage();
+                }
             };
             reader.readAsArrayBuffer(file);
+
         } else {
-            const objectUrl = URL.createObjectURL(file);
-            finalizarCarga(objectUrl);
+            // --- RAMA B: ES JPG/PNG ---
+            reader.onload = (event) => {
+                procesarImagenFinal(event.target.result);
+            }
+            reader.readAsDataURL(file);
         }
     });
 }
 
+// Clear Function
 window.removeImage = function() {
     userImage = null;
     if(imageLoader) imageLoader.value = "";
