@@ -533,7 +533,8 @@ function draw() {
         height = Math.round(width / targetAspect);
         
         // Regla de Video: Siempre números pares para evitar problemas de códec
-        if (height % 2 !== 0) height--;
+        // Lo voy a quitar, prefiero la precisión matemática
+        // if (height % 2 !== 0) height--;
     }
 
     // B. CANVAS
