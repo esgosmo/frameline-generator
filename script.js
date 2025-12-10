@@ -53,6 +53,7 @@ const inputs = {
     // Radios de escala
     scaleFit: getEl('scaleFit'),
     scaleFill: getEl('scaleFill'),
+    scaleCrop: getEl('scaleCrop'),
     scaleCrop: getEl('scaleCrop')
 };
 
@@ -558,11 +559,14 @@ window.removeImage = function() {
     draw();
 }
 
-if (showImageToggle) showImageToggle.addEventListener('change', requestDraw);
-if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', requestDraw);
-if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', requestDraw);
-if (inputs.scaleCrop) inputs.scaleCrop.addEventListener('change', requestDraw);
-
+// Listeners
+if (showImageToggle) showImageToggle.addEventListener('change', draw);
+if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', draw);
+if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', draw);
+// 5. Lógica para el ojito (Show/Hide)
+if (showImageToggle) {
+    showImageToggle.addEventListener('change', draw);
+}
 
 // ==========================================
 // HELPERS
@@ -645,20 +649,24 @@ function autoAdjustThickness(width) {
 function draw() {
     if (!inputs.w || !inputs.h) return;
 
-    const rawW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
-    const rawH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+    // A. LEER VALORES
+    const width = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
+    const height = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
 
+    // --- ESCALA ---
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
-    const scaleFactor = scaleVal / 100;
+    // const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
+    // --- OPACIDAD ---
     let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
     if (isNaN(opacityVal)) opacityVal = 100;
     const opacity = opacityVal / 100;
     if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
+    // --- GROSOR ---
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
     if (rawThick > 10) { rawThick = 10; if(inputs.thickness) inputs.thickness.value = 10; }
@@ -666,16 +674,9 @@ function draw() {
     const mainOffset = mainThickness / 2;
     const secThickness = mainThickness; 
     let safeThickness = 0;
-    if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
+     if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
 
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
-    let width = rawW;
-    let height = rawH;
-
-    if (isCropMode) {
-        height = Math.round(width / targetAspect);
-    }
-
+    // B. CANVAS
     if (canvas.width !== width) canvas.width = width;
     if (canvas.height !== height) canvas.height = height;
     ctx.clearRect(0, 0, width, height);
@@ -686,13 +687,24 @@ function draw() {
     if (userImage && mostrarImagen) {
         try {
             const isFill = inputs.scaleFill && inputs.scaleFill.checked;
-            const shouldUseFillLogic = isFill || isCropMode;
+            
+            // 2. Calcular la proporción de escalado (Scale Ratio)
+            // Calculamos cuánto hay que estirar el ancho y el alto
             const ratioW = width / userImage.width;
             const ratioH = height / userImage.height;
             let renderRatio;
-            if (shouldUseFillLogic) renderRatio = Math.max(ratioW, ratioH);
-            else renderRatio = Math.min(ratioW, ratioH);
 
+            if (isFill) {
+                // FILL: Usamos el ratio MAYOR (Math.max)
+                // Esto hace que la imagen crezca hasta cubrir todo el hueco (recortando lo que sobre)
+                renderRatio = Math.max(ratioW, ratioH);
+            } else {
+                // FIT: Usamos el ratio MENOR (Math.min)
+                // Esto hace que la imagen se detenga en cuanto toque un borde (dejando negro lo demás)
+                renderRatio = Math.min(ratioW, ratioH);
+            }
+
+            // 3. Calcular nuevas dimensiones finales
             const newW = userImage.width * renderRatio;
             const newH = userImage.height * renderRatio;
             const posX = (width - newW) / 2;
@@ -716,13 +728,12 @@ function draw() {
         offsetX = barWidth; offsetY = barHeight;
     }
 
-    if (!isCropMode) {
-        ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-        ctx.fillRect(0, 0, width, offsetY); 
-        ctx.fillRect(0, height - offsetY, width, offsetY); 
-        ctx.fillRect(0, offsetY, offsetX, visibleH); 
-        ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
-    }
+    // E. MATTE
+    ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+    ctx.fillRect(0, 0, width, offsetY); 
+    ctx.fillRect(0, height - offsetY, width, offsetY); 
+    ctx.fillRect(0, offsetY, offsetX, visibleH); 
+    ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
 
     // MAIN FRAMELINE
     if (mainThickness > 0) {
@@ -963,9 +974,9 @@ window.setOpacity = function(val, btn) {
 btnDownload.addEventListener('click', () => {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
-    let asp = "ratio";
-    if (inputs.aspect) asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
+    const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
+    
+    // 2. Detectar si estamos en "Modo Foto" (JPG)
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
 
     // Creamos el elemento de descarga
@@ -991,6 +1002,7 @@ btnDownload.addEventListener('click', () => {
         a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
         setTimeout(() => { if(typeof requestDraw === 'function') requestDraw(); else draw(); }, 0); 
     } else {
+        // --- CASO B: SOLO LÍNEAS (PNG) -> SIN MARCA DE AGUA ---
         a.href = canvas.toDataURL('image/png');
         a.download = `Frameline_${w}x${h}_${asp}.png`;
     }
