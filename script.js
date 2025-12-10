@@ -53,6 +53,8 @@ const inputs = {
     scaleFit: getEl('scaleFit'),
     scaleFill: getEl('scaleFill'),
     scaleCrop: getEl('scaleCrop')
+    scaleFill: getEl('scaleFill'),
+    scaleCrop: getEl('scaleCrop')
 };
 
 // ==========================================
@@ -494,7 +496,7 @@ function draw() {
     // --- ESCALA ---
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
-    const scaleFactor = scaleVal / 100;
+    // const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
     // --- OPACIDAD ---
@@ -531,8 +533,7 @@ function draw() {
         height = Math.round(width / targetAspect);
         
         // Regla de Video: Siempre números pares para evitar problemas de códec
-        // Lo voy a quitar, prefiero la precisión matemática
-        // if (height % 2 !== 0) height--;
+        if (height % 2 !== 0) height--;
     }
 
     // B. CANVAS
@@ -1143,16 +1144,9 @@ btnDownload.addEventListener('click', () => {
     // 1. Obtener datos actuales
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
+    const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
     
-    // Obtener aspecto limpio para el nombre
-    let asp = "ratio";
-    if (inputs.aspect) {
-        // Limpiamos caracteres raros y dos puntos
-        asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
-    }
-
-    // 2. Detectar Estados
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
+    // 2. Detectar si estamos en "Modo Foto" (JPG)
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
 
     // Creamos el elemento de descarga
@@ -1206,13 +1200,9 @@ btnDownload.addEventListener('click', () => {
         setTimeout(() => {
              if(typeof requestDraw === 'function') requestDraw(); else draw();
         }, 0); 
-    }
-    
-    // =========================================================
-    // RUTA C: MODO TEMPLATE (Solo Líneas / PNG Transparente)
-    // =========================================================
-    else {
-        // PNG Transparente sin fondo ni marca
+
+    } else {
+        // --- CASO B: SOLO LÍNEAS (PNG) -> SIN MARCA DE AGUA ---
         a.href = canvas.toDataURL('image/png');
         a.download = `Frameline_${w}x${h}_${asp}.png`;
     }
