@@ -128,13 +128,49 @@ if (imageLoader) {
         // ------------------------------------------------
         // 1. VALIDACIÓN Y NOMBRE
         // ------------------------------------------------
-        const limitBytes = 20 * 1024 * 1024; // 20MB
-        let isHeavyFile = false; // Flag to remember state
+        const fileName = file.name.toLowerCase();
+        const fileType = file.type.toLowerCase();
 
+        // Permitimos: Cualquier tipo "image/..." O extensiones explícitas de TIFF
+        // Esto bloquea .mov, .mp4, .pdf, .txt, etc.
+        const isValid = fileType.startsWith('image/') || 
+                        fileName.endsWith('.tiff') || 
+                        fileName.endsWith('.tif');
+
+        if (!isValid) {
+            alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF.");
+            
+            // IMPORTANTE: Resetear el input para que no se quede "enganchado" con el archivo malo
+            imageLoader.value = ""; 
+            
+            // DETENER TODO AQUÍ: No cambiamos el texto, no leemos nada.
+            return; 
+        }
+
+        // ------------------------------------------------
+        // 2. ACTUALIZAR UI (Solo si pasó la validación)
+        // ------------------------------------------------
+        const zone = document.querySelector('.upload-zone');
+        const textSpan = zone ? zone.querySelector('.upload-text') : null;
+
+        if (zone && textSpan) {
+            let name = file.name;
+            if (name.length > 20) name = name.substring(0, 18) + "...";
+            
+            textSpan.innerText = name;      // Cambiar texto
+            zone.classList.add('has-file'); // Poner estilo activo
+            zone.style.borderColor = "#007bff"; 
+        }
+
+        // ------------------------------------------------
+        // 3. DETECTAR PESO (> 20MB)
+        // ------------------------------------------------
+        const limitBytes = 20 * 1024 * 1024; 
+        let isHeavyFile = false;
+        
         if (file.size > limitBytes) {
             isHeavyFile = true;
             if(sizeWarning) {
-                // English Warning 1
                 sizeWarning.innerText = "⚠️ Large file size (>20MB) Performance may lag"; 
         let fileName = file.name;
         const fileType = file.type.toLowerCase();
@@ -185,9 +221,16 @@ if (imageLoader) {
                 sizeWarning.innerText = "⚠️ Large file size (>20MB)";
                 sizeWarning.classList.remove('hidden');
             }
+        } else {
+            // Hide for now if size is okay
+            if(sizeWarning) sizeWarning.classList.add('hidden');
         }
 
+        // ------------------------------------------------
+        // 4. PROCESAMIENTO (Reader / TIFF / JPG)
+        // ------------------------------------------------
         const reader = new FileReader();
+        const isTiff = fileName.endsWith('.tiff') || fileName.endsWith('.tif'); // Doble check por extensión
 
         reader.onload = (event) => {
         // ------------------------------------------------
@@ -197,7 +240,6 @@ if (imageLoader) {
             currentObjectUrl = blobUrl; // Guardar referencia
             const img = new Image();
 
-            
             img.onload = () => {
                 userImage = img;
                 
@@ -206,14 +248,11 @@ if (imageLoader) {
 
                 // Detectar Resolución Extrema (> 6K)
                 const limitRes = 6000; 
-
                 if (img.width > limitRes || img.height > limitRes) {
                     if (sizeWarning) {
-                        // English Warning 2 (Combined or Res only)
                         const msg = isHeavyFile 
                             ? "⚠️ Large file & large resolution (>6K) Performance may lag."
-                            : "⚠️ Large resolution (>6K) Performance may lag.";
-
+                            : "⚠️ Large resolution (>6K). Performance may lag.";
                         sizeWarning.innerText = msg;
                         sizeWarning.classList.remove('hidden');
                     }
@@ -221,15 +260,10 @@ if (imageLoader) {
 
                 // Activar Interfaz
                 if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
-
-                // Adapt Canvas
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
-
-                // Adjust thickness
+                
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
-
-                // Reset Menu
                 if(menuResoluciones) menuResoluciones.value = 'custom';
                 
                 // Limpiar botones azules
@@ -238,7 +272,7 @@ if (imageLoader) {
                     if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
                 };
                 clearContainer('resBtnContainer');
-
+                
                 flashInput(inputs.w);
                 flashInput(inputs.h);
                 
