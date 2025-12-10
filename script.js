@@ -970,11 +970,16 @@ window.setOpacity = function(val, btn) {
     flashInput(inputs.opacity); highlightButton(btn); requestDraw();
 }
 
-// Descarga
+// ==========================================
+// 8. DESCARGA INTELIGENTE (MARCA DE AGUA ABAJO A LA DERECHA)
+// ==========================================
 btnDownload.addEventListener('click', () => {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
     const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
+
+    // Nuevo - Detectar si es Crop
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     
     // 2. Detectar si estamos en "Modo Foto" (JPG)
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
@@ -982,31 +987,63 @@ btnDownload.addEventListener('click', () => {
     // Creamos el elemento de descarga
     const a = document.createElement('a');
 
-    if (isCropMode) {
-        const type = hasPhoto ? 'image/jpeg' : 'image/png';
-        const quality = hasPhoto ? 1.0 : undefined;
-        const ext = hasPhoto ? 'jpg' : 'png';
-        a.href = canvas.toDataURL(type, quality);
-        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
-    } else if (hasPhoto) {
-        ctx.save(); 
-        const fontSize = Math.max(10, Math.round(w * 0.012)); 
-        const margin = fontSize; 
+    if (hasPhoto) {
+        // --- CASO A: CON FOTO (JPG) -> LLEVA MARCA DE AGUA ---
+        
+        // 1. DIBUJAR LA MARCA DE AGUA (Temporalmente)
+        ctx.save(); // Guardar estado actual del canvas
+        
+        // Configuración Sutil (Dinámica según el tamaño de la imagen)
+        const fontSize = Math.max(10, Math.round(w * 0.012)); // 1.5% del ancho
+        const margin = fontSize; // Margen proporcional al tamaño de letra
+
         ctx.font = `500 ${fontSize}px Arial, sans-serif`;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
-        ctx.textAlign = "right"; ctx.textBaseline = "bottom";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.5)"; ctx.shadowBlur = 4;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; // Blanco al 50%
+        
+        // 🔥 CAMBIO CLAVE 1: Alineación a la derecha
+        ctx.textAlign = "right";
+        // 🔥 CAMBIO CLAVE 2: Línea base abajo
+        ctx.textBaseline = "bottom";
+        
+        // Sombra suave para legibilidad
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        ctx.shadowBlur = 4;
+        
+        // 🔥 CAMBIO CLAVE 3: Coordenadas (Ancho total menos margen, Alto total menos margen)
         ctx.fillText("frameline-generator.com", w - margin, h - margin);
         ctx.restore(); 
         a.href = canvas.toDataURL('image/jpeg', 0.9);
         a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
-        setTimeout(() => { if(typeof requestDraw === 'function') requestDraw(); else draw(); }, 0); 
+
+        // 3. LIMPIEZA INMEDIATA
+        // Volvemos a llamar a draw() (o requestDraw si usaste la optimización)
+        // para borrar la marca de la pantalla del usuario.
+        setTimeout(() => {
+             if(typeof requestDraw === 'function') requestDraw(); else draw();
+        }, 0); 
+
     } else {
-        // --- CASO B: SOLO LÍNEAS (PNG) -> SIN MARCA DE AGUA ---
-        a.href = canvas.toDataURL('image/png');
-        a.download = `Frameline_${w}x${h}_${asp}.png`;
+        // ... (CASO B: PNG o CROP MODE) -> SIN MARCA ...
+        // Al ser Crop Mode, el canvas YA tiene el tamaño recortado gracias al draw()
+        // así que solo lo descargamos tal cual.
+        
+        const ext = hasPhoto ? 'jpg' : 'png'; // Si es crop con foto, mejor jpg
+        const type = hasPhoto ? 'image/jpeg' : 'image/png';
+        const quality = hasPhoto ? 0.9 : undefined;
+
+        a.href = canvas.toDataURL(type, quality);
+        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
     }
-    if (typeof gtag === 'function') { gtag('event', 'download_file', { 'event_category': 'Engagement', 'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') }); }
+
+    // --- TRACKING ---
+    if (typeof gtag === 'function') {
+        gtag('event', 'download_png', {
+            'event_category': 'Engagement',
+            'event_label': `Resolution: ${w}x${h}`
+        });
+    }
+
+    // 4. Descargar
     a.click();
 });
 
