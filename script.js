@@ -196,14 +196,11 @@ if (imageLoader) {
 
                 // Detectar Resolución Extrema (> 6K)
                 const limitRes = 6000; 
-
                 if (img.width > limitRes || img.height > limitRes) {
                     if (sizeWarning) {
-                        // English Warning 2 (Combined or Res only)
                         const msg = isHeavyFile 
                             ? "⚠️ Large file & large resolution (>6K) Performance may lag."
-                            : "⚠️ Large resolution (>6K) Performance may lag.";
-
+                            : "⚠️ Large resolution (>6K). Performance may lag.";
                         sizeWarning.innerText = msg;
                         sizeWarning.classList.remove('hidden');
                     }
@@ -211,15 +208,10 @@ if (imageLoader) {
 
                 // Mostrar panel y setear valores
                 if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
-
-                // Adapt Canvas
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
-
-                // Adjust thickness
+                
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
-
-                // Reset Menu
                 if(menuResoluciones) menuResoluciones.value = 'custom';
                 
                 // Limpiar botones
@@ -228,7 +220,7 @@ if (imageLoader) {
                     if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
                 };
                 clearContainer('resBtnContainer');
-
+                
                 flashInput(inputs.w);
                 flashInput(inputs.h);
                 
