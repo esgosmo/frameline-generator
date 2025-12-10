@@ -51,7 +51,8 @@ const inputs = {
     showResLabels: getEl('showResLabelsToggle'),
     // NUEVO: Referencias a los radios
     scaleFit: getEl('scaleFit'),
-    scaleFill: getEl('scaleFill')
+    scaleFill: getEl('scaleFill'),
+    scaleCrop: getEl('scaleCrop')
 };
 
 // ==========================================
@@ -319,9 +320,10 @@ window.removeImage = function() {
 }
 
 // Listeners
-if (showImageToggle) showImageToggle.addEventListener('change', draw);
-if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', draw);
-if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', draw);
+if (showImageToggle) showImageToggle.addEventListener('change', requestDraw);
+if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', requestDraw);
+if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', requestDraw);
+if (inputs.scaleCrop) inputs.scaleCrop.addEventListener('change', requestDraw);
 // 5. Lógica para el ojito (Show/Hide)
 if (showImageToggle) {
     showImageToggle.addEventListener('change', draw);
@@ -485,20 +487,23 @@ function draw() {
     if (!inputs.w || !inputs.h) return;
 
     // A. LEER VALORES
-    const width = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
-    const height = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+    const rawW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
+    const rawH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
 
+    // --- ESCALA ---
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
-    const scaleFactor = scaleVal / 100;
+    // const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
+    // --- OPACIDAD ---
     let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
     if (isNaN(opacityVal)) opacityVal = 100;
     const opacity = opacityVal / 100;
     if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
+    // --- GROSOR ---
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
     if (rawThick > 10) {
@@ -509,7 +514,25 @@ function draw() {
     const mainOffset = mainThickness / 2;
     const secThickness = mainThickness; 
     let safeThickness = 0;
-    if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
+     if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
+
+    
+// =====================================================
+    // 🔥 LÓGICA DE CROP (Aquí definimos width/height finales)
+    // =====================================================
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
+
+     // Definimos las dimensiones finales (width y height que usará el canvas)
+    let width = rawW;
+    let height = rawH;
+
+    if (isCropMode) {
+        // ...pero si es CROP, calculamos la altura exacta matemática
+        height = Math.round(width / targetAspect);
+        
+        // Regla de Video: Siempre números pares para evitar problemas de códec
+        if (height % 2 !== 0) height--;
+    }
 
     // B. CANVAS
     if (canvas.width !== width) canvas.width = width;
@@ -525,6 +548,8 @@ function draw() {
             // 1. Detectar qué modo eligió el usuario
             // Si el radio "Fill" está marcado, usamos modo 'max', si no, 'min'.
             const isFill = inputs.scaleFill && inputs.scaleFill.checked;
+            // Si es Crop, la imagen SIEMPRE debe comportarse como Fill (cubrir todo)
+            const shouldUseFillLogic = isFill || isCropMode;
             
             // 2. Calcular la proporción de escalado (Scale Ratio)
             // Calculamos cuánto hay que estirar el ancho y el alto
@@ -533,13 +558,11 @@ function draw() {
             
             let renderRatio;
 
-            if (isFill) {
-                // FILL: Usamos el ratio MAYOR (Math.max)
-                // Esto hace que la imagen crezca hasta cubrir todo el hueco (recortando lo que sobre)
+          if (shouldUseFillLogic) {
+                // En modo Crop o Fill, usamos Max para cubrir todo el área
                 renderRatio = Math.max(ratioW, ratioH);
             } else {
-                // FIT: Usamos el ratio MENOR (Math.min)
-                // Esto hace que la imagen se detenga en cuanto toque un borde (dejando negro lo demás)
+                // En modo Fit, usamos Min para ver la imagen entera
                 renderRatio = Math.min(ratioW, ratioH);
             }
 
@@ -586,12 +609,21 @@ function draw() {
     const offsetX = barWidth;
     const offsetY = barHeight;
 
-    // E. MATTE
-    ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-    ctx.fillRect(0, 0, width, offsetY); 
-    ctx.fillRect(0, height - offsetY, width, offsetY); 
-    ctx.fillRect(0, offsetY, offsetX, visibleH); 
-    ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
+// E. MATTE
+    // 🔥 CAMBIO: Solo dibujamos las barras negras si NO estamos en modo Crop.
+    // En modo Crop, el borde del canvas es el límite natural.
+    if (!isCropMode) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+        
+        // Barra Superior
+        ctx.fillRect(0, 0, width, offsetY); 
+        // Barra Inferior
+        ctx.fillRect(0, height - offsetY, width, offsetY); 
+        // Barra Izquierda
+        ctx.fillRect(0, offsetY, offsetX, visibleH); 
+        // Barra Derecha
+        ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
+    }
 
     // F. FRAMELINE 1 (Principal)
     if (mainThickness > 0) {
@@ -1092,6 +1124,9 @@ btnDownload.addEventListener('click', () => {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
     const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
+
+    // Nuevo - Detectar si es Crop
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     
     // 2. Detectar si estamos en "Modo Foto" (JPG)
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
@@ -1137,9 +1172,16 @@ btnDownload.addEventListener('click', () => {
         }, 0); 
 
     } else {
-        // --- CASO B: SOLO LÍNEAS (PNG) -> SIN MARCA DE AGUA ---
-        a.href = canvas.toDataURL('image/png');
-        a.download = `Frameline_${w}x${h}_${asp}.png`;
+        // ... (CASO B: PNG o CROP MODE) -> SIN MARCA ...
+        // Al ser Crop Mode, el canvas YA tiene el tamaño recortado gracias al draw()
+        // así que solo lo descargamos tal cual.
+        
+        const ext = hasPhoto ? 'jpg' : 'png'; // Si es crop con foto, mejor jpg
+        const type = hasPhoto ? 'image/jpeg' : 'image/png';
+        const quality = hasPhoto ? 0.9 : undefined;
+
+        a.href = canvas.toDataURL(type, quality);
+        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
     }
 
     // --- TRACKING ---
