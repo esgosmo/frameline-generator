@@ -441,7 +441,6 @@ if (imageLoader) {
         // Función interna para procesar el resultado final (sea cual sea el origen)
         const procesarImagenFinal = (src) => {
             const img = new Image();
-
             img.onload = () => {
                 userImage = img;
                 
@@ -450,7 +449,6 @@ if (imageLoader) {
 
                 // Detectar Resolución Extrema (> 6K)
                 const limitRes = 6000; 
-
                 if (img.width > limitRes || img.height > limitRes) {
                     if (sizeWarning) {
                         const msg = isHeavyFile 
@@ -463,14 +461,10 @@ if (imageLoader) {
 
                 // Mostrar panel y setear valores
                 if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
-
-                // Adapt Canvas
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
                 
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
-
-                // Reset Menu
                 if(menuResoluciones) menuResoluciones.value = 'custom';
                 
                 // Limpiar botones
