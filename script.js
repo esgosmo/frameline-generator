@@ -578,15 +578,21 @@ function draw() {
             let newW = Math.ceil(userImage.width * renderRatio);
             let newH = Math.ceil(userImage.height * renderRatio);
 
-            // 🔥 CORRECCIÓN 2: SEGURIDAD ANTI-HUECOS (SOLO PARA CROP/FILL)
-            // Si el objetivo es llenar el canvas, prohibimos estrictamente que la imagen 
-            // sea 1 pixel menor que el canvas por error de cálculo.
+            // =========================================================
+            // 🔥 SOLUCIÓN DEFINITIVA: SANGRADO (BLEED)
+            // =========================================================
             if (shouldUseFillLogic) {
-                if (newW < width) newW = width;
-                if (newH < height) newH = height;
+               // Si la imagen es casi del mismo tamaño que el canvas (diferencia menor a 2px),
+                // la estiramos forzosamente +2px para "matar" cualquier línea verde o blanca en los bordes.
+                if (Math.abs(newW - width) < 2) newW = width + 2;
+                if (Math.abs(newH - height) < 2) newH = height + 2;
+                
+                // Seguridad adicional: NUNCA permitir que sea menor al canvas
+                if (newW < width) newW = width + 1;
+                if (newH < height) newH = height + 1;
             }
              
-            
+
             // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
             const posY = (height - newH) / 2;
