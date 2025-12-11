@@ -731,7 +731,7 @@ function draw() {
         const lineHeight = fontSize + 6; 
 
         // --- A. DIBUJAR MAIN FRAMELINE TEXT ---
-        if (mainThickness > 0) {
+        //if (mainThickness > 0) {
             ctx.fillStyle = inputs.color.value;
             
           // CAMBIO AQUÍ: Usamos getCleanLabel para limpiar el número feo
@@ -760,7 +760,7 @@ function draw() {
                     ctx.fillText(txtRes, posX, offsetY + padding);
                 }
             }
-        }
+       //}
 
         // --- B. DIBUJAR SECONDARY FRAMELINE TEXT ---
         if (drawSec && inputs.secAspect) {
