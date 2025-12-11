@@ -728,10 +728,19 @@ function draw() {
                 renderRatio = Math.min(ratioW, ratioH);
             }
 
-            // 3. Calcular nuevas dimensiones finales
-            const newW = userImage.width * renderRatio;
-            const newH = userImage.height * renderRatio;
+           // 3. Calcular nuevas dimensiones finales
+            // 🔥 CORRECCIÓN 1: Usamos Math.ceil (Redondear arriba) para evitar huecos de sub-pixel
+            let newW = Math.ceil(userImage.width * renderRatio);
+            let newH = Math.ceil(userImage.height * renderRatio);
 
+            // 🔥 CORRECCIÓN 2: SEGURIDAD ANTI-HUECOS (SOLO PARA CROP/FILL)
+            // Si el objetivo es llenar el canvas, prohibimos estrictamente que la imagen 
+            // sea 1 pixel menor que el canvas por error de cálculo.
+            if (shouldUseFillLogic) {
+                if (newW < width) newW = width;
+                if (newH < height) newH = height;
+            }
+            
             // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
             const posY = (height - newH) / 2;
