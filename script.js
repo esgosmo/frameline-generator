@@ -157,10 +157,16 @@ if (imageLoader) {
         const zone = document.querySelector('.upload-zone');
         const textSpan = zone ? zone.querySelector('.upload-text') : null;
 
-        if (zone && textSpan) {
-            let displayName = fileName;
-            if (displayName.length > 25) displayName = displayName.substring(0, 22) + "...";
-            textSpan.innerText = displayName;      
+      if (zone && textSpan) {
+            // ❌ ANTES (Borradas las líneas que calculaban el nombre):
+            // let displayName = fileName;
+            // if (displayName.length > 25) displayName = ...
+            // textSpan.innerText = displayName;
+
+            // ✅ AHORA (Mensaje fijo):
+            textSpan.innerText = "Image Loaded"; 
+            
+            // Mantenemos el estilo visual de "activo"
             zone.classList.add('has-file'); 
             zone.style.borderColor = "#007bff"; 
         }
