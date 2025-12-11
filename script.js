@@ -573,25 +573,9 @@ function draw() {
                 renderRatio = Math.min(ratioW, ratioH);
             }
 
-           // 3. Calcular nuevas dimensiones finales
-            // 🔥 CORRECCIÓN 1: Usamos Math.ceil (Redondear arriba) para evitar huecos de sub-pixel
-            let newW = Math.ceil(userImage.width * renderRatio);
-            let newH = Math.ceil(userImage.height * renderRatio);
-
-            // =========================================================
-            // 🔥 SOLUCIÓN DEFINITIVA: SANGRADO (BLEED)
-            // =========================================================
-            if (shouldUseFillLogic) {
-               // Si la imagen es casi del mismo tamaño que el canvas (diferencia menor a 2px),
-                // la estiramos forzosamente +2px para "matar" cualquier línea verde o blanca en los bordes.
-                if (Math.abs(newW - width) < 2) newW = width + 2;
-                if (Math.abs(newH - height) < 2) newH = height + 2;
-                
-                // Seguridad adicional: NUNCA permitir que sea menor al canvas
-                if (newW < width) newW = width + 1;
-                if (newH < height) newH = height + 1;
-            }
-             
+            // 3. Calcular nuevas dimensiones finales
+            const newW = userImage.width * renderRatio;
+            const newH = userImage.height * renderRatio;
 
             // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
@@ -606,15 +590,30 @@ function draw() {
 
    // D. CÁLCULO DE GEOMETRÍA (Matemática Pixel-Perfect)
     let visibleW, visibleH;
+    let offsetX, offsetY; // Declaramos aquí para usarlas fuera
 
-    // 1. Calcular tamaño base
-    if (targetAspect > screenAspect) {
+    if (isCropMode) {
+        // 🔥 CORRECCIÓN DEFINITIVA PARA CROP:
+        // En modo Crop, el "Visible Area" ES el canvas entero.
+        // Forzamos que coincidan exactamente para evitar líneas de 1px.
         visibleW = width;
-        visibleH = width / targetAspect;
-    } else {
         visibleH = height;
-        visibleW = height * targetAspect;
-    }
+        
+        // Cero márgenes, porque no hay barras negras
+        offsetX = 0;
+        offsetY = 0;
+    } 
+    else {
+        // --- LÓGICA ESTÁNDAR (FIT / FILL) ---
+        
+        // 1. Calcular tamaño base
+        if (targetAspect > screenAspect) {
+            visibleW = width;
+            visibleH = width / targetAspect;
+        } else {
+            visibleH = height;
+            visibleW = height * targetAspect;
+        }
 
     // 2. Aplicar Escala y REDONDEAR (Vital para evitar bordes borrosos)
     // Math.round fuerza al pixel entero más cercano
@@ -630,8 +629,9 @@ function draw() {
     // Math.floor asegura que no queden medios píxeles sueltos
     const barHeight = Math.floor((height - visibleH) / 2);
     const barWidth = Math.floor((width - visibleW) / 2);
-    const offsetX = barWidth;
-    const offsetY = barHeight;
+    offsetX = barWidth;
+    offsetY = barHeight;
+     }
 
 // E. MATTE
     // 🔥 CAMBIO: Solo dibujamos las barras negras si NO estamos en modo Crop.
