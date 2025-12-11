@@ -747,7 +747,7 @@ function draw() {
                 if (newH < height) newH = height + 1;
             }
              
-            
+
             // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
             const posY = (height - newH) / 2;
@@ -756,10 +756,11 @@ function draw() {
     }
 
     let visibleW, visibleH;
-    let offsetX, offsetY;
 
-    if (isCropMode) {
-        visibleW = width; visibleH = height; offsetX = 0; offsetY = 0;
+    // 1. Calcular tamaño base
+    if (targetAspect > screenAspect) {
+        visibleW = width;
+        visibleH = width / targetAspect;
     } else {
         visibleH = height;
         visibleW = height * targetAspect;
@@ -778,8 +779,9 @@ function draw() {
     // Math.floor asegura que no queden medios píxeles sueltos
     const barHeight = Math.floor((height - visibleH) / 2);
     const barWidth = Math.floor((width - visibleW) / 2);
-    const offsetX = barWidth;
-    const offsetY = barHeight;
+    offsetX = barWidth;
+    offsetY = barHeight;
+     }
 
     // E. MATTE
     ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
