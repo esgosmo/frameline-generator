@@ -731,6 +731,8 @@ function draw() {
             // 3. Calcular nuevas dimensiones finales
             const newW = userImage.width * renderRatio;
             const newH = userImage.height * renderRatio;
+
+            // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
             const posY = (height - newH) / 2;
             ctx.drawImage(userImage, posX, posY, newW, newH);
