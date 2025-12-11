@@ -840,6 +840,7 @@ function draw() {
         const padding = 10; 
         const lineHeight = fontSize + 6; 
 
+        // --- A. DIBUJAR MAIN FRAMELINE TEXT ---
         if (mainThickness > 0) {
             ctx.fillStyle = inputs.color.value;
             const txtAsp = obtenerRatioTexto(Math.round(visibleW), Math.round(visibleH));
@@ -852,7 +853,7 @@ function draw() {
                 if (isTightHoriz && showAspect) { ctx.textAlign = "left"; ctx.fillText(txtRes, offsetX + padding, offsetY + padding + lineHeight); } 
                 else { ctx.textAlign = showAspect ? "right" : "left"; const posX = showAspect ? (offsetX + visibleW - padding) : (offsetX + padding); ctx.fillText(txtRes, posX, offsetY + padding); }
             }
-       }
+        }
 
         // --- B. DIBUJAR SECONDARY FRAMELINE TEXT ---
         if (drawSec && inputs.secAspect) {
