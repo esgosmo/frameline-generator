@@ -575,25 +575,9 @@ function draw() {
                 renderRatio = Math.min(ratioW, ratioH);
             }
 
-           // 3. Calcular nuevas dimensiones finales
-            // 🔥 CORRECCIÓN 1: Usamos Math.ceil (Redondear arriba) para evitar huecos de sub-pixel
-            let newW = Math.ceil(userImage.width * renderRatio);
-            let newH = Math.ceil(userImage.height * renderRatio);
-
-            // =========================================================
-            // 🔥 SOLUCIÓN DEFINITIVA: SANGRADO (BLEED)
-            // =========================================================
-            if (shouldUseFillLogic) {
-               // Si la imagen es casi del mismo tamaño que el canvas (diferencia menor a 2px),
-                // la estiramos forzosamente +2px para "matar" cualquier línea verde o blanca en los bordes.
-                if (Math.abs(newW - width) < 2) newW = width + 2;
-                if (Math.abs(newH - height) < 2) newH = height + 2;
-                
-                // Seguridad adicional: NUNCA permitir que sea menor al canvas
-                if (newW < width) newW = width + 1;
-                if (newH < height) newH = height + 1;
-            }
-             
+            // 3. Calcular nuevas dimensiones finales
+            const newW = userImage.width * renderRatio;
+            const newH = userImage.height * renderRatio;
 
             // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
