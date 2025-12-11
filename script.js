@@ -585,6 +585,7 @@ function draw() {
                 if (newW < width) newW = width;
                 if (newH < height) newH = height;
             }
+             
             
             // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
