@@ -7,12 +7,15 @@
         { "name": "HD 720p (1280 x 720)", "value": "1080,1920" }
     ]
   },
-  {
-    "category": "Cinema (DCI)",
+{
+    "category": "DCI Cinema Standards",
     "items": [
-        { "name": "Alexa 35 (Open Gate 4.6K)", "value": "4608,3164" },
-        { "name": "Alexa Mini (Open Gate 3.4K)", "value": "3424,2202" },
-        { "name": "Amira (3.2K)", "value": "3200,1800" }
+      { "name": "DCI 2K FC (2048 x 1080)", "value": "2048,1080" },
+      { "name": "DCI 2K Flat (1998 x 1080)", "value": "1998,1080" },
+      { "name": "DCI 2K Scope (2048 x 858)", "value": "2048,858" },
+      { "name": "DCI 4K FC (4096 x 2160)", "value": "4096,2160" },
+      { "name": "DCI 4K Flat (3996 x 2160)", "value": "3996,2160" },
+      { "name": "DCI 4K Scope (4096 x 1716)", "value": "4096,1716" }
     ]
   },
   {
