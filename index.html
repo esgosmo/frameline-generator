@@ -45,30 +45,28 @@
             
             <div class="controls">
 
-    <div class="input-group">
-     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-        <label style="margin: 0;">Canvas / Resolution</label>
+<div class="input-group">
         
-        <div id="resetAllBtn" 
-             style="cursor: pointer; font-size: 0.9rem; color: #d9534f; display: flex; align-items: center; user-select: none; transition: color 0.2s;"
-             onmouseover="this.style.color='#ff7b77'"
-             onmouseout="this.style.color='#d9534f'"
-             title="Reset all settings to default">
-            <span style="margin-right: 4px; font-weight: bold;">↺</span> 
-            <span>Reset</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label style="margin: 0;">Canvas / Resolution</label>
+            
+            <div id="resetAllBtn" 
+                 style="cursor: pointer; font-size: 0.9rem; color: #d9534f; display: flex; align-items: center; user-select: none; transition: color 0.2s;"
+                 onmouseover="this.style.color='#ff7b77'"
+                 onmouseout="this.style.color='#d9534f'"
+                 title="Reset all settings to default">
+                <span style="margin-right: 4px; font-weight: bold;">↺</span> 
+                <span>Reset</span>
+            </div>
         </div>
-    </div>
         
-     
-        <select id="resolutionSelect">
+        <select id="brandFilter" class="custom-select" style="margin-bottom: 5px;">
+            <option value="all">Show All Categories</option>
+            </select>
 
-         <select id="brandFilter" class="custom-select" style="margin-bottom: 5px;">
-        <option value="all">Show All Categories</option>
-    </select>
-
-    <select id="resolutionSelect" class="custom-select">
-        <option value="custom">Custom / Manual</option>
-    </select>
+        <select id="resolutionSelect" class="custom-select">
+            <option value="custom">Custom / Manual</option>
+            </select>
 
             
 
