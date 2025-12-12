@@ -1,0 +1,22 @@
+[
+  { "group": "Cine Estándar", "options": [
+      { "name": "2.39:1 (Anamorphic / Scope)", "value": "2.39" },
+      { "name": "2.35:1 (Old Scope)", "value": "2.35" },
+      { "name": "1.85:1 (Flat / Americano)", "value": "1.85" },
+      { "name": "1.66:1 (European Flat)", "value": "1.6666" },
+      { "name": "1.37:1 (Academy)", "value": "1.37" }
+    ]
+  },
+  { "group": "Digital & TV", "options": [
+      { "name": "16:9 (UHD / HD)", "value": "1.7777" },
+      { "name": "2:1 (Univisium / Netflix)", "value": "2.00" },
+      { "name": "4:3 (SD / TV Antigua)", "value": "1.3333" }
+    ]
+  },
+  { "group": "Redes Sociales", "options": [
+      { "name": "1:1 (Square)", "value": "1.00" },
+      { "name": "4:5 (Portrait / IG)", "value": "0.8" },
+      { "name": "9:16 (Stories / TikTok)", "value": "0.5625" }
+    ]
+  }
+]
