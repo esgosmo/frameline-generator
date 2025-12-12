@@ -7,6 +7,7 @@
         { "name": "HD 720p (1280 x 720)", "value": "1080,1920" }
     ]
   },
+<<<<<<< HEAD
 {
     "category": "DCI Cinema Standards",
     "items": [
@@ -16,6 +17,14 @@
       { "name": "DCI 4K FC (4096 x 2160)", "value": "4096,2160" },
       { "name": "DCI 4K Flat (3996 x 2160)", "value": "3996,2160" },
       { "name": "DCI 4K Scope (4096 x 1716)", "value": "4096,1716" }
+=======
+  {
+    "category": "Cinema (DCI)",
+    "items": [
+        { "name": "Alexa 35 (Open Gate 4.6K)", "value": "4608,3164" },
+        { "name": "Alexa Mini (Open Gate 3.4K)", "value": "3424,2202" },
+        { "name": "Amira (3.2K)", "value": "3200,1800" }
+>>>>>>> d2eb11d (Nuevo archivo de resoluciones)
     ]
   },
   {
@@ -27,6 +36,7 @@
     ]
   },
   {
+<<<<<<< HEAD
     "category": "Arri",
     "items": [
       { "name": "Alexa 65 Open Gate (6.5K)", "value": "6560,3100" },
@@ -87,11 +97,27 @@
       { "name": "Alexa Mini 3.4K Open Gate", "value": "3424,2202" },
       { "name": "Alexa Mini 3.2K 16:9", "value": "3200,1800" },
       { "name": "Alexa Mini 2.8K 4:3", "value": "2880,2160" }
+=======
+    "category": "ARRI",
+    "items": [
+        { "name": "Alexa 35 (Open Gate 4.6K)", "value": "4608,3164" },
+        { "name": "Alexa Mini (Open Gate 3.4K)", "value": "3424,2202" },
+        { "name": "Amira (3.2K)", "value": "3200,1800" }
+    ]
+  },
+  {
+    "category": "RED Digital Cinema",
+    "items": [
+        { "name": "V-Raptor (8K VV)", "value": "8192,4320" },
+        { "name": "Komodo (6K)", "value": "6144,3240" },
+        { "name": "Monstro (8K VV)", "value": "8192,4320" }
+>>>>>>> d2eb11d (Nuevo archivo de resoluciones)
     ]
   },
   {
     "category": "Sony",
     "items": [
+<<<<<<< HEAD
       { "name": "Venice 2 8.6K 3:2 Full Scan", "value": "8640,5760" },
       { "name": "Venice 2 8.2K 17:9", "value": "8192,4320" },
       { "name": "Venice 2 7.6K 16:9", "value": "7680,4320" },
@@ -124,6 +150,10 @@
       { "name": "Cinema Camera 6K FF 2.4:1", "value": "6048,2520" },
       { "name": "Pocket 6K (S35) 16:9", "value": "6144,3456" },
       { "name": "Pocket 4K DCI", "value": "4096,2160" }
+=======
+        { "name": "Venice 2 (8.6K 3:2)", "value": "8640,5760" },
+        { "name": "FX9 / FX6 (4K DCI)", "value": "4096,2160" }
+>>>>>>> d2eb11d (Nuevo archivo de resoluciones)
     ]
   }
 ]
