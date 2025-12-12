@@ -60,216 +60,92 @@ const inputs = {
 // ==========================================
 // CARGADOR DE DATOS EXTERNOS (JSON)
 // ==========================================
+// Variable global para guardar los datos crudos y no volver a pedir el JSON
 let resolucionesData = [];
-let currentViewMode = 'root'; // Variable para controlar la navegación de carpetas
 
 async function cargarDatosExternos() {
     try {
-        // 1. Cargar JSON Resoluciones
+        // 1. Cargar JSON
         const resResponse = await fetch('resolutions.json');
-        resolucionesData = await resResponse.json(); 
+        resolucionesData = await resResponse.json(); // Guardamos en global
 
-        // 2. Renderizar Menú Híbrido
-        renderResolutionMenu(); // Ya no lleva 'all'
+        // 2. Inicializar Filtro de Marcas
+        initBrandFilter();
 
-        // 3. Cargar Aspectos
+        // 3. Inicializar Menú de Resoluciones (Carga inicial: Todo o Default)
+        renderResolutionMenu('all');
+
+        // 4. Cargar Aspectos (Esto sigue igual)
         const aspResponse = await fetch('aspects.json');
         const aspData = await aspResponse.json();
         llenarSelectSimple('aspectSelect', aspData);
         llenarSelectSimple('secAspectSelect', aspData);
-
-        // FORZAR 2.39 POR DEFECTO
-        const aspectSelect = document.getElementById('aspectSelect');
-        if (aspectSelect && aspectSelect.querySelector('option[value="2.39"]')) {
-            aspectSelect.value = "2.39";
-        } else if (aspectSelect && aspectSelect.querySelector('option[value="2.38695"]')) {
-            aspectSelect.value = "2.38695";
-        }
-
-        // FORZAR 9:16 EN EL SECUNDARIO
-        const secSelect = document.getElementById('secAspectSelect');
-        if (secSelect && secSelect.querySelector('option[value="9:16"]')) {
-            secSelect.value = "9:16";
-        }
 
     } catch (error) {
         console.error("Error loading JSONs:", error);
     }
 }
 
-// =========================================================
-// 🔥 HYBRID MENU LOGIC (TOP 3 + FOLDER VIEW)
-// =========================================================
-function renderResolutionMenu() {
+// A. Llenar el Filtro de Marcas
+function initBrandFilter() {
+    const brandSelect = document.getElementById('brandFilter');
+    if (!brandSelect) return;
+
+    // Limpiar (dejar solo 'Show All')
+    brandSelect.innerHTML = '<option value="all">★ Popular / All</option>';
+
+    resolucionesData.forEach((grupo, index) => {
+        const opt = document.createElement('option');
+        opt.value = index; // Usamos el índice del array como ID
+        opt.innerText = grupo.category;
+        brandSelect.appendChild(opt);
+    });
+
+    // Evento: Cuando cambias la marca...
+    brandSelect.addEventListener('change', (e) => {
+        renderResolutionMenu(e.target.value);
+    });
+}
+
+// B. Renderizar el Menú de Resoluciones según el Filtro
+function renderResolutionMenu(filterValue) {
     const resSelect = document.getElementById('resolutionSelect');
     if (!resSelect) return;
 
-    // 1. Guardar selección previa
-    const valorPrevio = resSelect.value;
-    
-    // Limpiar menú
-    resSelect.innerHTML = '';
+    // Guardar valor actual por si queremos mantenerlo (opcional)
+    // const oldValue = resSelect.value;
 
-    // --- VISTA PRINCIPAL (ROOT) ---
-    if (currentViewMode === 'root') {
-        
-        resSelect.add(new Option("Custom / Manual", "custom"));
+    resSelect.innerHTML = '<option value="custom">Custom / Manual</option>';
 
-        resolucionesData.forEach((grupo, index) => {
-            const nombre = grupo.category;
-            const items = grupo.items;
-            
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = nombre;
-            
-            // Regla: Broadcast y DCI muestran todo. El resto solo Top 3.
-            //Voy a poner las categorías que aún no he completado, pero la idea es
-            // que solo sea Broadcast y DCI los que no se expandan.
-            const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI")
-             || nombre.includes("Social Media") || nombre.includes("Sony") || nombre.includes("RED")
-             || nombre.includes("Blackmagic");
-            
-            let itemsAMostrar = items;
-            let hayBotonVerMas = false;
+    // Lógica de filtrado
+    let gruposAMostrar = [];
 
-            if (!mostrarTodo && items.length > 3) {
-                // Filtro para el ROOT: Quitamos headers y separadores para la vista previa
-                itemsAMostrar = items.filter(i => {
-                    const t = i.type ? i.type.toLowerCase() : '';
-                    return t !== 'header' && t !== 'separator' && !i.name.includes('▼');
-                }).slice(0, 3);
-                
-                hayBotonVerMas = true;
-            }
+    if (filterValue === 'all') {
+        // Mostrar TODOS los grupos
+        gruposAMostrar = resolucionesData;
+    } else {
+        // Mostrar SOLO el grupo seleccionado (ej. ARRI)
+        // filterValue es el índice que pusimos en el option
+        gruposAMostrar = [resolucionesData[filterValue]];
+    }
 
-            itemsAMostrar.forEach(item => {
-                const opt = document.createElement('option');
-                opt.text = item.name;
-                opt.value = item.value;
-                optgroup.appendChild(opt);
-            });
+    // Construir el HTML
+    gruposAMostrar.forEach(grupo => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = grupo.category;
 
-            if (hayBotonVerMas) {
-                const optMore = document.createElement('option');
-                optMore.text = `↳ See all ${nombre} ...`;
-                optMore.value = `NAV_FOLDER_${index}`;
-                optMore.style.fontWeight = "bold";
-                optMore.style.color = "#007bff"; 
-                optgroup.appendChild(optMore);
-            }
-
-            resSelect.appendChild(optgroup);
-        });
-    } 
-
-    // --- VISTA DE CARPETA (FULL LIST) ---
-    else {
-        // 1. Botón Back
-        const optBack = document.createElement('option');
-        optBack.text = "⬅ \u00A0 Back to main menu";
-        optBack.value = "NAV_BACK";
-        optBack.style.fontWeight = "bold";
-        optBack.style.backgroundColor = "#444";
-        optBack.style.color = "#fff";
-        resSelect.add(optBack);
-
-        // 2. Título de la Categoría
-        const titulo = resolucionesData[currentViewMode].category;
-        const optSep = new Option(`── ${titulo} (Complete list) ──`, "");
-        optSep.disabled = true;
-        resSelect.add(optSep);
-
-        // 3. Renderizado con FILTRO INTELIGENTE
-        const items = resolucionesData[currentViewMode].items;
-        
-        // Detectamos si esta lista tiene Headers (buscando 'type: header' O el símbolo '▼')
-        // Esto es crucial para que funcione en Arri.
-        const tieneHeaders = items.some(i => 
-            (i.type && i.type.toLowerCase() === 'header') || i.name.includes('▼')
-        );
-        
-        // Si tiene headers, bloqueamos el renderizado hasta encontrar el primero.
-        // Esto elimina los duplicados "Top 3" que están al inicio del JSON.
-        let renderizar = !tieneHeaders; 
-
-        items.forEach(item => {
-            const esHeader = (item.type && item.type.toLowerCase() === 'header') || item.name.includes('▼');
-
-            // Lógica del filtro:
-            if (!renderizar) {
-                if (esHeader) {
-                    renderizar = true; // ¡Header encontrado! Empezamos a dibujar.
-                } else {
-                    return; // Saltamos este ítem (es un duplicado del top 3)
-                }
-            }
-
+        grupo.items.forEach(item => {
             const opt = document.createElement('option');
-            
-            if (esHeader) {
-                opt.text = item.name;
-                opt.disabled = true; 
-                opt.style.fontWeight = "bold";
-                opt.style.color = "#aaa";
-            } else if (item.type === 'separator') {
-                opt.text = "──────";
-                opt.disabled = true;
-                opt.style.textAlign = "center";
-            } else {
-                opt.text = item.name;
-                opt.value = item.value;
-            }
-            resSelect.add(opt);
+            opt.innerText = item.name;
+            opt.value = item.value;
+            optgroup.appendChild(opt);
         });
-    }
 
-    // =========================================================
-    // 🎯 LÓGICA DE SELECCIÓN (SELECTION LOGIC)
-    // =========================================================
-
-    // CASO 1: Acabamos de entrar a una carpeta ("See all...")
-    if (valorPrevio && valorPrevio.startsWith('NAV_FOLDER_')) {
-        
-        for (let i = 0; i < resSelect.options.length; i++) {
-            const opt = resSelect.options[i];
-            
-            // Buscamos la primera opción VÁLIDA (Ni Back, ni Header, ni vacía)
-             if (opt.value && opt.value !== 'NAV_BACK' && !opt.disabled ) {
-                
-                resSelect.selectedIndex = i;
-
-                // Forzamos actualización de inputs (Ancho/Alto)
-                setTimeout(() => {
-                    resSelect.dispatchEvent(new Event('change'));
-                }, 10);
-                
-                break; 
-            }
-        }
-    }
-    
-    // CASO 2: Navegación normal (mantener selección si existe)
-    else if (valorPrevio && !valorPrevio.startsWith('NAV_')) {
-        let existe = false;
-        for (let i = 0; i < resSelect.options.length; i++) {
-            if (resSelect.options[i].value === valorPrevio) {
-                resSelect.selectedIndex = i;
-                existe = true;
-                break;
-            }
-        }
-    }
-    
-    // CASO 3: Fallback para Root
-    // Si estamos en el menú principal y está seleccionado "Custom" (o nada útil), forzamos HD.
-    if (currentViewMode === 'root' && resSelect.value === 'custom') {
-          resSelect.value = "1920,1080"; 
-          // Opcional: si quieres asegurar que los inputs cambien a 1920x1080 visualmente:
-           setTimeout(() => resSelect.dispatchEvent(new Event('change')), 10);
-    }
+        resSelect.appendChild(optgroup);
+    });
 }
 
-// Función auxiliar para Aspectos
+// Función auxiliar para los Aspectos (que no tienen filtro)
 function llenarSelectSimple(id, datos) {
     const select = document.getElementById(id);
     if (!select) return;
@@ -279,7 +155,7 @@ function llenarSelectSimple(id, datos) {
 
     datos.forEach(grupo => {
         const optgroup = document.createElement('optgroup');
-        optgroup.label = grupo.group; 
+        optgroup.label = grupo.group; // Nota: en aspects.json usaste "group", en res usé "category". Ajusta según tu JSON.
         grupo.options.forEach(op => {
             const opt = document.createElement('option');
             opt.innerText = op.name;
@@ -293,76 +169,57 @@ function llenarSelectSimple(id, datos) {
 // 🔥 EJECUTAR AL INICIO
 document.addEventListener('DOMContentLoaded', () => {
     cargarDatosExternos();
-    aplicarModoMobile();
+    
+    // ... aquí va tu llamada a aplicarModoMobile() y draw() ...
 });
 
-
 // ==========================================
-// 🔥 LISTENER DEL MENÚ DE RESOLUCIÓN (CORREGIDO)
-// ==========================================
-if (menuResoluciones) {
-    menuResoluciones.addEventListener('change', () => {
-        const val = menuResoluciones.value;
-
-        // A. SI ELIGE UNA CARPETA ("Ver más...")
-        if (val.startsWith('NAV_FOLDER_')) {
-            const index = parseInt(val.replace('NAV_FOLDER_', ''));
-            currentViewMode = index; // Entrar a la carpeta
-            renderResolutionMenu(); // Redibujar
-            return;
-        }
-
-        // B. SI ELIGE VOLVER
-        if (val === 'NAV_BACK') {
-            currentViewMode = 'root'; // Volver al inicio
-            renderResolutionMenu();
-            // Intentar volver a HD
-            if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
-                menuResoluciones.value = "1920,1080";
-                menuResoluciones.dispatchEvent(new Event('change'));
-            }
-            return;
-        }
-
-        // C. SELECCIÓN NORMAL
-        if (val === 'custom' || val === '') return;
-
-        const [nW, nH] = val.split(',');
-        if(inputs.w) inputs.w.value = nW;
-        if(inputs.h) inputs.h.value = nH;
-
-        autoAdjustThickness(nW); 
-        
-        // Limpiar botones azules
-        const contenedorRes = document.getElementById('resBtnContainer');
-        if (contenedorRes) {
-            contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
-        }
-        
-        flashInput(inputs.w);
-        flashInput(inputs.h);
-        requestDraw();
-    });
-}
-
-
-// ==========================================
-// DRAG & DROP & IMAGE LOADER (Sin Cambios)
+// CARGADOR DE DATOS EXTERNOS (JSON)
 // ==========================================
 const dropZone = document.querySelector('.upload-zone');
 const fileInput = document.getElementById('imageLoader');
 
 if (dropZone && fileInput) {
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+
+    // 1. Cuando entras o mueves el archivo sobre la zona
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault(); // OBLIGATORIO: Evita que el navegador abra la foto
+        dropZone.classList.add('drag-over'); // Activa el estilo visual
+    });
+
+    // 2. Cuando te sales de la zona sin soltar
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over'); // Quita el estilo
+    });
+
+    // 3. Cuando SUELTAS el archivo
     dropZone.addEventListener('drop', (e) => {
-        e.preventDefault(); dropZone.classList.remove('drag-over'); 
+        e.preventDefault(); // OBLIGATORIO
+        dropZone.classList.remove('drag-over'); // Quita el estilo
+        
+        // A. Obtener los archivos soltados
         const files = e.dataTransfer.files;
-        if (files.length > 0) { fileInput.files = files; const event = new Event('change'); fileInput.dispatchEvent(event); }
+
+        if (files.length > 0) {
+            // B. EL TRUCO MAESTRO:
+            // Asignamos los archivos soltados al input invisible
+            fileInput.files = files; 
+
+            // C. Disparamos manualmente el evento "change"
+            // Esto hace que tu código anterior crea que el usuario hizo clic y seleccionó
+            const event = new Event('change');
+            fileInput.dispatchEvent(event);
+        }
     });
 }
 
-// Variables Imagen
+
+// ==========================================
+// LÓGICA DE CARGA DE IMAGEN 
+// ==========================================
+
+// 1. Variable Global (Tiene que estar afuera de las funciones)
 let userImage = null;
 let lastThickness = 2;
 const imageLoader = document.getElementById('imageLoader');
