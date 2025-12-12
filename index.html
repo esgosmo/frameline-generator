@@ -62,97 +62,13 @@
      
         <select id="resolutionSelect">
 
-            <option value="custom">Custom / Manual</option>
-            <optgroup label="Broadcast & Web">
-                <option value="1920,1080" selected>HD (1920 x 1080)</option>
-                <option value="3840,2160">UHD (3840 x 2160)</option>
-                <option value="1280,720">HD 720p (1280 x 720)</option>
-            </optgroup>
+         <select id="brandFilter" class="custom-select" style="margin-bottom: 5px;">
+        <option value="all">Show All Categories</option>
+    </select>
 
-
-            <optgroup label="Cinema (DCI)">
-                <option value="2048,1080">DCI 2K FC (2048 x 1080)</option>
-                <option value="1998,1080">DCI 2K Flat (1998 x 1080)</option>
-                <option value="2048,858">DCI 2K Scope (2048 x 858)</option>
-                <option value="4096,2160">DCI 4K FC (4096 x 2160)</option>
-                <option value="3996,2160">DCI 4K Flat (3996 x 2160)</option>
-                <option value="4096,1716">DCI 4K Scope (4096 x 1716)</option>
-            </optgroup>
-            <optgroup label="Social Media">
-                 <option value="1080,1920">Vertical 9:16 (1080 x 1920)</option>
-                <option value="1080,1350">Portrait 4:5 (1080 x 1350)</option>
-                <option value="1080,1080">Square (1080 x 1080)</option>
-            </optgroup>
-
-            <optgroup label="Camera">
-    <option value="Arri_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>Arri
-    </option>
-    <option value="6560,3100">Alexa 65 Open Gate (6.5K)</option>
-    <option value="6560,2744">Alexa 65 2.39:1 Scope</option>
-    <option value="5440,3060">Alexa 65 16:9 (UHD Crop)</option>
-    <option value="4320,4320">Alexa 65 1:1 Square</option>
-    <option value="sep_arri_1" disabled>──────</option>
-    <option value="6560,4320">Alexa 265 2.12:1 Open Gate</option>
-    <option value="5120,3100">Alexa 265 1.65:1</option>
-    <option value="4448,3096">Alexa 265 LF 3:2</option>
-    <option value="sep_arri_2" disabled>──────</option>
-    <option value="4608,3164">Alexa 35 4.6K 3:2 Open Gate</option>
-    <option value="4608,2592">Alexa 35 4.6K 16:9</option>
-    <option value="4096,2304">Alexa 35 4K 16:9</option>
-    <option value="sep_arri_3" disabled>──────</option>
-    <option value="4448,3096">Alexa LF/Mini LF 4.5K Open Gate</option>
-    <option value="4448,1856">Alexa LF/Mini LF 4.5K 2.39:1</option>
-    <option value="3840,2160">Alexa LF/Mini LF UHD 16:9</option>
-    <option value="sep_arri_4" disabled>──────</option>
-    <option value="3424,2202">Alexa Mini 3.4K Open Gate</option>
-    <option value="3200,1800">Alexa Mini 3.2K 16:9</option>
-    <option value="2880,2160">Alexa Mini 2.8K 4:3</option>
-
-
-    <option value="Sony_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>Sony
-    </option>
-    <option value="8640,5760">Venice 2 8.6K 3:2 Full Scan</option>
-    <option value="8192,4320">Venice 2 8.2K 17:9</option>
-    <option value="7680,4320">Venice 2 7.6K 16:9</option>
-    <option value="sep_sony_1" disabled>──────</option>
-    <option value="6048,4032">Venice 6K 3:2 Full Scan</option>
-    <option value="4096,3024">Venice 4K 4:3 Anamorphic</option>
-    <option value="sep_sony_2" disabled>──────</option>
-    <option value="8640,4860">Sony Burano 8.6K 16:9</option>
-    <option value="6008,3168">Sony FX9 6K Full Frame</option>
-    <option value="4096,2160">Sony FX6/FX3 DCI 4K</option>
-
-
-    <option value="Red_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>RED
-    </option>
-    <option value="8192,4320">V-Raptor 8K VV 17:9</option>
-    <option value="8192,5760">V-Raptor [X] 8K Open Gate (3:2)</option>
-    <option value="7168,3780">V-Raptor 7K 17:9</option>
-    <option value="sep_red_1" disabled>──────</option>
-    <option value="6144,3240">Komodo-X 6K 17:9</option>
-    <option value="6144,2592">Komodo 6K 2.4:1</option>
-    <option value="sep_red_2" disabled>──────</option>
-    <option value="8192,4320">Monstro/Helium 8K Full Format</option>
-    <option value="5120,3000">Gemini 5K Full Format</option>
-
-
-    <option value="BMD_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>Blackmagic
-    </option>
-    <option value="17520,8040">URSA Cine 17K 65mm</option>
-    <option value="12288,6480">URSA Mini Pro 12K 17:9</option>
-    <option value="8192,4320">URSA Mini Pro 8K DCI</option>
-    <option value="sep_bmd_1" disabled>──────</option>
-    <option value="6048,4032">Cinema Camera 6K FF Open Gate</option>
-    <option value="6048,2520">Cinema Camera 6K FF 2.4:1</option>
-    <option value="sep_bmd_2" disabled>──────</option>
-    <option value="6144,3456">Pocket 6K (S35) 16:9</option>
-    <option value="4096,2160">Pocket 4K DCI</option>
-
-</optgroup>
+    <select id="resolutionSelect" class="custom-select">
+        <option value="custom">Custom / Manual</option>
+    </select>
 
 
         </select>
