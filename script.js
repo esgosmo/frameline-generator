@@ -92,7 +92,7 @@ function initBrandFilter() {
     if (!brandSelect) return;
 
     // Limpiar (dejar solo 'Show All')
-    brandSelect.innerHTML = '<option value="all">★ Popular / All</option>';
+    brandSelect.innerHTML = '<option value="all">All</option>';
 
     resolucionesData.forEach((grupo, index) => {
         const opt = document.createElement('option');
