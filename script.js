@@ -143,6 +143,11 @@ function renderResolutionMenu(filterValue) {
 
         resSelect.appendChild(optgroup);
     });
+
+if (resSelect.querySelector('option[value="1920,1080"]')) {
+        resSelect.value = "1920,1080";
+    }
+
 }
 
 
