@@ -1,0 +1,49 @@
+[
+  {
+    "category": "Broadcast & Web",
+    "items": [
+        { "name": "HD (1920 x 1080)", "value": "1920,1080" },
+        { "name": "UHD (3840 x 2160)", "value": "3840,2160" },
+        { "name": "HD 720p (1280 x 720)", "value": "1080,1920" }
+    ]
+  },
+  {
+    "category": "Cinema (DCI)",
+    "items": [
+        { "name": "Alexa 35 (Open Gate 4.6K)", "value": "4608,3164" },
+        { "name": "Alexa Mini (Open Gate 3.4K)", "value": "3424,2202" },
+        { "name": "Amira (3.2K)", "value": "3200,1800" }
+    ]
+  },
+  {
+    "category": "Social Media",
+    "items": [
+        { "name": "Vertical 9:16 (1080 x 1920)", "value": "1080,1920" },
+        { "name": "Portrait 4:5 (1080 x 1350)", "value": "1080,1350" },
+        { "name": "Square (1080 x 1080)", "value": "1080,1080" }
+    ]
+  },
+  {
+    "category": "ARRI",
+    "items": [
+        { "name": "Alexa 35 (Open Gate 4.6K)", "value": "4608,3164" },
+        { "name": "Alexa Mini (Open Gate 3.4K)", "value": "3424,2202" },
+        { "name": "Amira (3.2K)", "value": "3200,1800" }
+    ]
+  },
+  {
+    "category": "RED Digital Cinema",
+    "items": [
+        { "name": "V-Raptor (8K VV)", "value": "8192,4320" },
+        { "name": "Komodo (6K)", "value": "6144,3240" },
+        { "name": "Monstro (8K VV)", "value": "8192,4320" }
+    ]
+  },
+  {
+    "category": "Sony",
+    "items": [
+        { "name": "Venice 2 (8.6K 3:2)", "value": "8640,5760" },
+        { "name": "FX9 / FX6 (4K DCI)", "value": "4096,2160" }
+    ]
+  }
+]
