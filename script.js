@@ -145,6 +145,10 @@ function renderResolutionMenu(filterValue) {
     });
 }
 
+if (resSelect.querySelector('option[value="1920,1080"]')) {
+        resSelect.value = "1920,1080";
+    }
+
 // Función auxiliar para los Aspectos (que no tienen filtro)
 function llenarSelectSimple(id, datos) {
     const select = document.getElementById(id);
@@ -166,12 +170,16 @@ function llenarSelectSimple(id, datos) {
     });
 }
 
+
+
 // 🔥 EJECUTAR AL INICIO
 document.addEventListener('DOMContentLoaded', () => {
     cargarDatosExternos();
     
     // ... aquí va tu llamada a aplicarModoMobile() y draw() ...
 });
+
+
 
 // ==========================================
 // LÓGICA DE DRAG & DROP 
