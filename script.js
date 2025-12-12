@@ -56,6 +56,122 @@ const inputs = {
 };
 
 // ==========================================
+// CARGADOR DE DATOS EXTERNOS (JSON)
+// ==========================================
+// Variable global para guardar los datos crudos y no volver a pedir el JSON
+let resolucionesData = [];
+
+async function cargarDatosExternos() {
+    try {
+        // 1. Cargar JSON
+        const resResponse = await fetch('resolutions.json');
+        resolucionesData = await resResponse.json(); // Guardamos en global
+
+        // 2. Inicializar Filtro de Marcas
+        initBrandFilter();
+
+        // 3. Inicializar Menú de Resoluciones (Carga inicial: Todo o Default)
+        renderResolutionMenu('all');
+
+        // 4. Cargar Aspectos (Esto sigue igual)
+        const aspResponse = await fetch('aspects.json');
+        const aspData = await aspResponse.json();
+        llenarSelectSimple('aspectSelect', aspData);
+        llenarSelectSimple('secAspectSelect', aspData);
+
+    } catch (error) {
+        console.error("Error loading JSONs:", error);
+    }
+}
+
+// A. Llenar el Filtro de Marcas
+function initBrandFilter() {
+    const brandSelect = document.getElementById('brandFilter');
+    if (!brandSelect) return;
+
+    // Limpiar (dejar solo 'Show All')
+    brandSelect.innerHTML = '<option value="all">★ Popular / All</option>';
+
+    resolucionesData.forEach((grupo, index) => {
+        const opt = document.createElement('option');
+        opt.value = index; // Usamos el índice del array como ID
+        opt.innerText = grupo.category;
+        brandSelect.appendChild(opt);
+    });
+
+    // Evento: Cuando cambias la marca...
+    brandSelect.addEventListener('change', (e) => {
+        renderResolutionMenu(e.target.value);
+    });
+}
+
+// B. Renderizar el Menú de Resoluciones según el Filtro
+function renderResolutionMenu(filterValue) {
+    const resSelect = document.getElementById('resolutionSelect');
+    if (!resSelect) return;
+
+    // Guardar valor actual por si queremos mantenerlo (opcional)
+    // const oldValue = resSelect.value;
+
+    resSelect.innerHTML = '<option value="custom">Custom / Manual</option>';
+
+    // Lógica de filtrado
+    let gruposAMostrar = [];
+
+    if (filterValue === 'all') {
+        // Mostrar TODOS los grupos
+        gruposAMostrar = resolucionesData;
+    } else {
+        // Mostrar SOLO el grupo seleccionado (ej. ARRI)
+        // filterValue es el índice que pusimos en el option
+        gruposAMostrar = [resolucionesData[filterValue]];
+    }
+
+    // Construir el HTML
+    gruposAMostrar.forEach(grupo => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = grupo.category;
+
+        grupo.items.forEach(item => {
+            const opt = document.createElement('option');
+            opt.innerText = item.name;
+            opt.value = item.value;
+            optgroup.appendChild(opt);
+        });
+
+        resSelect.appendChild(optgroup);
+    });
+}
+
+// Función auxiliar para los Aspectos (que no tienen filtro)
+function llenarSelectSimple(id, datos) {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const custom = select.querySelector('option[value="custom"]');
+    select.innerHTML = '';
+    if(custom) select.appendChild(custom);
+
+    datos.forEach(grupo => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = grupo.group; // Nota: en aspects.json usaste "group", en res usé "category". Ajusta según tu JSON.
+        grupo.options.forEach(op => {
+            const opt = document.createElement('option');
+            opt.innerText = op.name;
+            opt.value = op.value;
+            optgroup.appendChild(opt);
+        });
+        select.appendChild(optgroup);
+    });
+}
+
+// 🔥 EJECUTAR AL INICIO
+document.addEventListener('DOMContentLoaded', () => {
+    cargarDatosExternos();
+    
+    // ... aquí va tu llamada a aplicarModoMobile() y draw() ...
+});
+
+// ==========================================
 // LÓGICA DE DRAG & DROP 
 // ==========================================
 const dropZone = document.querySelector('.upload-zone');
