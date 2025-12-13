@@ -39,19 +39,12 @@
       { "name": "Alexa LF/Mini LF 4.5K Open Gate", "value": "4448,3096" },
      
       { "name": "── More Resolutions ──", "type": "separator" },
+      { "name": "Alexa 65", "type": "separator" },
 
       { "name": "Alexa 65 Open Gate (6.5K)", "value": "6560,3100" },
-      { "name": "Alexa 35 4.6K 3:2 Open Gate", "value": "4608,3164" },
-      { "name": "Alexa LF/Mini LF 4.5K Open Gate", "value": "4448,3096" },
-     
-      { "name": "── More Resolutions ──", "type": "separator" },
-
-      { "name": "▼ Alexa 65", "type": "header" },
-      { "name": "Alexa 65 Open Gate (6.5K)", "value": "6560,3100" },
-      { "name": "Alexa 65 5.1K 1.78", "value": "5120,2880" },
-      { "name": "Alexa 65 LF Open Gate", "value": "4448,3096" },
-      { "name": "Alexa 65 4.3K", "value": "4320,2880" },
-      { "name": "Alexa 65 4k UHD", "value": "3840,2160" },
+      { "name": "Alexa 65 2.39:1 Scope", "value": "6560,2744" },
+      { "name": "Alexa 65 16:9 (UHD Crop)", "value": "5440,3060" },
+      { "name": "Alexa 65 1:1 Square", "value": "4320,4320" },
 
       { "name": "──────", "type": "separator" }
 
