@@ -23,7 +23,7 @@
     "items": [
         { "name": "Vertical 9:16 (1080 x 1920)", "value": "1080,1920" },
         { "name": "Portrait 4:5 (1080 x 1350)", "value": "1080,1350" },
-        { "name": "Square (1080 x 1080)", "value": "1080,1080" }
+        { "name": "Square (1080 x 1080)", "value": "1080,1080" },
 
 	      { "name": "── More Resolutions ──", "type": "separator" },
 
@@ -54,10 +54,9 @@
       { "name": "Alexa 65 4.3K", "value": "4320,2880" },
       { "name": "Alexa 65 4k UHD", "value": "3840,2160" },
 
-      { "name": "──────", "type": "separator" },
+      { "name": "──────", "type": "separator" }
 
-      { "name": "▼ Alexa 265", "type": "header" },
-      { "name": "Alexa 265 2.12:1 Open Gate", "value": "6560,3100" },
+      { "name": "Alexa 265 2.12:1 Open Gate", "value": "6560,4320" },
       { "name": "Alexa 265 1.65:1", "value": "5120,3100" },
       { "name": "Alexa 265 LF 3:2", "value": "4448,3096" },
 

@@ -62,6 +62,7 @@ const inputs = {
 // ==========================================
 // Variable global para guardar los datos crudos y no volver a pedir el JSON
 let resolucionesData = [];
+let currentViewMode = 'root';
 
 async function cargarDatosExternos() {
     try {
@@ -102,48 +103,114 @@ async function cargarDatosExternos() {
     }
 }
 
-// A. Llenar el Filtro de Marcas
-function initBrandFilter() {
-    const brandSelect = document.getElementById('brandFilter');
-    if (!brandSelect) return;
-
-    // Limpiar (dejar solo 'Show All')
-    brandSelect.innerHTML = '<option value="all">All</option>';
-
-    resolucionesData.forEach((grupo, index) => {
-        const opt = document.createElement('option');
-        opt.value = index; // Usamos el índice del array como ID
-        opt.innerText = grupo.category;
-        brandSelect.appendChild(opt);
-    });
-
-    // Evento: Cuando cambias la marca...
-    brandSelect.addEventListener('change', (e) => {
-        renderResolutionMenu(e.target.value);
-    });
-}
-
-// B. Renderizar el Menú de Resoluciones según el Filtro
-function renderResolutionMenu(filterValue) {
+// B. Renderizar el Menú de Resoluciones (VISTA HÍBRIDA: TOP 3 + VER MÁS)
+function renderResolutionMenu() {
     const resSelect = document.getElementById('resolutionSelect');
     if (!resSelect) return;
 
-    // Guardar valor actual por si queremos mantenerlo (opcional)
-    // const oldValue = resSelect.value;
+    // Guardar selección previa
+    const valorPrevio = resSelect.value;
+    resSelect.innerHTML = '';
 
-    resSelect.innerHTML = '<option value="custom">Custom / Manual</option>';
+    // ===============================================
+    // VISTA PRINCIPAL (ROOT) - "TOP 3"
+    // ===============================================
+    if (currentViewMode === 'root') {
+        
+        // Opción base
+        resSelect.add(new Option("Custom / Manual", "custom"));
 
-    // Lógica de filtrado
-    let gruposAMostrar = [];
+        resolucionesData.forEach((grupo, index) => {
+            const nombre = grupo.category;
+            const items = grupo.items;
+            
+            // Crear grupo visual
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = nombre;
+            
+            // --- REGLA: Broadcast/DCI siempre completos. El resto, Top 3. ---
+            const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI");
+            
+            let itemsAMostrar = items;
+            let hayBotonVerMas = false;
 
-    if (filterValue === 'all') {
-        // Mostrar TODOS los grupos
-        gruposAMostrar = resolucionesData;
-    } else {
-        // Mostrar SOLO el grupo seleccionado (ej. ARRI)
-        // filterValue es el índice que pusimos en el option
-        gruposAMostrar = [resolucionesData[filterValue]];
+            // Si la lista es larga (>3) y NO es estándar, cortamos.
+            if (!mostrarTodo && items.length > 3) {
+                itemsAMostrar = items.slice(0, 3); 
+                hayBotonVerMas = true;
+            }
+
+            // Pintar items
+            itemsAMostrar.forEach(item => {
+                if (item.type !== 'header' && item.type !== 'separator') {
+                    const opt = document.createElement('option');
+                    opt.text = item.name;
+                    opt.value = item.value;
+                    optgroup.appendChild(opt);
+                }
+            });
+
+            // Botón "Ver todas..."
+            if (hayBotonVerMas) {
+                const optMore = document.createElement('option');
+                optMore.text = `↳ Ver todas las de ${nombre} ...`;
+                optMore.value = `NAV_FOLDER_${index}`;
+                optMore.style.fontWeight = "bold";
+                optMore.style.color = "#007bff"; 
+                optgroup.appendChild(optMore);
+            }
+
+            resSelect.appendChild(optgroup);
+        });
+    } 
+
+    // ===============================================
+    // VISTA DE CARPETA (FULL)
+    // ===============================================
+    else {
+        // Botón Volver
+        const optBack = document.createElement('option');
+        optBack.text = "⬅ \u00A0 VOLVER AL MENÚ PRINCIPAL";
+        optBack.value = "NAV_BACK";
+        optBack.style.fontWeight = "bold";
+        optBack.style.backgroundColor = "#444";
+        optBack.style.color = "#fff";
+        resSelect.add(optBack);
+
+        // Título
+        const titulo = resolucionesData[currentViewMode].category;
+        const optSep = new Option(`── ${titulo} (Lista Completa) ──`, "");
+        optSep.disabled = true;
+        resSelect.add(optSep);
+
+        // Lista Completa
+        const items = resolucionesData[currentViewMode].items;
+        items.forEach(item => {
+            const opt = document.createElement('option');
+            if (item.type === 'header') {
+                opt.text = item.name;
+                opt.disabled = true;
+                opt.style.fontWeight = "bold";
+                opt.style.color = "#aaa";
+            } else if (item.type === 'separator') {
+                opt.text = "──────";
+                opt.disabled = true;
+                opt.style.textAlign = "center";
+            } else {
+                opt.text = item.name;
+                opt.value = item.value;
+            }
+            resSelect.add(opt);
+        });
     }
+
+    // Mantener selección visual si no es navegación
+    if (!valorPrevio.startsWith('NAV_')) {
+        if (Array.from(resSelect.options).some(o => o.value === valorPrevio)) {
+            resSelect.value = valorPrevio;
+        }
+    }
+
 
     // Construir el HTML
     gruposAMostrar.forEach(grupo => {
@@ -806,7 +873,45 @@ Object.values(inputs).forEach(input => {
     }
 });
 
-// Listener Aspecto
+// ==========================================
+// LÓGICA DEL MENÚ DE RESOLUCIÓN
+// ==========================================
+if (menuResoluciones) {
+    menuResoluciones.addEventListener('change', () => {
+        const val = menuResoluciones.value;
+        
+        // Si elige custom o vacío, no hacemos nada con los números
+        if (val === 'custom' || val === '') return;
+
+        // 1. Poner valores en los inputs
+        const [nW, nH] = val.split(',');
+        if(inputs.w) inputs.w.value = nW;
+        if(inputs.h) inputs.h.value = nH;
+
+        // --- NUEVO: AJUSTAR GROSOR AUTOMÁTICAMENTE ---
+        autoAdjustThickness(nW); 
+        // --
+        
+        // 2. APAGAR BOTONES (LIMPIEZA)
+        // Buscamos la caja de botones por su ID nuevo
+        const contenedorRes = document.getElementById('resBtnContainer');
+        
+        if (contenedorRes) {
+            // Buscamos solo los botones azules ADENTRO de esa caja
+            const botonesPrendidos = contenedorRes.querySelectorAll('button.active');
+            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
+        }
+        
+        // 3. Redibujar
+        flashInput(inputs.w);
+        flashInput(inputs.h);
+        requestDraw();
+    });
+}
+
+// ==========================================
+// LÓGICA DEL MENÚ DE ASPECTO (FRAMELINE)
+// ==========================================
 if (menuAspecto) {
     menuAspecto.addEventListener('change', () => {
         if (cajaAspecto) cajaAspecto.classList.remove('hidden');
@@ -1073,9 +1178,7 @@ if (resetBtn) {
         const infoArrow = document.getElementById('infoArrow'); if(infoArrow) infoArrow.innerText = "▼";
         if (typeof removeImage === "function") removeImage();
 
-        // RESETEAR MENÚS Y NAVEGACIÓN
-        currentViewMode = 'root';
-        renderResolutionMenu();
+        // 3. Resetear Menús
         if(menuResoluciones) menuResoluciones.value = "1920,1080"; 
         
         if(menuAspecto) menuAspecto.value = "2.38695";
