@@ -60,39 +60,33 @@ const inputs = {
 // ==========================================
 // CARGADOR DE DATOS EXTERNOS (JSON)
 // ==========================================
-// Variable global para guardar los datos crudos y no volver a pedir el JSON
 let resolucionesData = [];
-let currentViewMode = 'root';
+let currentViewMode = 'root'; // Variable para controlar la navegación de carpetas
 
 async function cargarDatosExternos() {
     try {
-        // 1. Cargar JSON
+        // 1. Cargar JSON Resoluciones
         const resResponse = await fetch('resolutions.json');
-        resolucionesData = await resResponse.json(); // Guardamos en global
+        resolucionesData = await resResponse.json(); 
 
-        // 2. Inicializar Filtro de Marcas
-        initBrandFilter();
+        // 2. Renderizar Menú Híbrido
+        renderResolutionMenu(); // Ya no lleva 'all'
 
-        // 3. Inicializar Menú de Resoluciones (Carga inicial: Todo o Default)
-        renderResolutionMenu('all');
-
-        // 4. Cargar Aspectos (Esto sigue igual)
+        // 3. Cargar Aspectos
         const aspResponse = await fetch('aspects.json');
         const aspData = await aspResponse.json();
         llenarSelectSimple('aspectSelect', aspData);
         llenarSelectSimple('secAspectSelect', aspData);
 
-        // 🔥 NUEVO: FORZAR 2.39 POR DEFECTO
+        // FORZAR 2.39 POR DEFECTO
         const aspectSelect = document.getElementById('aspectSelect');
-        // Usamos el valor exacto que pusiste en tu JSON (probablemente "2.39" o "2.38695")
         if (aspectSelect && aspectSelect.querySelector('option[value="2.39"]')) {
             aspectSelect.value = "2.39";
         } else if (aspectSelect && aspectSelect.querySelector('option[value="2.38695"]')) {
-             // Por si usaste la versión precisa en el JSON
             aspectSelect.value = "2.38695";
         }
 
-        // 🔥 NUEVO: FORZAR 9:16 EN EL SECUNDARIO
+        // FORZAR 9:16 EN EL SECUNDARIO
         const secSelect = document.getElementById('secAspectSelect');
         if (secSelect && secSelect.querySelector('option[value="9:16"]')) {
             secSelect.value = "9:16";
@@ -103,7 +97,9 @@ async function cargarDatosExternos() {
     }
 }
 
-// B. Renderizar el Menú de Resoluciones (VISTA HÍBRIDA: TOP 3 + VER MÁS)
+// =========================================================
+// 🔥 LÓGICA DEL MENÚ HÍBRIDO (TOP 3 + VER MÁS) - CORREGIDA
+// =========================================================
 function renderResolutionMenu() {
     const resSelect = document.getElementById('resolutionSelect');
     if (!resSelect) return;
@@ -112,35 +108,29 @@ function renderResolutionMenu() {
     const valorPrevio = resSelect.value;
     resSelect.innerHTML = '';
 
-    // ===============================================
-    // VISTA PRINCIPAL (ROOT) - "TOP 3"
-    // ===============================================
+    // --- VISTA PRINCIPAL (ROOT) ---
     if (currentViewMode === 'root') {
         
-        // Opción base
         resSelect.add(new Option("Custom / Manual", "custom"));
 
         resolucionesData.forEach((grupo, index) => {
             const nombre = grupo.category;
             const items = grupo.items;
             
-            // Crear grupo visual
             const optgroup = document.createElement('optgroup');
             optgroup.label = nombre;
             
-            // --- REGLA: Broadcast/DCI siempre completos. El resto, Top 3. ---
+            // Regla: Broadcast/DCI siempre completos. El resto, Top 3.
             const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI");
             
             let itemsAMostrar = items;
             let hayBotonVerMas = false;
 
-            // Si la lista es larga (>3) y NO es estándar, cortamos.
             if (!mostrarTodo && items.length > 3) {
                 itemsAMostrar = items.slice(0, 3); 
                 hayBotonVerMas = true;
             }
 
-            // Pintar items
             itemsAMostrar.forEach(item => {
                 if (item.type !== 'header' && item.type !== 'separator') {
                     const opt = document.createElement('option');
@@ -150,7 +140,6 @@ function renderResolutionMenu() {
                 }
             });
 
-            // Botón "Ver todas..."
             if (hayBotonVerMas) {
                 const optMore = document.createElement('option');
                 optMore.text = `↳ Ver todas las de ${nombre} ...`;
@@ -164,9 +153,7 @@ function renderResolutionMenu() {
         });
     } 
 
-    // ===============================================
-    // VISTA DE CARPETA (FULL)
-    // ===============================================
+    // --- VISTA DE CARPETA (FULL) ---
     else {
         // Botón Volver
         const optBack = document.createElement('option');
@@ -210,32 +197,18 @@ function renderResolutionMenu() {
             resSelect.value = valorPrevio;
         }
     }
-
-
-    // Construir el HTML
-    gruposAMostrar.forEach(grupo => {
-        const optgroup = document.createElement('optgroup');
-        optgroup.label = grupo.category;
-
-        grupo.items.forEach(item => {
-            const opt = document.createElement('option');
-            opt.innerText = item.name;
-            opt.value = item.value;
-            optgroup.appendChild(opt);
-        });
-
-        resSelect.appendChild(optgroup);
-    });
-
-if (resSelect.querySelector('option[value="1920,1080"]')) {
-        resSelect.value = "1920,1080";
+    
+    // Intentar seleccionar HD si estamos en root y nada seleccionado
+    if (currentViewMode === 'root' && resSelect.querySelector('option[value="1920,1080"]')) {
+        if (resSelect.value === 'custom') {
+             // Si estaba en custom, se queda en custom. 
+             // Si quieres forzar HD al renderizar, descomenta abajo:
+             // resSelect.value = "1920,1080";
+        }
     }
-
 }
 
-
-
-// Función auxiliar para los Aspectos (que no tienen filtro)
+// Función auxiliar para Aspectos
 function llenarSelectSimple(id, datos) {
     const select = document.getElementById(id);
     if (!select) return;
@@ -245,7 +218,7 @@ function llenarSelectSimple(id, datos) {
 
     datos.forEach(grupo => {
         const optgroup = document.createElement('optgroup');
-        optgroup.label = grupo.group; // Nota: en aspects.json usaste "group", en res usé "category". Ajusta según tu JSON.
+        optgroup.label = grupo.group; 
         grupo.options.forEach(op => {
             const opt = document.createElement('option');
             opt.innerText = op.name;
@@ -256,251 +229,179 @@ function llenarSelectSimple(id, datos) {
     });
 }
 
-
-
 // 🔥 EJECUTAR AL INICIO
 document.addEventListener('DOMContentLoaded', () => {
     cargarDatosExternos();
-    
-    // ... aquí va tu llamada a aplicarModoMobile() y draw() ...
+    aplicarModoMobile();
 });
 
 
+// ==========================================
+// LÓGICA DE DRAG & DROP 
+// ==========================================
+if (menuResoluciones) {
+    menuResoluciones.addEventListener('change', () => {
+        const val = menuResoluciones.value;
+
+        // A. SI ELIGE UNA CARPETA ("Ver más...")
+        if (val.startsWith('NAV_FOLDER_')) {
+            const index = parseInt(val.replace('NAV_FOLDER_', ''));
+            currentViewMode = index; // Entrar a la carpeta
+            renderResolutionMenu(); // Redibujar
+            
+            // Auto-seleccionar el primer item real para UX
+            if (menuResoluciones.options.length > 2) {
+                menuResoluciones.selectedIndex = 2;
+                menuResoluciones.dispatchEvent(new Event('change'));
+            }
+            return;
+        }
+
+        // B. SI ELIGE VOLVER
+        if (val === 'NAV_BACK') {
+            currentViewMode = 'root'; // Volver al inicio
+            renderResolutionMenu();
+            // Intentar volver a HD
+            if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
+                menuResoluciones.value = "1920,1080";
+                menuResoluciones.dispatchEvent(new Event('change'));
+            }
+            return;
+        }
+
+        // C. SELECCIÓN NORMAL
+        if (val === 'custom' || val === '') return;
+
+        const [nW, nH] = val.split(',');
+        if(inputs.w) inputs.w.value = nW;
+        if(inputs.h) inputs.h.value = nH;
+
+        autoAdjustThickness(nW); 
+        
+        // Limpiar botones azules
+        const contenedorRes = document.getElementById('resBtnContainer');
+        if (contenedorRes) {
+            contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
+        }
+        
+        flashInput(inputs.w);
+        flashInput(inputs.h);
+        requestDraw();
+    });
+}
+
 
 // ==========================================
-// CARGADOR DE DATOS EXTERNOS (JSON)
+// DRAG & DROP & IMAGE LOADER (Sin Cambios)
 // ==========================================
 const dropZone = document.querySelector('.upload-zone');
 const fileInput = document.getElementById('imageLoader');
 
 if (dropZone && fileInput) {
-
-    // 1. Cuando entras o mueves el archivo sobre la zona
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault(); // OBLIGATORIO: Evita que el navegador abra la foto
-        dropZone.classList.add('drag-over'); // Activa el estilo visual
-    });
-
-    // 2. Cuando te sales de la zona sin soltar
-    dropZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over'); // Quita el estilo
-    });
-
-    // 3. Cuando SUELTAS el archivo
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
     dropZone.addEventListener('drop', (e) => {
-        e.preventDefault(); // OBLIGATORIO
-        dropZone.classList.remove('drag-over'); // Quita el estilo
-        
-        // A. Obtener los archivos soltados
+        e.preventDefault(); dropZone.classList.remove('drag-over'); 
         const files = e.dataTransfer.files;
-
-        if (files.length > 0) {
-            // B. EL TRUCO MAESTRO:
-            // Asignamos los archivos soltados al input invisible
-            fileInput.files = files; 
-
-            // C. Disparamos manualmente el evento "change"
-            // Esto hace que tu código anterior crea que el usuario hizo clic y seleccionó
-            const event = new Event('change');
-            fileInput.dispatchEvent(event);
-        }
+        if (files.length > 0) { fileInput.files = files; const event = new Event('change'); fileInput.dispatchEvent(event); }
     });
 }
 
-
-// ==========================================
-// LÓGICA DE CARGA DE IMAGEN 
-// ==========================================
-
-// 1. Variable Global (Tiene que estar afuera de las funciones)
+// Variables Imagen
 let userImage = null;
 let lastThickness = 2;
 const imageLoader = document.getElementById('imageLoader');
 const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
-
-// ==========================================
-// 3. LÓGICA DE CARGA BLINDADA (PERFORMANCE 6K+ & TIFF)
-// ==========================================
 const sizeWarning = document.getElementById('sizeWarning'); 
 
 if (imageLoader) {
+    // Variable para limpiar memoria cuando cambiamos de foto
+    let currentObjectUrl = null;
+
     imageLoader.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
-        // Limpiar memoria anterior si existía
         if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
 
-        // ------------------------------------------------
-        // 1. VALIDACIÓN Y NOMBRE
-        // ------------------------------------------------
         let fileName = file.name;
-        const fileType = file.type.toLowerCase();
-        
-        // Corrección de nombre "temp"
-        // Si el nombre parece basura temporal, intentamos limpiarlo o dejarlo genérico
         if (fileName.toLowerCase().includes('temp') || fileName.length > 50) {
-             // Intentar sacar extensión
              const ext = fileName.split('.').pop();
-             if(ext) fileName = `Image_Loaded.${ext}`;
-             else fileName = "Image_Loaded";
+             fileName = ext ? `Image_Loaded.${ext}` : "Image_Loaded";
         }
 
-        const isValid = fileType.startsWith('image/') || 
-                        fileName.toLowerCase().endsWith('.tiff') || 
-                        fileName.toLowerCase().endsWith('.tif');
+        const isValid = file.type.startsWith('image/') || fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
+        if (!isValid) { alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF."); imageLoader.value = ""; return; }
 
-        if (!isValid) {
-            alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF.");
-            imageLoader.value = ""; 
-            return; 
-        }
-
-        // ------------------------------------------------
-        // 2. ACTUALIZAR UI (Inmediato)
-        // ------------------------------------------------
         const zone = document.querySelector('.upload-zone');
         const textSpan = zone ? zone.querySelector('.upload-text') : null;
-
-      if (zone && textSpan) {
-            // ❌ ANTES (Borradas las líneas que calculaban el nombre):
-            // let displayName = fileName;
-            // if (displayName.length > 25) displayName = ...
-            // textSpan.innerText = displayName;
-
-            // ✅ AHORA (Mensaje fijo):
+        if (zone && textSpan) {
             textSpan.innerText = "Image Loaded"; 
-            
-            // Mantenemos el estilo visual de "activo"
             zone.classList.add('has-file'); 
             zone.style.borderColor = "#007bff"; 
         }
 
-        // ------------------------------------------------
-        // 3. AVISOS DE PESO / RESOLUCIÓN
-        // ------------------------------------------------
-        const limitBytes = 20 * 1024 * 1024; // 20MB
+        const limitBytes = 20 * 1024 * 1024;
         let isHeavyFile = (file.size > limitBytes);
-        
-        // Reset warning state
         if(sizeWarning) {
             sizeWarning.classList.add('hidden');
-            if (isHeavyFile) {
-                sizeWarning.innerText = "⚠️ Large file size (>20MB)";
-                sizeWarning.classList.remove('hidden');
-            }
+            if (isHeavyFile) { sizeWarning.innerText = "⚠️ Large file size (>20MB)"; sizeWarning.classList.remove('hidden'); }
         }
 
-        // ------------------------------------------------
-        // 4. FUNCIÓN MAESTRA DE PROCESAMIENTO
-        // ------------------------------------------------
         const finalizarCarga = (blobUrl) => {
-            currentObjectUrl = blobUrl; // Guardar referencia
+            currentObjectUrl = blobUrl;
             const img = new Image();
-            
             img.onload = () => {
                 userImage = img;
-                
-                // Reset Pan
-                if (typeof imgPanX !== 'undefined') { imgPanX = 0; imgPanY = 0; }
-
-                // Detectar Resolución Extrema (> 6K)
                 const limitRes = 6000; 
                 if (img.width > limitRes || img.height > limitRes) {
                     if (sizeWarning) {
-                        const msg = isHeavyFile 
-                            ? "⚠️ Large file & large resolution (>6K) Performance may lag."
-                            : "⚠️ Large resolution (>6K). Performance may lag.";
+                        const msg = isHeavyFile ? "⚠️ Large file & large resolution (>6K) Performance may lag." : "⚠️ Large resolution (>6K). Performance may lag.";
                         sizeWarning.innerText = msg;
                         sizeWarning.classList.remove('hidden');
                     }
                 }
-
-                // Activar Interfaz
                 if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
-                
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
                 if(menuResoluciones) menuResoluciones.value = 'custom';
-                
-                // Limpiar botones azules
-                const clearContainer = (id) => {
-                    const cont = document.getElementById(id);
-                    if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
-                };
+                const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
                 clearContainer('resBtnContainer');
-                
-                flashInput(inputs.w);
-                flashInput(inputs.h);
-                
-                // Forzar Fit en móviles
+                flashInput(inputs.w); flashInput(inputs.h);
                 if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
-
-                // Dibujar
                 if(typeof requestDraw === 'function') requestDraw(); else draw();
             };
-
-            img.onerror = () => {
-                alert("Error loading image data. The file might be corrupted.");
-                if(window.removeImage) window.removeImage();
-            };
-
+            img.onerror = () => { alert("Error loading image."); if(window.removeImage) window.removeImage(); };
             img.src = blobUrl;
         };
 
-        // ------------------------------------------------
-        // 5. RUTAS DE CARGA (Aquí está la optimización)
-        // ------------------------------------------------
         const isTiff = fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
-
         if (isTiff) {
-            // --- RUTA TIFF (Lenta pero necesaria) ---
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    if (typeof UTIF === 'undefined') throw new Error("UTIF library missing");
-                    
+                    if (typeof UTIF === 'undefined') throw new Error("UTIF missing");
                     const buffer = event.target.result;
                     const ifds = UTIF.decode(buffer);
                     UTIF.decodeImage(buffer, ifds[0]);
                     const rgba = UTIF.toRGBA8(ifds[0]); 
-                    
                     const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = ifds[0].width;
-                    tempCanvas.height = ifds[0].height;
+                    tempCanvas.width = ifds[0].width; tempCanvas.height = ifds[0].height;
                     const tempCtx = tempCanvas.getContext('2d');
-                    
                     const imageData = tempCtx.createImageData(ifds[0].width, ifds[0].height);
                     imageData.data.set(rgba);
                     tempCtx.putImageData(imageData, 0, 0);
-                    
-                    // OPTIMIZACIÓN: Usar toBlob en lugar de toDataURL para ahorrar RAM
-                    tempCanvas.toBlob((blob) => {
-                        const tiffUrl = URL.createObjectURL(blob);
-                        finalizarCarga(tiffUrl);
-                    }, 'image/png');
-
-                } catch (err) {
-                    console.error(err);
-                    alert("Error processing TIFF file.");
-                    if(window.removeImage) window.removeImage();
-                }
+                    tempCanvas.toBlob((blob) => { const tiffUrl = URL.createObjectURL(blob); finalizarCarga(tiffUrl); }, 'image/png');
+                } catch (err) { console.error(err); alert("Error processing TIFF."); if(window.removeImage) window.removeImage(); }
             };
             reader.readAsArrayBuffer(file);
-
         } else {
-            // --- RUTA JPG/PNG (TURBO MODE) ---
-            // 🔥 No usamos FileReader. Usamos ObjectURL directo.
-            // Esto carga 8K instantáneo sin leer bytes.
             const objectUrl = URL.createObjectURL(file);
             finalizarCarga(objectUrl);
         }
     });
 }
-
 // Clear Function
 window.removeImage = function() {
     userImage = null;
@@ -517,9 +418,10 @@ window.removeImage = function() {
 }
 
 // Listeners
-if (showImageToggle) showImageToggle.addEventListener('change', draw);
-if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', draw);
-if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', draw);
+if (showImageToggle) showImageToggle.addEventListener('change', requestDraw);
+if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', requestDraw);
+if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', requestDraw);
+if (inputs.scaleCrop) inputs.scaleCrop.addEventListener('change', requestDraw);
 // 5. Lógica para el ojito (Show/Hide)
 if (showImageToggle) {
     showImageToggle.addEventListener('change', draw);
@@ -607,23 +509,20 @@ function draw() {
     if (!inputs.w || !inputs.h) return;
 
     // A. LEER VALORES
-    const width = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
-    const height = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+    const rawW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
+    const rawH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
 
-    // --- ESCALA ---
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
     const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
-    // --- OPACIDAD ---
     let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
     if (isNaN(opacityVal)) opacityVal = 100;
     const opacity = opacityVal / 100;
     if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
-    // --- GROSOR ---
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
     if (rawThick > 10) { rawThick = 10; if(inputs.thickness) inputs.thickness.value = 10; }
@@ -631,27 +530,20 @@ function draw() {
     const mainOffset = mainThickness / 2;
     const secThickness = mainThickness; 
     let safeThickness = 0;
-     if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
+    if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
 
-    
-// =====================================================
-    // 🔥 LÓGICA DE CROP (Aquí definimos width/height finales)
-    // =====================================================
     const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
-
-     // Definimos las dimensiones finales (width y height que usará el canvas)
     let width = rawW;
     let height = rawH;
 
     if (isCropMode) {
-        // ...pero si es CROP, calculamos la altura exacta matemática
         height = Math.round(width / targetAspect);
         
         // Regla de Video: Siempre números pares para evitar problemas de códec
-        if (height % 2 !== 0) height--;
+        // Lo voy a quitar, prefiero la precisión matemática
+        // if (height % 2 !== 0) height--;
     }
 
-    // B. CANVAS
     if (canvas.width !== width) canvas.width = width;
     if (canvas.height !== height) canvas.height = height;
     ctx.clearRect(0, 0, width, height);
@@ -662,6 +554,8 @@ function draw() {
     if (userImage && mostrarImagen) {
         try {
             const isFill = inputs.scaleFill && inputs.scaleFill.checked;
+            // Si es Crop, la imagen SIEMPRE debe comportarse como Fill (cubrir todo)
+            const shouldUseFillLogic = isFill || isCropMode;
             
             // 2. Calcular la proporción de escalado (Scale Ratio)
             // Calculamos cuánto hay que estirar el ancho y el alto
@@ -669,35 +563,17 @@ function draw() {
             const ratioH = height / userImage.height;
             let renderRatio;
 
-            if (isFill) {
-                // FILL: Usamos el ratio MAYOR (Math.max)
-                // Esto hace que la imagen crezca hasta cubrir todo el hueco (recortando lo que sobre)
+          if (shouldUseFillLogic) {
+                // En modo Crop o Fill, usamos Max para cubrir todo el área
                 renderRatio = Math.max(ratioW, ratioH);
             } else {
-                // FIT: Usamos el ratio MENOR (Math.min)
-                // Esto hace que la imagen se detenga en cuanto toque un borde (dejando negro lo demás)
+                // En modo Fit, usamos Min para ver la imagen entera
                 renderRatio = Math.min(ratioW, ratioH);
             }
 
-           // 3. Calcular nuevas dimensiones finales
-            // 🔥 CORRECCIÓN 1: Usamos Math.ceil (Redondear arriba) para evitar huecos de sub-pixel
-            let newW = Math.ceil(userImage.width * renderRatio);
-            let newH = Math.ceil(userImage.height * renderRatio);
-
-            // =========================================================
-            // 🔥 SOLUCIÓN DEFINITIVA: SANGRADO (BLEED)
-            // =========================================================
-            if (shouldUseFillLogic) {
-               // Si la imagen es casi del mismo tamaño que el canvas (diferencia menor a 2px),
-                // la estiramos forzosamente +2px para "matar" cualquier línea verde o blanca en los bordes.
-                if (Math.abs(newW - width) < 2) newW = width + 2;
-                if (Math.abs(newH - height) < 2) newH = height + 2;
-                
-                // Seguridad adicional: NUNCA permitir que sea menor al canvas
-                if (newW < width) newW = width + 1;
-                if (newH < height) newH = height + 1;
-            }
-             
+            // 3. Calcular nuevas dimensiones finales
+            const newW = userImage.width * renderRatio;
+            const newH = userImage.height * renderRatio;
 
             // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
@@ -707,15 +583,30 @@ function draw() {
     }
 
     let visibleW, visibleH;
+    let offsetX, offsetY; // Declaramos aquí para usarlas fuera
 
-    // 1. Calcular tamaño base
-    if (targetAspect > screenAspect) {
+    if (isCropMode) {
+        // 🔥 CORRECCIÓN DEFINITIVA PARA CROP:
+        // En modo Crop, el "Visible Area" ES el canvas entero.
+        // Forzamos que coincidan exactamente para evitar líneas de 1px.
         visibleW = width;
-        visibleH = width / targetAspect;
-    } else {
         visibleH = height;
-        visibleW = height * targetAspect;
-    }
+        
+        // Cero márgenes, porque no hay barras negras
+        offsetX = 0;
+        offsetY = 0;
+    } 
+    else {
+        // --- LÓGICA ESTÁNDAR (FIT / FILL) ---
+        
+        // 1. Calcular tamaño base
+        if (targetAspect > screenAspect) {
+            visibleW = width;
+            visibleH = width / targetAspect;
+        } else {
+            visibleH = height;
+            visibleW = height * targetAspect;
+        }
 
     // 2. Aplicar Escala y REDONDEAR (Vital para evitar bordes borrosos)
     // Math.round fuerza al pixel entero más cercano
@@ -723,8 +614,9 @@ function draw() {
     visibleH = Math.round(visibleH * scaleFactor);
 
     // 3. Asegurar que sean números pares (Opcional, ayuda al centrado perfecto)
-    if (visibleW % 2 !== 0) visibleW--;
-    if (visibleH % 2 !== 0) visibleH--;
+    // Voy a comentarlas, prefiero la precisión matemática
+    //if (visibleW % 2 !== 0) visibleW--;
+    // if (visibleH % 2 !== 0) visibleH--;
 
     // 4. Calcular Matte (Barras) con enteros
     // Math.floor asegura que no queden medios píxeles sueltos
@@ -734,12 +626,21 @@ function draw() {
     offsetY = barHeight;
      }
 
-    // E. MATTE
-    ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-    ctx.fillRect(0, 0, width, offsetY); 
-    ctx.fillRect(0, height - offsetY, width, offsetY); 
-    ctx.fillRect(0, offsetY, offsetX, visibleH); 
-    ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
+// E. MATTE
+    // 🔥 CAMBIO: Solo dibujamos las barras negras si NO estamos en modo Crop.
+    // En modo Crop, el borde del canvas es el límite natural.
+    if (!isCropMode) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+        
+        // Barra Superior
+        ctx.fillRect(0, 0, width, offsetY); 
+        // Barra Inferior
+        ctx.fillRect(0, height - offsetY, width, offsetY); 
+        // Barra Izquierda
+        ctx.fillRect(0, offsetY, offsetX, visibleH); 
+        // Barra Derecha
+        ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
+    }
 
     // MAIN FRAMELINE
     if (mainThickness > 0) {
@@ -769,11 +670,13 @@ function draw() {
         }
 
        // 2. 🔥 CORRECCIÓN: REDONDEAR Y FORZAR PARES (Igual que Main Frame)
+       
         secW = Math.round(secW);
         secH = Math.round(secH);
 
-        if (secW % 2 !== 0) secW--; // Si es 1215 -> 1214
-        if (secH % 2 !== 0) secH--; // Si es impar -> par
+        // Voy a comentarlas, prefiero la precisión matemática
+       // if (secW % 2 !== 0) secW--; // Si es 1215 -> 1214
+       // if (secH % 2 !== 0) secH--; // Si es impar -> par
 
         // 3. CALCULAR POSICIÓN
         secX = (width - secW) / 2;
@@ -811,7 +714,6 @@ function draw() {
         const padding = 10; 
         const lineHeight = fontSize + 6; 
 
-        // --- A. DIBUJAR MAIN FRAMELINE TEXT ---
         if (mainThickness > 0) {
             ctx.fillStyle = inputs.color.value;
             const txtAsp = obtenerRatioTexto(Math.round(visibleW), Math.round(visibleH));
@@ -824,7 +726,7 @@ function draw() {
                 if (isTightHoriz && showAspect) { ctx.textAlign = "left"; ctx.fillText(txtRes, offsetX + padding, offsetY + padding + lineHeight); } 
                 else { ctx.textAlign = showAspect ? "right" : "left"; const posX = showAspect ? (offsetX + visibleW - padding) : (offsetX + padding); ctx.fillText(txtRes, posX, offsetY + padding); }
             }
-       //}
+       }
 
         // --- B. DIBUJAR SECONDARY FRAMELINE TEXT ---
         if (drawSec && inputs.secAspect) {
@@ -876,33 +778,54 @@ Object.values(inputs).forEach(input => {
 // ==========================================
 // LÓGICA DEL MENÚ DE RESOLUCIÓN
 // ==========================================
+// ==========================================
+// LÓGICA DEL MENÚ DE RESOLUCIÓN (NAVEGACIÓN)
+// ==========================================
 if (menuResoluciones) {
     menuResoluciones.addEventListener('change', () => {
         const val = menuResoluciones.value;
-        
-        // Si elige custom o vacío, no hacemos nada con los números
+
+        // A. SI ELIGE UNA CARPETA ("Ver más...")
+        if (val.startsWith('NAV_FOLDER_')) {
+            const index = parseInt(val.replace('NAV_FOLDER_', ''));
+            currentViewMode = index; // Entrar a la carpeta
+            renderResolutionMenu(); // Redibujar
+            
+            // Auto-seleccionar el primer item real para UX
+            if (menuResoluciones.options.length > 2) {
+                menuResoluciones.selectedIndex = 2;
+                menuResoluciones.dispatchEvent(new Event('change'));
+            }
+            return;
+        }
+
+        // B. SI ELIGE VOLVER
+        if (val === 'NAV_BACK') {
+            currentViewMode = 'root'; // Volver al inicio
+            renderResolutionMenu();
+            // Intentar volver a HD
+            if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
+                menuResoluciones.value = "1920,1080";
+                menuResoluciones.dispatchEvent(new Event('change'));
+            }
+            return;
+        }
+
+        // C. SELECCIÓN NORMAL (Resolución)
         if (val === 'custom' || val === '') return;
 
-        // 1. Poner valores en los inputs
         const [nW, nH] = val.split(',');
         if(inputs.w) inputs.w.value = nW;
         if(inputs.h) inputs.h.value = nH;
 
-        // --- NUEVO: AJUSTAR GROSOR AUTOMÁTICAMENTE ---
         autoAdjustThickness(nW); 
-        // --
         
-        // 2. APAGAR BOTONES (LIMPIEZA)
-        // Buscamos la caja de botones por su ID nuevo
+        // Limpiar botones azules
         const contenedorRes = document.getElementById('resBtnContainer');
-        
         if (contenedorRes) {
-            // Buscamos solo los botones azules ADENTRO de esa caja
-            const botonesPrendidos = contenedorRes.querySelectorAll('button.active');
-            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
+            contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
         }
         
-        // 3. Redibujar
         flashInput(inputs.w);
         flashInput(inputs.h);
         requestDraw();
@@ -1025,17 +948,21 @@ window.setOpacity = function(val, btn) {
 }
 
 // ==========================================
-// 8. DESCARGA INTELIGENTE (MARCA DE AGUA ABAJO A LA DERECHA)
+// 8. DESCARGA INTELIGENTE (CORREGIDA)
 // ==========================================
 btnDownload.addEventListener('click', () => {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
-    const asp = inputs.aspect ? inputs.aspect.value.replace(':','-') : 'ratio';
-
-    // Nuevo - Detectar si es Crop
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     
-    // 2. Detectar si estamos en "Modo Foto" (JPG)
+    // Obtener aspecto limpio para el nombre
+    let asp = "ratio";
+    if (inputs.aspect) {
+        // Limpiamos caracteres raros y dos puntos
+        asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
+    }
+
+    // 2. Detectar Estados
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
 
     // Creamos el elemento de descarga
@@ -1052,52 +979,41 @@ btnDownload.addEventListener('click', () => {
         const margin = fontSize; // Margen proporcional al tamaño de letra
 
         ctx.font = `500 ${fontSize}px Arial, sans-serif`;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; // Blanco al 50%
-        
-        // 🔥 CAMBIO CLAVE 1: Alineación a la derecha
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
         ctx.textAlign = "right";
-        // 🔥 CAMBIO CLAVE 2: Línea base abajo
         ctx.textBaseline = "bottom";
-        
-        // Sombra suave para legibilidad
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
         ctx.shadowBlur = 4;
         
-        // 🔥 CAMBIO CLAVE 3: Coordenadas (Ancho total menos margen, Alto total menos margen)
         ctx.fillText("frameline-generator.com", w - margin, h - margin);
         ctx.restore(); 
         a.href = canvas.toDataURL('image/jpeg', 0.9);
         a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
 
-        // 3. LIMPIEZA INMEDIATA
-        // Volvemos a llamar a draw() (o requestDraw si usaste la optimización)
-        // para borrar la marca de la pantalla del usuario.
+        // Borrar marca de agua visualmente (Redibujar rápido)
         setTimeout(() => {
              if(typeof requestDraw === 'function') requestDraw(); else draw();
         }, 0); 
-
-    } else {
-        // ... (CASO B: PNG o CROP MODE) -> SIN MARCA ...
-        // Al ser Crop Mode, el canvas YA tiene el tamaño recortado gracias al draw()
-        // así que solo lo descargamos tal cual.
-        
-        const ext = hasPhoto ? 'jpg' : 'png'; // Si es crop con foto, mejor jpg
-        const type = hasPhoto ? 'image/jpeg' : 'image/png';
-        const quality = hasPhoto ? 0.9 : undefined;
-
-        a.href = canvas.toDataURL(type, quality);
-        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
+    }
+    
+    // =========================================================
+    // RUTA C: MODO TEMPLATE (Solo Líneas / PNG Transparente)
+    // =========================================================
+    else {
+        // PNG Transparente sin fondo ni marca
+        a.href = canvas.toDataURL('image/png');
+        a.download = `Frameline_${w}x${h}_${asp}.png`;
     }
 
     // --- TRACKING ---
     if (typeof gtag === 'function') {
-        gtag('event', 'download_png', {
+        gtag('event', 'download_file', {
             'event_category': 'Engagement',
-            'event_label': `Resolution: ${w}x${h}`
+            'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template')
         });
     }
 
-    // 4. Descargar
+    // Ejecutar descarga
     a.click();
 });
 
@@ -1132,8 +1048,7 @@ if (resetBtn) {
     resetBtn.addEventListener('click', () => {
         if(inputs.w) inputs.w.value = 1920;
         if(inputs.h) inputs.h.value = 1080;
-        if(inputs.aspect) inputs.aspect.value = 2.39;
-        
+        if(inputs.aspect) inputs.aspect.value = 2.38695;
         if(inputs.opacity) inputs.opacity.value = 0;
         if(textoOpacidad) textoOpacidad.innerText = "100%";
         if(inputs.scale) inputs.scale.value = 100;
@@ -1152,8 +1067,6 @@ if (resetBtn) {
             const el = document.getElementById(id);
             if (el) el.checked = false;
         };
-
-        
 
        
         hideById('aspectGroup'); // Oculta Manual Ratio y Frameline Scale
@@ -1179,6 +1092,8 @@ if (resetBtn) {
         if (typeof removeImage === "function") removeImage();
 
         // 3. Resetear Menús
+        currentViewMode = 'root'; // Volver a la raíz
+        renderResolutionMenu();   // Redibujar menú
         if(menuResoluciones) menuResoluciones.value = "1920,1080"; 
         
         if(menuAspecto) menuAspecto.value = "2.38695";
