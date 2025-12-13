@@ -91,6 +91,12 @@ async function cargarDatosExternos() {
             aspectSelect.value = "2.38695";
         }
 
+        // 🔥 NUEVO: FORZAR 9:16 EN EL SECUNDARIO
+        const secSelect = document.getElementById('secAspectSelect');
+        if (secSelect && secSelect.querySelector('option[value="9:16"]')) {
+            secSelect.value = "9:16";
+        }
+
     } catch (error) {
         console.error("Error loading JSONs:", error);
     }
