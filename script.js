@@ -126,8 +126,8 @@ function renderResolutionMenu() {
             let itemsAMostrar = items;
             let hayBotonVerMas = false;
 
-            if (!mostrarTodo && items.length > 4) {
-                itemsAMostrar = items.slice(0, 4); 
+            if (!mostrarTodo && items.length > 3) {
+                itemsAMostrar = items.slice(0, 3); 
                 hayBotonVerMas = true;
             }
 
