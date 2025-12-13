@@ -204,7 +204,7 @@ function renderResolutionMenu() {
         if (resSelect.value === 'custom') {
              // Si estaba en custom, se queda en custom. 
              // Si quieres forzar HD al renderizar, descomenta abajo:
-             // resSelect.value = "1920,1080";
+              resSelect.value = "1920,1080";
         }
     }
 }
