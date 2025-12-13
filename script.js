@@ -1011,7 +1011,8 @@ if (resetBtn) {
     resetBtn.addEventListener('click', () => {
         if(inputs.w) inputs.w.value = 1920;
         if(inputs.h) inputs.h.value = 1080;
-        if(inputs.aspect) inputs.aspect.value = 2.38695;
+        if(inputs.aspect) inputs.aspect.value = 2.39;
+        
         if(inputs.opacity) inputs.opacity.value = 0;
         if(textoOpacidad) textoOpacidad.innerText = "100%";
         if(inputs.scale) inputs.scale.value = 100;
@@ -1033,7 +1034,7 @@ if (resetBtn) {
 
         
 
-        // --- AQUÍ ESTÁ EL CAMBIO QUE PEDISTE ---
+       
         hideById('aspectGroup'); // Oculta Manual Ratio y Frameline Scale
         hideById('secFrameControls'); // Oculta opciones secundarias
         hideById('advancedGroup'); // Oculta Advanced
