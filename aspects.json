@@ -6,23 +6,23 @@
       { "name": "2:1 (Univisium)", "value": "2.0" },
       { "name": "1.9:1 (Full Container)", "value": "1.9" },
       { "name": "1.85:1 (Cinema Flat)", "value": "1.85" },
-      { "name": "1.66:1 (European Flat)", "value": "1.6666" },
-      { "name": "1.37:1 (Academy Ratio)", "value": "1.375" }
+      { "name": "1.66:1 (European Flat)", "value": "5:3" },
+      { "name": "1.37:1 (Academy Ratio)", "value": "11:8" }
     ]
   },
   {
     "group": "TV & Video",
     "options": [
-      { "name": "1.78:1 (16:9 HDTV)", "value": "1.7777" },
-      { "name": "1.33:1 (4:3 SDTV)", "value": "1.3333" },
-      { "name": "1.55 (14:9 Commercial)", "value": "1.55" }
+      { "name": "1.78:1 (16:9 HDTV)", "value": "16:9" },
+      { "name": "1.33:1 (4:3 SDTV)", "value": "4:3" },
+      { "name": "1.55 (14:9 Commercial)", "value": "14:9" }
     ]
   },
   {
     "group": "Social Media",
     "options": [
-      { "name": "9:16 (Vertical)", "value": "0.5625" },
-      { "name": "4:5 (Portrait)", "value": "0.8" },
+      { "name": "9:16 (Vertical)", "value": "9:16" },
+      { "name": "4:5 (Portrait)", "value": "4:5" },
       { "name": "1:1 (Square)", "value": "1.00" }
     ]
   },
@@ -40,7 +40,7 @@
       { "name": "Venice 2 8.6K 3:2 Full Scan (1.50:1)", "value": "1.50" },
       { "name": "Venice 2 8.2K 17:9 (1.89:1)", "value": "1.89" },
       { "name": "Venice 6K 3:2 (1.50:1)", "value": "1.50" },
-      { "name": "Venice 4K 4:3 (1.33:1)", "value": "1.3333" },
+      { "name": "Venice 4K 4:3 (1.33:1)", "value": "4:3" },
       { "name": "Venice 6K 2.39:1", "value": "2.38695" }
     ]
   },
