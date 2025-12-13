@@ -81,6 +81,16 @@ async function cargarDatosExternos() {
         llenarSelectSimple('aspectSelect', aspData);
         llenarSelectSimple('secAspectSelect', aspData);
 
+        // 🔥 NUEVO: FORZAR 2.39 POR DEFECTO
+        const aspectSelect = document.getElementById('aspectSelect');
+        // Usamos el valor exacto que pusiste en tu JSON (probablemente "2.39" o "2.38695")
+        if (aspectSelect && aspectSelect.querySelector('option[value="2.39"]')) {
+            aspectSelect.value = "2.39";
+        } else if (aspectSelect && aspectSelect.querySelector('option[value="2.38695"]')) {
+             // Por si usaste la versión precisa en el JSON
+            aspectSelect.value = "2.38695";
+        }
+
     } catch (error) {
         console.error("Error loading JSONs:", error);
     }
