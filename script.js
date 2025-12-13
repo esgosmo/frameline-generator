@@ -127,8 +127,8 @@ function renderResolutionMenu() {
             let itemsAMostrar = items;
             let hayBotonVerMas = false;
 
-            if (!mostrarTodo && items.length > 3) {
-                itemsAMostrar = items.slice(0, 3); 
+            if (!mostrarTodo && items.length > 4) {
+                itemsAMostrar = items.slice(0, 4); 
                 hayBotonVerMas = true;
             }
 
@@ -143,7 +143,7 @@ function renderResolutionMenu() {
 
             if (hayBotonVerMas) {
                 const optMore = document.createElement('option');
-                optMore.text = `↳ Ver todas las de ${nombre} ...`;
+                optMore.text = `↳ See all ${nombre} ...`;
                 optMore.value = `NAV_FOLDER_${index}`;
                 optMore.style.fontWeight = "bold";
                 optMore.style.color = "#007bff"; 
@@ -158,7 +158,7 @@ function renderResolutionMenu() {
     else {
         // Botón Volver
         const optBack = document.createElement('option');
-        optBack.text = "⬅ \u00A0 VOLVER AL MENÚ PRINCIPAL";
+        optBack.text = "⬅ \u00A0 Back to main menu";
         optBack.value = "NAV_BACK";
         optBack.style.fontWeight = "bold";
         optBack.style.backgroundColor = "#444";
@@ -167,7 +167,7 @@ function renderResolutionMenu() {
 
         // Título
         const titulo = resolucionesData[currentViewMode].category;
-        const optSep = new Option(`── ${titulo} (Lista Completa) ──`, "");
+        const optSep = new Option(`── ${titulo} (Complete list) ──`, "");
         optSep.disabled = true;
         resSelect.add(optSep);
 
