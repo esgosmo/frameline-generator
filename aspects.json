@@ -1,22 +1,73 @@
 [
-  { "group": "Cine Estándar", "options": [
-      { "name": "2.39:1 (Anamorphic / Scope)", "value": "2.39" },
-      { "name": "2.35:1 (Old Scope)", "value": "2.35" },
-      { "name": "1.85:1 (Flat / Americano)", "value": "1.85" },
+  {
+    "group": "Cinema",
+    "options": [
+      { "name": "2.39:1 (Anamorphic / Scope)", "value": "2.38695" },
+      { "name": "2:1 (Univisium)", "value": "2.0" },
+      { "name": "1.9:1 (Full Container)", "value": "1.9" },
+      { "name": "1.85:1 (Cinema Flat)", "value": "1.85" },
       { "name": "1.66:1 (European Flat)", "value": "1.6666" },
-      { "name": "1.37:1 (Academy)", "value": "1.37" }
+      { "name": "1.37:1 (Academy Ratio)", "value": "1.375" }
     ]
   },
-  { "group": "Digital & TV", "options": [
-      { "name": "16:9 (UHD / HD)", "value": "1.7777" },
-      { "name": "2:1 (Univisium / Netflix)", "value": "2.00" },
-      { "name": "4:3 (SD / TV Antigua)", "value": "1.3333" }
+  {
+    "group": "TV & Video",
+    "options": [
+      { "name": "1.78:1 (16:9 HDTV)", "value": "1.7777" },
+      { "name": "1.33:1 (4:3 SDTV)", "value": "1.3333" },
+      { "name": "1.55 (14:9 Commercial)", "value": "1.55" }
     ]
   },
-  { "group": "Redes Sociales", "options": [
-      { "name": "1:1 (Square)", "value": "1.00" },
-      { "name": "4:5 (Portrait / IG)", "value": "0.8" },
-      { "name": "9:16 (Stories / TikTok)", "value": "0.5625" }
+  {
+    "group": "Social Media",
+    "options": [
+      { "name": "9:16 (Vertical)", "value": "0.5625" },
+      { "name": "4:5 (Portrait)", "value": "0.8" },
+      { "name": "1:1 (Square)", "value": "1.00" }
+    ]
+  },
+  {
+    "group": "Arri Sensor Modes",
+    "options": [
+      { "name": "Alexa 35 Open Gate (1.46:1)", "value": "1.46" },
+      { "name": "Alexa LF Open Gate (1.44:1)", "value": "1.44" },
+      { "name": "Alexa LF 3:2 (1.50:1)", "value": "1.50" }
+    ]
+  },
+  {
+    "group": "Sony Sensor Modes",
+    "options": [
+      { "name": "Venice 2 8.6K 3:2 Full Scan (1.50:1)", "value": "1.50" },
+      { "name": "Venice 2 8.2K 17:9 (1.89:1)", "value": "1.89" },
+      { "name": "Venice 6K 3:2 (1.50:1)", "value": "1.50" },
+      { "name": "Venice 4K 4:3 (1.33:1)", "value": "1.3333" },
+      { "name": "Venice 6K 2.39:1", "value": "2.38695" }
+    ]
+  },
+  {
+    "group": "RED Sensor Modes",
+    "options": [
+      { "name": "RED 17:9 (DCI Full)", "value": "1.89" },
+      { "name": "V-Raptor 8K VV (3:2)", "value": "1.50" },
+      { "name": "RED 6:5 (Anamorphic 2x)", "value": "1.20" },
+      { "name": "RED 2.4:1 (WS)", "value": "2.40" }
+    ]
+  },
+  {
+    "group": "Blackmagic Sensor Modes",
+    "options": [
+      { "name": "URSA 12K Open Gate (14:9)", "value": "1.56" },
+      { "name": "URSA 12K 2.4:1", "value": "2.40" },
+      { "name": "Cinema Camera 6K FF Open Gate (3:2)", "value": "1.50" },
+      { "name": "Pocket 6K 6:5 Anamorphic", "value": "1.20" }
+    ]
+  },
+  {
+    "group": "Large Format 65MM",
+    "options": [
+      { "name": "Alexa 65 Open Gate (2.11:1)", "value": "2.11" },
+      { "name": "70mm 5-Perf (2.20:1)", "value": "2.20" },
+      { "name": "Ultra Panavision 70 (2.76:1)", "value": "2.76" }
     ]
   }
 ]
