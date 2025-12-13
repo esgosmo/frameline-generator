@@ -1427,7 +1427,7 @@ if (resetBtn) {
         // 1. Restaurar Valores Numéricos
         if(inputs.w) inputs.w.value = 1920;
         if(inputs.h) inputs.h.value = 1080;
-        if(inputs.aspect) inputs.aspect.value = 2.39;
+        if(inputs.aspect) inputs.aspect.value = 2.38695;
         
         if(inputs.opacity) inputs.opacity.value = 0;
         if(textoOpacidad) textoOpacidad.innerText = "100%";
@@ -1453,8 +1453,6 @@ if (resetBtn) {
             const el = document.getElementById(id);
             if (el) el.checked = false;
         };
-
-        
 
        
         hideById('aspectGroup'); // Oculta Manual Ratio y Frameline Scale

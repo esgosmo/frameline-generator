@@ -27,26 +27,61 @@
     ]
   },
   {
-    "category": "ARRI",
+    "category": "Arri",
     "items": [
-        { "name": "Alexa 35 (Open Gate 4.6K)", "value": "4608,3164" },
-        { "name": "Alexa Mini (Open Gate 3.4K)", "value": "3424,2202" },
-        { "name": "Amira (3.2K)", "value": "3200,1800" }
-    ]
-  },
-  {
-    "category": "RED Digital Cinema",
-    "items": [
-        { "name": "V-Raptor (8K VV)", "value": "8192,4320" },
-        { "name": "Komodo (6K)", "value": "6144,3240" },
-        { "name": "Monstro (8K VV)", "value": "8192,4320" }
+      { "name": "Alexa 65 Open Gate (6.5K)", "value": "6560,3100" },
+      { "name": "Alexa 65 2.39:1 Scope", "value": "6560,2744" },
+      { "name": "Alexa 65 16:9 (UHD Crop)", "value": "5440,3060" },
+      { "name": "Alexa 65 1:1 Square", "value": "4320,4320" },
+      { "name": "Alexa 265 2.12:1 Open Gate", "value": "6560,4320" },
+      { "name": "Alexa 265 1.65:1", "value": "5120,3100" },
+      { "name": "Alexa 265 LF 3:2", "value": "4448,3096" },
+      { "name": "Alexa 35 4.6K 3:2 Open Gate", "value": "4608,3164" },
+      { "name": "Alexa 35 4.6K 16:9", "value": "4608,2592" },
+      { "name": "Alexa 35 4K 16:9", "value": "4096,2304" },
+      { "name": "Alexa LF/Mini LF 4.5K Open Gate", "value": "4448,3096" },
+      { "name": "Alexa LF/Mini LF 4.5K 2.39:1", "value": "4448,1856" },
+      { "name": "Alexa LF/Mini LF UHD 16:9", "value": "3840,2160" },
+      { "name": "Alexa Mini 3.4K Open Gate", "value": "3424,2202" },
+      { "name": "Alexa Mini 3.2K 16:9", "value": "3200,1800" },
+      { "name": "Alexa Mini 2.8K 4:3", "value": "2880,2160" }
     ]
   },
   {
     "category": "Sony",
     "items": [
-        { "name": "Venice 2 (8.6K 3:2)", "value": "8640,5760" },
-        { "name": "FX9 / FX6 (4K DCI)", "value": "4096,2160" }
+      { "name": "Venice 2 8.6K 3:2 Full Scan", "value": "8640,5760" },
+      { "name": "Venice 2 8.2K 17:9", "value": "8192,4320" },
+      { "name": "Venice 2 7.6K 16:9", "value": "7680,4320" },
+      { "name": "Venice 6K 3:2 Full Scan", "value": "6048,4032" },
+      { "name": "Venice 4K 4:3 Anamorphic", "value": "4096,3024" },
+      { "name": "Sony Burano 8.6K 16:9", "value": "8640,4860" },
+      { "name": "Sony FX9 6K Full Frame", "value": "6008,3168" },
+      { "name": "Sony FX6/FX3 DCI 4K", "value": "4096,2160" }
+    ]
+  },
+  {
+    "category": "RED Digital Cinema",
+    "items": [
+      { "name": "V-Raptor 8K VV 17:9", "value": "8192,4320" },
+      { "name": "V-Raptor [X] 8K Open Gate (3:2)", "value": "8192,5760" },
+      { "name": "V-Raptor 7K 17:9", "value": "7168,3780" },
+      { "name": "Komodo-X 6K 17:9", "value": "6144,3240" },
+      { "name": "Komodo 6K 2.4:1", "value": "6144,2592" },
+      { "name": "Monstro/Helium 8K Full Format", "value": "8192,4320" },
+      { "name": "Gemini 5K Full Format", "value": "5120,3000" }
+    ]
+  },
+  {
+    "category": "Blackmagic Design",
+    "items": [
+      { "name": "URSA Cine 17K 65mm", "value": "17520,8040" },
+      { "name": "URSA Mini Pro 12K 17:9", "value": "12288,6480" },
+      { "name": "URSA Mini Pro 8K DCI", "value": "8192,4320" },
+      { "name": "Cinema Camera 6K FF Open Gate", "value": "6048,4032" },
+      { "name": "Cinema Camera 6K FF 2.4:1", "value": "6048,2520" },
+      { "name": "Pocket 6K (S35) 16:9", "value": "6144,3456" },
+      { "name": "Pocket 4K DCI", "value": "4096,2160" }
     ]
   }
 ]
