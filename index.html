@@ -199,85 +199,16 @@
     
     <div class="input-group" style="margin-bottom: 15px;">
         <label>2nd Aspect (e.g. 9:16)</label>
+        
+        <select id="secAspectSelect" class="custom-select" style="margin-bottom: 8px;">
+            <option value="custom">Custom / Manual</option>
+            </select>
 
-<select id="secAspectSelect" style="margin-bottom: 8px;">
-        <option value="custom">Custom / Manual</option>
-        <optgroup label="Social Media">
-            <option value="9:16" selected>9:16 (Vertical)</option>
-            <option value="4:5">4:5 (Portrait)</option>
-            <option value="1:1">1:1 (Square)</option>
-        </optgroup>
-        <optgroup label="Cinema">
-            <option value="2.38695">2.39:1 (Anamorphic / Scope)</option>
-            <option value="2.0">2:1 (Univisium)</option>
-            <option value="1.9">1.9:1 (Full Container)</option>
-            <option value="1.85">1.85:1 (Cinema Flat)</option>
-            <option value="5:3">1.66:1 (European Flat)</option>
-            <option value="11:8">1.37:1 (Academy Ratio)</option>
-        </optgroup>
-            <optgroup label="TV & Video">
-            <option value="16:9">1.78:1 (16:9 HDTV)</option>
-            <option value="4:3">1.33:1 (4:3 SDTV)</option>
-            <option value="14:9">1.55 (14:9 Commercial)</option>
-        </optgroup>
-
-  <optgroup label="Camera Sensor Modes">
-    
-    <option value="Arri_Ratio_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>Arri Sensor Modes
-    </option>
-    <option value="1.46">Alexa 35 Open Gate (1.46:1)</option>
-    <option value="1.44">Alexa LF Open Gate (1.44:1)</option>
-    <option value="1.50">Alexa LF 3:2 (1.50:1)</option>
-
-    <option value="sep_ratio_1" disabled>──────</option>
-
-    <option value="Sony_Ratio_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>Sony Sensor Modes
-    </option>
-    <option value="1.50">Venice 2 8.6K 3:2 Full Scan (1.50:1)</option>
-    <option value="1.89">Venice 2 8.2K 17:9 (1.89:1)</option>
-    <option value="1.50">Venice 6K 3:2 (1.50:1)</option>
-    <option value="4:3">Venice 4K 4:3 (1.33:1)</option>
-    <option value="2.38695">Venice 6K 2.39:1</option>
-
-    <option value="sep_ratio_2" disabled>──────</option>
-
-    <option value="Red_Ratio_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>RED Sensor Modes
-    </option>
-    <option value="1.89">RED 17:9 (DCI Full)</option>
-    <option value="1.50">V-Raptor 8K VV (3:2)</option>
-    <option value="1.20">RED 6:5 (Anamorphic 2x)</option>
-    <option value="2.40">RED 2.4:1 (WS)</option>
-
-    <option value="sep_ratio_3" disabled>──────</option>
-
-    <option value="BMD_Ratio_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>Blackmagic Sensor Modes
-    </option>
-    <option value="1.56">URSA 12K Open Gate (14:9)</option>
-    <option value="2.40">URSA 12K 2.4:1</option>
-    <option value="1.50">Cinema Camera 6K FF Open Gate (3:2)</option>
-    <option value="1.20">Pocket 6K 6:5 Anamorphic</option>
-
-    <option value="sep_ratio_4" disabled>──────</option>
-
-    <option value="65mm_Ratio_Header" disabled style="font-weight: bold; color: #ddd; background-color: #333;">
-        <span>▼ </span>Large Format 65MM
-    </option>
-    <option value="2.11">Alexa 65 Open Gate (2.11:1)</option>
-    <option value="2.20">70mm 5-Perf (2.20:1)</option>
-    <option value="2.76">Ultra Panavision 70 (2.76:1)</option>
-
-</optgroup>
-
-    </select>
-
-    <label style="display:block; margin-top: 10px; margin-bottom: 5px; font-size: 0.85rem; color: #888;">
-        Manual Aspect Ratio
-    </label>
-    <input type="text" id="secFrameAspect" value="9:16" placeholder="Ex: 1:1">    </div>
+        <label style="display:block; margin-top: 10px; margin-bottom: 5px; font-size: 0.85rem; color: #888;">
+            Manual Aspect Ratio
+        </label>
+        <input type="text" id="secFrameAspect" value="9:16" placeholder="Ex: 1:1">    
+    </div>
 
 <div style="
         margin-top: 10px; 
