@@ -105,10 +105,10 @@ function renderResolutionMenu() {
     const resSelect = document.getElementById('resolutionSelect');
     if (!resSelect) return;
 
-    // 1. Guardamos la selección ANTES de borrar el HTML
+    // 1. Guardar selección previa
     const valorPrevio = resSelect.value;
     
-    // Limpiamos el menú
+    // Limpiar menú
     resSelect.innerHTML = '';
 
     // --- VISTA PRINCIPAL (ROOT) ---
@@ -123,7 +123,7 @@ function renderResolutionMenu() {
             const optgroup = document.createElement('optgroup');
             optgroup.label = nombre;
             
-            // Regla: Broadcast/DCI siempre completos. El resto, Top 3.
+            // Regla: Broadcast y DCI muestran todo. El resto solo Top 3.
             const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI");
             
             let itemsAMostrar = items;
@@ -158,7 +158,7 @@ function renderResolutionMenu() {
 
     // --- VISTA DE CARPETA (FULL LIST) ---
     else {
-        // Botón Back
+        // 1. Botón Back
         const optBack = document.createElement('option');
         optBack.text = "⬅ \u00A0 Back to main menu";
         optBack.value = "NAV_BACK";
@@ -167,31 +167,37 @@ function renderResolutionMenu() {
         optBack.style.color = "#fff";
         resSelect.add(optBack);
 
-        // Título Header
+        // 2. Título de la Categoría
         const titulo = resolucionesData[currentViewMode].category;
         const optSep = new Option(`── ${titulo} (Complete list) ──`, "");
         optSep.disabled = true;
         resSelect.add(optSep);
 
-        // Renderizar items (con filtro para no repetir los top 3 si hay headers)
+        // 3. Renderizado con FILTRO DE DUPLICADOS
         const items = resolucionesData[currentViewMode].items;
+        
+        // Verificamos si existen headers (tipo "▼ Alexa 65")
         const tieneHeaders = items.some(item => item.type === 'header');
-        let headerEncontrado = false;
+        
+        // Si tiene headers, no empezamos a dibujar hasta encontrar el primero.
+        // Esto elimina los "Top 3" que están sueltos al principio del JSON.
+        let renderizar = !tieneHeaders; 
 
         items.forEach(item => {
-            // Si hay headers, saltamos todo hasta encontrar el primero
-            if (tieneHeaders && !headerEncontrado) {
+            // Lógica del filtro:
+            if (!renderizar) {
                 if (item.type === 'header') {
-                    headerEncontrado = true;
+                    renderizar = true; // ¡Encontramos el primer header! Empezamos a dibujar.
                 } else {
-                    return; 
+                    return; // Saltamos este ítem (es un duplicado o separador inicial)
                 }
             }
 
             const opt = document.createElement('option');
+            
             if (item.type === 'header') {
                 opt.text = item.name;
-                opt.disabled = true;
+                opt.disabled = true; // Los headers no se pueden seleccionar
                 opt.style.fontWeight = "bold";
                 opt.style.color = "#aaa";
             } else if (item.type === 'separator') {
@@ -207,34 +213,37 @@ function renderResolutionMenu() {
     }
 
     // =========================================================
-    // 🎯 LÓGICA DE SELECCIÓN (SELECTION LOGIC)
+    // 🎯 LÓGICA DE SELECCIÓN AUTOMÁTICA
     // =========================================================
 
     // CASO 1: Acabamos de entrar a una carpeta ("See all...")
     if (valorPrevio && valorPrevio.startsWith('NAV_FOLDER_')) {
         
-        // Recorremos las opciones recién creadas
+        // Recorremos las opciones que acabamos de crear
         for (let i = 0; i < resSelect.options.length; i++) {
             const opt = resSelect.options[i];
             
-            // Buscamos la primera que sea válida (ni Back, ni Header, ni vacía)
+            // Buscamos la primera opción VÁLIDA:
+            // - Que NO sea el botón "Back"
+            // - Que NO esté deshabilitada (Headers o Separadores)
+            // - Que tenga un valor real (Width,Height)
             if (opt.value !== 'NAV_BACK' && !opt.disabled && opt.value !== '') {
                 
+                // 1. Seleccionamos visualmente la opción
                 resSelect.selectedIndex = i;
 
-                // 🔥 EL CAMBIO CLAVE: setTimeout
-                // Esperamos 10ms para asegurar que el navegador registró el cambio de HTML
-                // antes de disparar el evento que actualiza los inputs.
+                // 2. 🔥 FORZAMOS EL EVENTO CON UN PEQUEÑO RETRASO
+                // Esto asegura que los inputs de ancho/alto se actualicen
                 setTimeout(() => {
                     resSelect.dispatchEvent(new Event('change'));
                 }, 10);
                 
-                break; 
+                break; // Terminamos, ya seleccionamos la primera.
             }
         }
     }
     
-    // CASO 2: Navegación normal (mantener selección si existe)
+    // CASO 2: Navegación normal (Mantener selección si existe)
     else if (valorPrevio && !valorPrevio.startsWith('NAV_')) {
         let existe = false;
         for (let i = 0; i < resSelect.options.length; i++) {
@@ -246,11 +255,10 @@ function renderResolutionMenu() {
         }
     }
     
-    // CASO 3: Fallback (Si estamos en root y nada coincide, forzar HD)
+    // CASO 3: Fallback para Root
     if (currentViewMode === 'root' && resSelect.value === 'custom') {
+         // Opcional: forzar HD por defecto
           resSelect.value = "1920,1080"; 
-          // Opcional: Si quieres que al resetear también se dispare el evento:
-          // setTimeout(() => resSelect.dispatchEvent(new Event('change')), 10);
     }
 }
 
