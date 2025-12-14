@@ -99,15 +99,16 @@ async function cargarDatosExternos() {
 }
 
 // =========================================================
-// =========================================================
 // 🔥 HYBRID MENU LOGIC (TOP 3 + FOLDER VIEW)
 // =========================================================
 function renderResolutionMenu() {
     const resSelect = document.getElementById('resolutionSelect');
     if (!resSelect) return;
 
-    // Guardar selección previa
+    // 1. Guardamos la selección ANTES de borrar el HTML
     const valorPrevio = resSelect.value;
+    
+    // Limpiamos el menú
     resSelect.innerHTML = '';
 
     // --- VISTA PRINCIPAL (ROOT) ---
@@ -157,7 +158,7 @@ function renderResolutionMenu() {
 
     // --- VISTA DE CARPETA (FULL LIST) ---
     else {
-        // 1. Botón Back
+        // Botón Back
         const optBack = document.createElement('option');
         optBack.text = "⬅ \u00A0 Back to main menu";
         optBack.value = "NAV_BACK";
@@ -166,28 +167,24 @@ function renderResolutionMenu() {
         optBack.style.color = "#fff";
         resSelect.add(optBack);
 
-        // 2. Título de la categoría
+        // Título Header
         const titulo = resolucionesData[currentViewMode].category;
         const optSep = new Option(`── ${titulo} (Complete list) ──`, "");
         optSep.disabled = true;
         resSelect.add(optSep);
 
-        // 3. Renderizar items (CON FILTRO PARA OCULTAR LOS TOP 3 DUPLICADOS)
+        // Renderizar items (con filtro para no repetir los top 3 si hay headers)
         const items = resolucionesData[currentViewMode].items;
-        
-        // Verificamos si esta lista usa Headers (ej. ▼ ALEXA 65)
         const tieneHeaders = items.some(item => item.type === 'header');
         let headerEncontrado = false;
 
         items.forEach(item => {
-            // LÓGICA CLAVE: 
-            // Si la lista tiene headers, saltamos todo lo que esté ANTES del primer header.
-            // Esto elimina los "Top 3" que están sueltos al inicio del array.
+            // Si hay headers, saltamos todo hasta encontrar el primero
             if (tieneHeaders && !headerEncontrado) {
                 if (item.type === 'header') {
-                    headerEncontrado = true; // A partir de aquí empezamos a pintar
+                    headerEncontrado = true;
                 } else {
-                    return; // Saltamos este ítem (es uno de los duplicados del top 3)
+                    return; 
                 }
             }
 
@@ -209,30 +206,51 @@ function renderResolutionMenu() {
         });
     }
 
-    // --- LÓGICA DE SELECCIÓN ---
+    // =========================================================
+    // 🎯 LÓGICA DE SELECCIÓN (SELECTION LOGIC)
+    // =========================================================
 
-    // 1. Si acabamos de entrar a una carpeta (El valor previo era NAV_FOLDER_...)
-    //    Seleccionamos automáticamente el primer ítem REAL de la lista limpia.
-    if (valorPrevio.startsWith('NAV_FOLDER_')) {
+    // CASO 1: Acabamos de entrar a una carpeta ("See all...")
+    // Queremos que se seleccione el primer ítem real (ej. Alexa 65) automáticamente.
+    if (valorPrevio && valorPrevio.startsWith('NAV_FOLDER_')) {
+        let encontrado = false;
+        
+        // Recorremos las opciones recién creadas
         for (let i = 0; i < resSelect.options.length; i++) {
             const opt = resSelect.options[i];
-            // Saltamos Back, títulos y headers deshabilitados
+            
+            // Buscamos la primera que NO sea Back, NO esté deshabilitada (Header) y tenga valor
             if (opt.value !== 'NAV_BACK' && !opt.disabled && opt.value !== '') {
                 resSelect.selectedIndex = i;
+                encontrado = true;
+                
+                // 🔥 IMPORTANTE: Disparamos el evento manualmente para que 
+                // se actualicen los inputs de Ancho y Alto.
+                resSelect.dispatchEvent(new Event('change'));
                 break; 
             }
         }
     }
-    // 2. Si no es navegación, mantenemos lo que el usuario tenía seleccionado
-    else if (!valorPrevio.startsWith('NAV_')) {
-        if (Array.from(resSelect.options).some(o => o.value === valorPrevio)) {
-            resSelect.value = valorPrevio;
+    
+    // CASO 2: Navegación normal (mantener selección si existe)
+    else if (valorPrevio && !valorPrevio.startsWith('NAV_')) {
+        // Intentamos volver a seleccionar lo que tenía el usuario
+        // (Por ejemplo si cambió de resolución y se repintó el menú por alguna razón)
+        let existe = false;
+        for (let i = 0; i < resSelect.options.length; i++) {
+            if (resSelect.options[i].value === valorPrevio) {
+                resSelect.selectedIndex = i;
+                existe = true;
+                break;
+            }
         }
-            // 3. Fallback: Forzar HD si estamos en root y estaba en custom (opcional)
-    if (currentViewMode === 'root' && resSelect.value === 'custom') {
-         resSelect.value = "1920,1080"; 
     }
-
+    
+    // CASO 3: Fallback (Si estamos en root y nada coincide, forzar Custom o HD)
+    // Esto está fuera de los 'else if' anteriores para ejecutarse si es necesario
+    if (currentViewMode === 'root' && resSelect.value === 'custom') {
+         // Si quieres forzar HD al resetear, descomenta la siguiente línea:
+          resSelect.value = "1920,1080"; 
     }
 }
 
