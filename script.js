@@ -217,7 +217,7 @@ function renderResolutionMenu() {
     // Forzar HD en Root si está vacío
     if (currentViewMode === 'root' && resSelect.querySelector('option[value="1920,1080"]')) {
         if (resSelect.value === 'custom' || resSelect.value === "") {
-             // resSelect.value = "1920,1080"; // Descomenta si quieres forzarlo siempre
+              resSelect.value = "1920,1080"; // Descomenta si quieres forzarlo siempre
         }
     }
 }
