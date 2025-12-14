@@ -133,7 +133,8 @@ function renderResolutionMenu() {
             }
 
             itemsAMostrar.forEach(item => {
-                if (item.type !== 'header' && item.type !== 'separator') {
+                // Filtramos headers y separadores en la vista root
+                if (item.type !== 'header' && item.type !== 'separator' && !item.name.includes('▼')) {
                     const opt = document.createElement('option');
                     opt.text = item.name;
                     opt.value = item.value;
@@ -171,31 +172,33 @@ function renderResolutionMenu() {
         optSep.disabled = true;
         resSelect.add(optSep);
 
-        // 3. Renderizado con FILTRO DE DUPLICADOS
+        // 3. Renderizado con FILTRO ROBUSTO
         const items = resolucionesData[currentViewMode].items;
         
-        // Verificamos si existen headers (tipo "▼ Alexa 65")
-        const tieneHeaders = items.some(item => item.type === 'header');
+        // Función auxiliar para detectar headers (por tipo O por símbolo ▼)
+        const esHeader = (item) => item.type === 'header' || item.name.includes('▼');
         
-        // Si tiene headers, no empezamos a dibujar hasta encontrar el primero.
-        // Esto elimina los "Top 3" que están sueltos al principio del JSON.
+        // Verificamos si existen headers en esta lista
+        const tieneHeaders = items.some(esHeader);
+        
+        // Si tiene headers, bloqueamos el renderizado hasta encontrar el primero
         let renderizar = !tieneHeaders; 
 
         items.forEach(item => {
             // Lógica del filtro:
             if (!renderizar) {
-                if (item.type === 'header') {
-                    renderizar = true; // ¡Encontramos el primer header! Empezamos a dibujar.
+                if (esHeader(item)) {
+                    renderizar = true; // ¡Encontramos el primer header! Empezamos a pintar.
                 } else {
-                    return; // Saltamos este ítem (es un duplicado o separador inicial)
+                    return; // Saltamos este ítem (es un duplicado del top 3)
                 }
             }
 
             const opt = document.createElement('option');
             
-            if (item.type === 'header') {
+            if (esHeader(item)) {
                 opt.text = item.name;
-                opt.disabled = true; // Los headers no se pueden seleccionar
+                opt.disabled = true; 
                 opt.style.fontWeight = "bold";
                 opt.style.color = "#aaa";
             } else if (item.type === 'separator') {
@@ -217,31 +220,26 @@ function renderResolutionMenu() {
     // CASO 1: Acabamos de entrar a una carpeta ("See all...")
     if (valorPrevio && valorPrevio.startsWith('NAV_FOLDER_')) {
         
-        // Recorremos las opciones que acabamos de crear
         for (let i = 0; i < resSelect.options.length; i++) {
             const opt = resSelect.options[i];
             
-            // Buscamos la primera opción VÁLIDA:
-            // - Que NO sea el botón "Back"
-            // - Que NO esté deshabilitada (Headers o Separadores)
-            // - Que tenga un valor real (Width,Height)
+            // Buscamos la primera opción VÁLIDA (Ni Back, ni Header, ni vacía)
             if (opt.value !== 'NAV_BACK' && !opt.disabled && opt.value !== '') {
                 
-                // 1. Seleccionamos visualmente la opción
+                // 1. Seleccionamos visualmente
                 resSelect.selectedIndex = i;
 
-                // 2. 🔥 FORZAMOS EL EVENTO CON UN PEQUEÑO RETRASO
-                // Esto asegura que los inputs de ancho/alto se actualicen
+                // 2. Forzamos la actualización de datos (ancho/alto)
                 setTimeout(() => {
                     resSelect.dispatchEvent(new Event('change'));
                 }, 10);
                 
-                break; // Terminamos, ya seleccionamos la primera.
+                break; 
             }
         }
     }
     
-    // CASO 2: Navegación normal (Mantener selección si existe)
+    // CASO 2: Navegación normal (mantener selección si existe)
     else if (valorPrevio && !valorPrevio.startsWith('NAV_')) {
         let existe = false;
         for (let i = 0; i < resSelect.options.length; i++) {
@@ -253,9 +251,8 @@ function renderResolutionMenu() {
         }
     }
     
-    // CASO 3: Fallback para Root
+    // CASO 3: Fallback para Root (opcional)
     if (currentViewMode === 'root' && resSelect.value === 'custom') {
-         // Opcional: forzar HD por defecto
           resSelect.value = "1920,1080"; 
     }
 }
