@@ -99,6 +99,7 @@ async function cargarDatosExternos() {
 }
 
 // =========================================================
+// =========================================================
 // 🔥 HYBRID MENU LOGIC (TOP 3 + FOLDER VIEW)
 // =========================================================
 function renderResolutionMenu() {
@@ -109,7 +110,7 @@ function renderResolutionMenu() {
     const valorPrevio = resSelect.value;
     resSelect.innerHTML = '';
 
-    // --- MAIN VIEW (ROOT) ---
+    // --- VISTA PRINCIPAL (ROOT) ---
     if (currentViewMode === 'root') {
         
         resSelect.add(new Option("Custom / Manual", "custom"));
@@ -154,9 +155,9 @@ function renderResolutionMenu() {
         });
     } 
 
-    // --- FOLDER VIEW (FULL LIST) ---
+    // --- VISTA DE CARPETA (FULL LIST) ---
     else {
-        // Botón Back
+        // 1. Botón Back
         const optBack = document.createElement('option');
         optBack.text = "⬅ \u00A0 Back to main menu";
         optBack.value = "NAV_BACK";
@@ -165,15 +166,31 @@ function renderResolutionMenu() {
         optBack.style.color = "#fff";
         resSelect.add(optBack);
 
-        // Título Header
+        // 2. Título de la categoría
         const titulo = resolucionesData[currentViewMode].category;
         const optSep = new Option(`── ${titulo} (Complete list) ──`, "");
         optSep.disabled = true;
         resSelect.add(optSep);
 
-        // Lista Completa de Items
+        // 3. Renderizar items (CON FILTRO PARA OCULTAR LOS TOP 3 DUPLICADOS)
         const items = resolucionesData[currentViewMode].items;
+        
+        // Verificamos si esta lista usa Headers (ej. ▼ ALEXA 65)
+        const tieneHeaders = items.some(item => item.type === 'header');
+        let headerEncontrado = false;
+
         items.forEach(item => {
+            // LÓGICA CLAVE: 
+            // Si la lista tiene headers, saltamos todo lo que esté ANTES del primer header.
+            // Esto elimina los "Top 3" que están sueltos al inicio del array.
+            if (tieneHeaders && !headerEncontrado) {
+                if (item.type === 'header') {
+                    headerEncontrado = true; // A partir de aquí empezamos a pintar
+                } else {
+                    return; // Saltamos este ítem (es uno de los duplicados del top 3)
+                }
+            }
+
             const opt = document.createElement('option');
             if (item.type === 'header') {
                 opt.text = item.name;
@@ -195,27 +212,27 @@ function renderResolutionMenu() {
     // --- LÓGICA DE SELECCIÓN ---
 
     // 1. Si acabamos de entrar a una carpeta (El valor previo era NAV_FOLDER_...)
-    //    Queremos seleccionar la PRIMERA resolución válida, no el botón Back ni el header.
+    //    Seleccionamos automáticamente el primer ítem REAL de la lista limpia.
     if (valorPrevio.startsWith('NAV_FOLDER_')) {
         for (let i = 0; i < resSelect.options.length; i++) {
             const opt = resSelect.options[i];
-            // Saltamos el botón "Back" y cualquier opción deshabilitada (headers)
+            // Saltamos Back, títulos y headers deshabilitados
             if (opt.value !== 'NAV_BACK' && !opt.disabled && opt.value !== '') {
                 resSelect.selectedIndex = i;
-                break; // Detenemos el loop en cuanto encontramos el primer item real (ej. Alexa 65)
+                break; 
             }
         }
     }
-    // 2. Si no es navegación, mantenemos la selección visual que tenía el usuario
+    // 2. Si no es navegación, mantenemos lo que el usuario tenía seleccionado
     else if (!valorPrevio.startsWith('NAV_')) {
         if (Array.from(resSelect.options).some(o => o.value === valorPrevio)) {
             resSelect.value = valorPrevio;
         }
-    }
-    
-    // 3. Fallback: Forzar HD si estamos en root y estaba en custom (opcional)
+            // 3. Fallback: Forzar HD si estamos en root y estaba en custom (opcional)
     if (currentViewMode === 'root' && resSelect.value === 'custom') {
          resSelect.value = "1920,1080"; 
+    }
+
     }
 }
 
