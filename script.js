@@ -99,7 +99,7 @@ async function cargarDatosExternos() {
 }
 
 // =========================================================
-// 🔥 LÓGICA DEL MENÚ HÍBRIDO (TOP 3 + VER MÁS) - CORREGIDA
+// 🔥 LÓGICA DEL MENÚ HÍBRIDO (TOP 3 + ORGANIZACIÓN POR CÁMARA)
 // =========================================================
 function renderResolutionMenu() {
     const resSelect = document.getElementById('resolutionSelect');
@@ -133,6 +133,7 @@ function renderResolutionMenu() {
             }
 
             itemsAMostrar.forEach(item => {
+                // En el preview (root) NO mostramos headers ni separadores, solo opciones limpias
                 if (item.type !== 'header' && item.type !== 'separator') {
                     const opt = document.createElement('option');
                     opt.text = item.name;
@@ -143,7 +144,7 @@ function renderResolutionMenu() {
 
             if (hayBotonVerMas) {
                 const optMore = document.createElement('option');
-                optMore.text = `↳ See all ${nombre} ...`;
+                optMore.text = `↳ Ver todas las de ${nombre} ...`;
                 optMore.value = `NAV_FOLDER_${index}`;
                 optMore.style.fontWeight = "bold";
                 optMore.style.color = "#007bff"; 
@@ -154,42 +155,57 @@ function renderResolutionMenu() {
         });
     } 
 
-    // --- VISTA DE CARPETA (FULL) ---
+    // --- VISTA DE CARPETA (FULL POR CÁMARAS) ---
     else {
-        // Botón Volver
+        // 1. Botón Volver
         const optBack = document.createElement('option');
-        optBack.text = "⬅ \u00A0 Back to main menu";
+        optBack.text = "⬅ \u00A0 VOLVER AL MENÚ PRINCIPAL";
         optBack.value = "NAV_BACK";
         optBack.style.fontWeight = "bold";
         optBack.style.backgroundColor = "#444";
         optBack.style.color = "#fff";
         resSelect.add(optBack);
 
-        // Título
+        // 2. Título de la Categoría
         const titulo = resolucionesData[currentViewMode].category;
-        const optSep = new Option(`── ${titulo} (Complete list) ──`, "");
+        const optSep = new Option(`── ${titulo} (Lista Completa) ──`, "");
         optSep.disabled = true;
         resSelect.add(optSep);
 
-        // Lista Completa
         const items = resolucionesData[currentViewMode].items;
-        items.forEach(item => {
+
+        // 🔥 TRUCO MAESTRO: ENCONTRAR DÓNDE EMPIEZA LA LISTA REAL
+        // Buscamos el índice del primer "header". 
+        // Todo lo que esté antes de ese header se asume que es el "Top 3 Preview" y se ignora.
+        let startIndex = items.findIndex(item => item.type === 'header');
+
+        // Si no hay headers (ej. lista simple de redes sociales), empezamos desde 0
+        if (startIndex === -1) startIndex = 0;
+
+        // Iteramos SOLO desde el primer header hacia abajo
+        for (let i = startIndex; i < items.length; i++) {
+            const item = items[i];
             const opt = document.createElement('option');
+
             if (item.type === 'header') {
-                opt.text = item.name;
+                opt.text = item.name; // Ej: ▼ ALEXA 35
                 opt.disabled = true;
                 opt.style.fontWeight = "bold";
-                opt.style.color = "#aaa";
+                opt.style.color = "#ddd"; // Color claro para destacar en fondo oscuro
+                opt.style.backgroundColor = "#333"; // Fondo oscuro tipo subtítulo
             } else if (item.type === 'separator') {
                 opt.text = "──────";
                 opt.disabled = true;
                 opt.style.textAlign = "center";
+                opt.style.color = "#555";
             } else {
                 opt.text = item.name;
                 opt.value = item.value;
+                // Pequeña sangría para que se vea dentro de la cámara
+                if (startIndex !== 0) opt.text = "\u00A0\u00A0" + item.name;
             }
             resSelect.add(opt);
-        });
+        }
     }
 
     // Mantener selección visual si no es navegación
@@ -199,12 +215,10 @@ function renderResolutionMenu() {
         }
     }
     
-    // Intentar seleccionar HD si estamos en root y nada seleccionado
+    // Forzar HD en Root si está vacío
     if (currentViewMode === 'root' && resSelect.querySelector('option[value="1920,1080"]')) {
-        if (resSelect.value === 'custom') {
-             // Si estaba en custom, se queda en custom. 
-             // Si quieres forzar HD al renderizar, descomenta abajo:
-              resSelect.value = "1920,1080";
+        if (resSelect.value === 'custom' || resSelect.value === "") {
+             // resSelect.value = "1920,1080"; // Descomenta si quieres forzarlo siempre
         }
     }
 }
