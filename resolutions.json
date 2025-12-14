@@ -62,7 +62,6 @@
 
       { "name": "──────", "type": "separator" },
 
-      { "name": "▼ Alexa LF/Mini LF", "type": "header" },
       { "name": "Alexa LF/Mini LF 4.5K Open Gate", "value": "4448,3096" },
       { "name": "Alexa Mini LF 4.3K 16:9 UHD ProRes", "value": "3840,2160" },
       { "name": "Alexa Mini LF 4.3K 16:9 HD ProRes", "value": "1920,1080" },
@@ -79,7 +78,6 @@
       
       { "name": "──────", "type": "separator" },
 
-      { "name": "▼ Alexa Mini", "type": "header" },
       { "name": "Alexa Mini 3.4K Open Gate", "value": "3424,2202" },
       { "name": "Alexa Mini 3.2K 16:9", "value": "3200,1800" },
       { "name": "Alexa Mini 2.8K 4:3", "value": "2880,2160" }
