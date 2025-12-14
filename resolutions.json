@@ -68,12 +68,14 @@
 
       { "name": "──────", "type": "separator" },
 
+      { "name": "▼ Alexa 65", "type": "header" },
       { "name": "Alexa LF/Mini LF 4.5K Open Gate", "value": "4448,3096" },
       { "name": "Alexa LF/Mini LF 4.5K 2.39:1", "value": "4448,1856" },
       { "name": "Alexa LF/Mini LF UHD 16:9", "value": "3840,2160" },
 
       { "name": "──────", "type": "separator" },
 
+      { "name": "▼ Alexa 65", "type": "header" },
       { "name": "Alexa Mini 3.4K Open Gate", "value": "3424,2202" },
       { "name": "Alexa Mini 3.2K 16:9", "value": "3200,1800" },
       { "name": "Alexa Mini 2.8K 4:3", "value": "2880,2160" }
