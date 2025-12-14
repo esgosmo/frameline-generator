@@ -98,7 +98,7 @@ async function cargarDatosExternos() {
 }
 
 // =========================================================
-// 🔥 LÓGICA DEL MENÚ HÍBRIDO (TOP 3 + ORGANIZACIÓN POR CÁMARA)
+// 🔥 HYBRID MENU LOGIC (TOP 3 + FOLDER VIEW)
 // =========================================================
 function renderResolutionMenu() {
     const resSelect = document.getElementById('resolutionSelect');
@@ -108,7 +108,7 @@ function renderResolutionMenu() {
     const valorPrevio = resSelect.value;
     resSelect.innerHTML = '';
 
-    // --- VISTA PRINCIPAL (ROOT) ---
+    // --- MAIN VIEW (ROOT) ---
     if (currentViewMode === 'root') {
         
         resSelect.add(new Option("Custom / Manual", "custom"));
@@ -132,7 +132,6 @@ function renderResolutionMenu() {
             }
 
             itemsAMostrar.forEach(item => {
-                // En el preview (root) NO mostramos headers ni separadores, solo opciones limpias
                 if (item.type !== 'header' && item.type !== 'separator') {
                     const opt = document.createElement('option');
                     opt.text = item.name;
@@ -143,7 +142,7 @@ function renderResolutionMenu() {
 
             if (hayBotonVerMas) {
                 const optMore = document.createElement('option');
-                optMore.text = `↳ Ver todas las de ${nombre} ...`;
+                optMore.text = `↳ See all ${nombre} ...`;
                 optMore.value = `NAV_FOLDER_${index}`;
                 optMore.style.fontWeight = "bold";
                 optMore.style.color = "#007bff"; 
@@ -154,71 +153,68 @@ function renderResolutionMenu() {
         });
     } 
 
-    // --- VISTA DE CARPETA (FULL POR CÁMARAS) ---
+    // --- FOLDER VIEW (FULL LIST) ---
     else {
-        // 1. Botón Volver
+        // Botón Back
         const optBack = document.createElement('option');
-        optBack.text = "⬅ \u00A0 VOLVER AL MENÚ PRINCIPAL";
+        optBack.text = "⬅ \u00A0 Back to main menu";
         optBack.value = "NAV_BACK";
         optBack.style.fontWeight = "bold";
         optBack.style.backgroundColor = "#444";
         optBack.style.color = "#fff";
         resSelect.add(optBack);
 
-        // 2. Título de la Categoría
+        // Título Header
         const titulo = resolucionesData[currentViewMode].category;
-        const optSep = new Option(`── ${titulo} (Lista Completa) ──`, "");
+        const optSep = new Option(`── ${titulo} (Complete list) ──`, "");
         optSep.disabled = true;
         resSelect.add(optSep);
 
+        // Lista Completa de Items
         const items = resolucionesData[currentViewMode].items;
-
-        // 🔥 TRUCO MAESTRO: ENCONTRAR DÓNDE EMPIEZA LA LISTA REAL
-        // Buscamos el índice del primer "header". 
-        // Todo lo que esté antes de ese header se asume que es el "Top 3 Preview" y se ignora.
-        let startIndex = items.findIndex(item => item.type === 'header');
-
-        // Si no hay headers (ej. lista simple de redes sociales), empezamos desde 0
-        if (startIndex === -1) startIndex = 0;
-
-        // Iteramos SOLO desde el primer header hacia abajo
-        for (let i = startIndex; i < items.length; i++) {
-            const item = items[i];
+        items.forEach(item => {
             const opt = document.createElement('option');
-
             if (item.type === 'header') {
-                opt.text = item.name; // Ej: ▼ ALEXA 35
+                opt.text = item.name;
                 opt.disabled = true;
                 opt.style.fontWeight = "bold";
-                opt.style.color = "#ddd"; // Color claro para destacar en fondo oscuro
-                opt.style.backgroundColor = "#333"; // Fondo oscuro tipo subtítulo
+                opt.style.color = "#aaa";
             } else if (item.type === 'separator') {
                 opt.text = "──────";
                 opt.disabled = true;
                 opt.style.textAlign = "center";
-                opt.style.color = "#555";
             } else {
                 opt.text = item.name;
                 opt.value = item.value;
-                // Pequeña sangría para que se vea dentro de la cámara
-                if (startIndex !== 0) opt.text = "\u00A0\u00A0" + item.name;
             }
             resSelect.add(opt);
-        }
+        });
     }
 
-    // Mantener selección visual si no es navegación
-    if (!valorPrevio.startsWith('NAV_')) {
+    // --- LÓGICA DE SELECCIÓN ---
+
+    // 1. Si acabamos de entrar a una carpeta (El valor previo era NAV_FOLDER_...)
+    //    Queremos seleccionar la PRIMERA resolución válida, no el botón Back ni el header.
+    if (valorPrevio.startsWith('NAV_FOLDER_')) {
+        for (let i = 0; i < resSelect.options.length; i++) {
+            const opt = resSelect.options[i];
+            // Saltamos el botón "Back" y cualquier opción deshabilitada (headers)
+            if (opt.value !== 'NAV_BACK' && !opt.disabled && opt.value !== '') {
+                resSelect.selectedIndex = i;
+                break; // Detenemos el loop en cuanto encontramos el primer item real (ej. Alexa 65)
+            }
+        }
+    }
+    // 2. Si no es navegación, mantenemos la selección visual que tenía el usuario
+    else if (!valorPrevio.startsWith('NAV_')) {
         if (Array.from(resSelect.options).some(o => o.value === valorPrevio)) {
             resSelect.value = valorPrevio;
         }
     }
     
-    // Forzar HD en Root si está vacío
-    if (currentViewMode === 'root' && resSelect.querySelector('option[value="1920,1080"]')) {
-        if (resSelect.value === 'custom' || resSelect.value === "") {
-              resSelect.value = "1920,1080"; // Descomenta si quieres forzarlo siempre
-        }
+    // 3. Fallback: Forzar HD si estamos en root y estaba en custom (opcional)
+    if (currentViewMode === 'root' && resSelect.value === 'custom') {
+        // resSelect.value = "1920,1080"; 
     }
 }
 
