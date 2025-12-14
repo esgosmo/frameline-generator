@@ -229,7 +229,7 @@ function renderResolutionMenu() {
             const opt = resSelect.options[i];
             
             // Buscamos la primera opción VÁLIDA (Ni Back, ni Header, ni vacía)
-             if (opt.value && !opt.disabled && opt.value !== 'NAV_BACK') {
+             if (opt.value && opt.value !== 'NAV_BACK' && !opt.disabled ) {
                 
                 resSelect.selectedIndex = i;
 
