@@ -209,33 +209,31 @@ function renderResolutionMenu() {
     // =========================================================
 
     // CASO 1: Acabamos de entrar a una carpeta ("See all...")
-    // Queremos que se seleccione el primer ítem real (ej. Alexa 65) automáticamente.
     if (valorPrevio && valorPrevio.startsWith('NAV_FOLDER_')) {
-        let encontrado = false;
         
         // Recorremos las opciones recién creadas
         for (let i = 0; i < resSelect.options.length; i++) {
             const opt = resSelect.options[i];
             
-            // Buscamos la primera que NO sea Back, NO esté deshabilitada (Header) y tenga valor
+            // Buscamos la primera que sea válida (ni Back, ni Header, ni vacía)
             if (opt.value !== 'NAV_BACK' && !opt.disabled && opt.value !== '') {
-                resSelect.selectedIndex = i;
-                encontrado = true;
                 
-              // HACK: Esperamos 10ms para asegurar que el navegador ya pintó la lista
-setTimeout(() => {
-    resSelect.dispatchEvent(new Event('change'));
-}, 10);
+                resSelect.selectedIndex = i;
 
-break;
+                // 🔥 EL CAMBIO CLAVE: setTimeout
+                // Esperamos 10ms para asegurar que el navegador registró el cambio de HTML
+                // antes de disparar el evento que actualiza los inputs.
+                setTimeout(() => {
+                    resSelect.dispatchEvent(new Event('change'));
+                }, 10);
+                
+                break; 
             }
         }
     }
     
     // CASO 2: Navegación normal (mantener selección si existe)
     else if (valorPrevio && !valorPrevio.startsWith('NAV_')) {
-        // Intentamos volver a seleccionar lo que tenía el usuario
-        // (Por ejemplo si cambió de resolución y se repintó el menú por alguna razón)
         let existe = false;
         for (let i = 0; i < resSelect.options.length; i++) {
             if (resSelect.options[i].value === valorPrevio) {
@@ -246,11 +244,11 @@ break;
         }
     }
     
-    // CASO 3: Fallback (Si estamos en root y nada coincide, forzar Custom o HD)
-    // Esto está fuera de los 'else if' anteriores para ejecutarse si es necesario
+    // CASO 3: Fallback (Si estamos en root y nada coincide, forzar HD)
     if (currentViewMode === 'root' && resSelect.value === 'custom') {
-         // Si quieres forzar HD al resetear, descomenta la siguiente línea:
           resSelect.value = "1920,1080"; 
+          // Opcional: Si quieres que al resetear también se dispare el evento:
+          // setTimeout(() => resSelect.dispatchEvent(new Event('change')), 10);
     }
 }
 
