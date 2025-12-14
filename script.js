@@ -105,42 +105,48 @@ function renderResolutionMenu() {
     const resSelect = document.getElementById('resolutionSelect');
     if (!resSelect) return;
 
-    // Guardar valor previo
+    // 1. Guardar selección previa
     const valorPrevio = resSelect.value;
+    
+    // Limpiar menú
     resSelect.innerHTML = '';
 
     // --- VISTA PRINCIPAL (ROOT) ---
     if (currentViewMode === 'root') {
+        
         resSelect.add(new Option("Custom / Manual", "custom"));
 
         resolucionesData.forEach((grupo, index) => {
             const nombre = grupo.category;
             const items = grupo.items;
+            
             const optgroup = document.createElement('optgroup');
             optgroup.label = nombre;
             
-            // Regla: Solo Arri, Social, RED, etc ocultan cosas. Broadcast/DCI muestran todo.
+            // Regla: Broadcast y DCI muestran todo. El resto solo Top 3.
             const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI");
             
             let itemsAMostrar = items;
-            let hayVerMas = false;
+            let hayBotonVerMas = false;
 
             if (!mostrarTodo && items.length > 3) {
-                // Filtro simple para el ROOT: Quitamos headers y separadores
-                itemsAMostrar = items.filter(i => i.type !== 'header' && i.type !== 'separator').slice(0, 3);
-                hayVerMas = true;
+                // Filtro para el ROOT: Quitamos headers y separadores para la vista previa
+                itemsAMostrar = items.filter(i => {
+                    const t = i.type ? i.type.toLowerCase() : '';
+                    return t !== 'header' && t !== 'separator' && !i.name.includes('▼');
+                }).slice(0, 3);
+                
+                hayBotonVerMas = true;
             }
 
             itemsAMostrar.forEach(item => {
-                if(item.type !== 'header' && item.type !== 'separator'){
-                    const opt = document.createElement('option');
-                    opt.text = item.name;
-                    opt.value = item.value;
-                    optgroup.appendChild(opt);
-                }
+                const opt = document.createElement('option');
+                opt.text = item.name;
+                opt.value = item.value;
+                optgroup.appendChild(opt);
             });
 
-            if (hayVerMas) {
+            if (hayBotonVerMas) {
                 const optMore = document.createElement('option');
                 optMore.text = `↳ See all ${nombre} ...`;
                 optMore.value = `NAV_FOLDER_${index}`;
@@ -148,13 +154,14 @@ function renderResolutionMenu() {
                 optMore.style.color = "#007bff"; 
                 optgroup.appendChild(optMore);
             }
+
             resSelect.appendChild(optgroup);
         });
     } 
 
-    // --- VISTA DE CARPETA (LISTA COMPLETA) ---
+    // --- VISTA DE CARPETA (FULL LIST) ---
     else {
-        // Back Button
+        // 1. Botón Back
         const optBack = document.createElement('option');
         optBack.text = "⬅ \u00A0 Back to main menu";
         optBack.value = "NAV_BACK";
@@ -163,30 +170,42 @@ function renderResolutionMenu() {
         optBack.style.color = "#fff";
         resSelect.add(optBack);
 
-        // Header Principal
+        // 2. Título de la Categoría
         const titulo = resolucionesData[currentViewMode].category;
         const optSep = new Option(`── ${titulo} (Complete list) ──`, "");
         optSep.disabled = true;
         resSelect.add(optSep);
 
+        // 3. Renderizado con FILTRO INTELIGENTE
         const items = resolucionesData[currentViewMode].items;
         
-        // --- FILTRO DE DUPLICADOS (ARRI) ---
-        // Si la lista tiene headers (type="header"), ignoramos todo hasta el primer header.
-        const tieneHeaders = items.some(i => i.type === 'header');
-        let pintar = !tieneHeaders; // Si NO hay headers (Sony), pintamos desde el principio.
+        // Detectamos si esta lista tiene Headers (buscando 'type: header' O el símbolo '▼')
+        // Esto es crucial para que funcione en Arri.
+        const tieneHeaders = items.some(i => 
+            (i.type && i.type.toLowerCase() === 'header') || i.name.includes('▼')
+        );
+        
+        // Si tiene headers, bloqueamos el renderizado hasta encontrar el primero.
+        // Esto elimina los duplicados "Top 3" que están al inicio del JSON.
+        let renderizar = !tieneHeaders; 
 
         items.forEach(item => {
-            if (!pintar) {
-                if (item.type === 'header') pintar = true;
-                else return; // Saltamos los duplicados del top
+            const esHeader = (item.type && item.type.toLowerCase() === 'header') || item.name.includes('▼');
+
+            // Lógica del filtro:
+            if (!renderizar) {
+                if (esHeader) {
+                    renderizar = true; // ¡Header encontrado! Empezamos a dibujar.
+                } else {
+                    return; // Saltamos este ítem (es un duplicado del top 3)
+                }
             }
 
             const opt = document.createElement('option');
             
-            if (item.type === 'header') {
+            if (esHeader) {
                 opt.text = item.name;
-                opt.disabled = true;
+                opt.disabled = true; 
                 opt.style.fontWeight = "bold";
                 opt.style.color = "#aaa";
             } else if (item.type === 'separator') {
@@ -201,32 +220,49 @@ function renderResolutionMenu() {
         });
     }
 
-    // --- LÓGICA DE SELECCIÓN AUTOMÁTICA ---
-    
-    // CASO 1: Entrando a carpeta (See all...)
+    // =========================================================
+    // 🎯 LÓGICA DE SELECCIÓN (SELECTION LOGIC)
+    // =========================================================
+
+    // CASO 1: Acabamos de entrar a una carpeta ("See all...")
     if (valorPrevio && valorPrevio.startsWith('NAV_FOLDER_')) {
+        
         for (let i = 0; i < resSelect.options.length; i++) {
             const opt = resSelect.options[i];
-            // Seleccionar el primero que NO sea Back, Header o Separator
+            
+            // Buscamos la primera opción VÁLIDA (Ni Back, ni Header, ni vacía)
             if (opt.value !== 'NAV_BACK' && !opt.disabled && opt.value !== '') {
+                
                 resSelect.selectedIndex = i;
-                // Disparar evento para actualizar medidas
-                setTimeout(() => resSelect.dispatchEvent(new Event('change')), 10);
+
+                // Forzamos actualización de inputs (Ancho/Alto)
+                setTimeout(() => {
+                    resSelect.dispatchEvent(new Event('change'));
+                }, 10);
+                
+                break; 
+            }
+        }
+    }
+    
+    // CASO 2: Navegación normal (mantener selección si existe)
+    else if (valorPrevio && !valorPrevio.startsWith('NAV_')) {
+        let existe = false;
+        for (let i = 0; i < resSelect.options.length; i++) {
+            if (resSelect.options[i].value === valorPrevio) {
+                resSelect.selectedIndex = i;
+                existe = true;
                 break;
             }
         }
     }
-    // CASO 2: Mantener selección previa
-    else if (valorPrevio && !valorPrevio.startsWith('NAV_')) {
-        // Intentar recuperar selección
-        let encontrado = false;
-        for(let i=0; i<resSelect.options.length; i++){
-            if(resSelect.options[i].value === valorPrevio){
-                resSelect.selectedIndex = i;
-                encontrado = true;
-                break;
-            }
-        }
+    
+    // CASO 3: Fallback para Root
+    // Si estamos en el menú principal y está seleccionado "Custom" (o nada útil), forzamos HD.
+    if (currentViewMode === 'root' && resSelect.value === 'custom') {
+          resSelect.value = "1920,1080"; 
+          // Opcional: si quieres asegurar que los inputs cambien a 1920x1080 visualmente:
+          // setTimeout(() => resSelect.dispatchEvent(new Event('change')), 10);
     }
 }
 
