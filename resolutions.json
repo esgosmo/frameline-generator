@@ -40,7 +40,7 @@
      
       { "name": "── More Resolutions ──", "type": "separator" },
 
-      { "name": "▼ ALEXA 65", "type": "header" },
+      { "name": "▼ Alexa 65", "type": "header" },
       { "name": "Alexa 65 Open Gate (6.5K)", "value": "6560,3100" },
       { "name": "Alexa 65 5.1K 1.78", "value": "5120,2880" },
       { "name": "Alexa 65 LF Open Gate", "value": "4448,3096" },
@@ -48,14 +48,14 @@
 
       { "name": "──────", "type": "separator" },
 
-      { "name": "▼ ALEXA 265", "type": "header" },
+      { "name": "▼ Alexa 265", "type": "header" },
       { "name": "Alexa 265 2.12:1 Open Gate", "value": "6560,3100" },
       { "name": "Alexa 265 1.65:1", "value": "5120,3100" },
       { "name": "Alexa 265 LF 3:2", "value": "4448,3096" },
 
       { "name": "──────", "type": "separator" },
 
-      { "name": "▼ ALEXA 35", "type": "header" },
+      { "name": "▼ Alexa 35", "type": "header" },
       { "name": "Alexa 35 4.6K 3:2 Open Gate", "value": "4608,3164" },
       { "name": "Alexa 35 4.6K 16:9", "value": "4608,2592" },
       { "name": "Alexa 35 4K 16:9", "value": "4096,2304" },
