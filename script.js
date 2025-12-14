@@ -306,12 +306,6 @@ if (menuResoluciones) {
             const index = parseInt(val.replace('NAV_FOLDER_', ''));
             currentViewMode = index; // Entrar a la carpeta
             renderResolutionMenu(); // Redibujar
-            
-            // Auto-seleccionar el primer item real para UX
-            if (menuResoluciones.options.length > 2) {
-                menuResoluciones.selectedIndex = 2;
-                menuResoluciones.dispatchEvent(new Event('change'));
-            }
             return;
         }
 
