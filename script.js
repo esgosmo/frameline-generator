@@ -214,7 +214,7 @@ function renderResolutionMenu() {
     
     // 3. Fallback: Forzar HD si estamos en root y estaba en custom (opcional)
     if (currentViewMode === 'root' && resSelect.value === 'custom') {
-        // resSelect.value = "1920,1080"; 
+         resSelect.value = "1920,1080"; 
     }
 }
 
