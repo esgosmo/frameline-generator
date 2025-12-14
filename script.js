@@ -223,10 +223,12 @@ function renderResolutionMenu() {
                 resSelect.selectedIndex = i;
                 encontrado = true;
                 
-                // 🔥 IMPORTANTE: Disparamos el evento manualmente para que 
-                // se actualicen los inputs de Ancho y Alto.
-                resSelect.dispatchEvent(new Event('change'));
-                break; 
+              // HACK: Esperamos 10ms para asegurar que el navegador ya pintó la lista
+setTimeout(() => {
+    resSelect.dispatchEvent(new Event('change'));
+}, 10);
+
+break;
             }
         }
     }
