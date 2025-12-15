@@ -123,7 +123,7 @@ function renderResolutionMenu() {
             optgroup.label = nombre;
             
             // Regla: Broadcast y DCI muestran todo. El resto solo Top 3.
-            const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI");
+            const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI") || nombre.includes("Social Media");
             
             let itemsAMostrar = items;
             let hayBotonVerMas = false;
