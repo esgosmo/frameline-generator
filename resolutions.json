@@ -84,13 +84,8 @@
       { "name": "Alexa Mini LF S35 3:2", "value": "3424,2202" },
       { "name": "Alexa Mini LF S35 16:9 3.2K ProRes", "value": "3200,1800" },
       { "name": "Alexa Mini LF S35 4:3 2.8K ProRes", "value": "3072,2160" },
-<<<<<<< HEAD
-      { "name": "Alexa Mini LF S35 16:9 HD ProRes", "value": "3072,2160" },
-      
-=======
       { "name": "Alexa Mini LF S35 16:9 HD ProRes", "value": "3072,2160" }
 
->>>>>>> 12fb586 (correcciones dropdown)
       { "name": "──────", "type": "separator" },
 
       { "name": "▼ Alexa 65", "type": "header" },
