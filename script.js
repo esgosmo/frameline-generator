@@ -91,6 +91,13 @@ async function cargarDatosExternos() {
             secSelect.value = "9:16";
         }
 
+        // 🔥 IMPORTANTE: Forzar dibujo final para que se vea al inicio
+        if (typeof requestDraw === 'function') {
+            requestDraw();
+        } else {
+            draw();
+        }
+
     } catch (error) {
         console.error("Error loading JSONs:", error);
     }
