@@ -770,6 +770,7 @@ function draw() {
             }
         }
     }
+    updateAspectButtonsVisuals();
 }
 
 // ==========================================
@@ -1122,5 +1123,60 @@ function aplicarModoMobile() {
         const fillRadio = document.getElementById('scaleFill');
         if (fitRadio && fillRadio) { fitRadio.checked = true; fillRadio.checked = false; }
     }
+}
+
+// =========================================================
+// 💡 ACTUALIZADOR VISUAL DE BOTONES (ILUMINA EL CORRECTO)
+// =========================================================
+function updateAspectButtonsVisuals() {
+    const btnContainer = document.getElementById('aspectBtnContainer');
+    if (!btnContainer) return;
+
+    // 1. Obtener datos actuales
+    const currentW = parseFloat(inputs.w.value) || 0;
+    const currentH = parseFloat(inputs.h.value) || 1;
+    const currentAsp = parseFloat(inputs.aspect.value) || 0;
+    
+    // Calcular aspecto nativo (Full / Max)
+    const nativeAsp = currentW / currentH;
+
+    // Tolerancia para comparar decimales (0.01 es suficiente)
+    const epsilon = 0.01;
+
+    // 2. Limpiar todos los botones
+    const buttons = btnContainer.querySelectorAll('button');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    // 3. Buscar cuál botón coincide con la realidad
+    buttons.forEach(btn => {
+        const txt = btn.innerText.toLowerCase();
+
+        // CASO A: Botón MAX / FULL
+        if (txt.includes('max') || txt.includes('full')) {
+            // Se enciende si el aspecto actual es igual a la resolución nativa
+            if (Math.abs(currentAsp - nativeAsp) < epsilon) {
+                btn.classList.add('active');
+            }
+        }
+        // CASO B: Botón 2.39 (Scope)
+        else if (txt.includes('2.39')) {
+            // Se enciende si el aspecto es ~2.38695 y NO es el nativo (para evitar doble encendido en sensores scope)
+            if (Math.abs(currentAsp - 2.38695) < epsilon && Math.abs(currentAsp - nativeAsp) >= epsilon) {
+                btn.classList.add('active');
+            }
+        }
+        // CASO C: Botón 1.85
+        else if (txt.includes('1.85')) {
+            if (Math.abs(currentAsp - 1.85) < epsilon && Math.abs(currentAsp - nativeAsp) >= epsilon) {
+                btn.classList.add('active');
+            }
+        }
+        // CASO D: Botón 4:3
+        else if (txt.includes('4:3')) {
+            if (Math.abs(currentAsp - (4/3)) < epsilon && Math.abs(currentAsp - nativeAsp) >= epsilon) {
+                btn.classList.add('active');
+            }
+        }
+    });
 }
 
