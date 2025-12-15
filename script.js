@@ -885,15 +885,25 @@ if (btnInfo) {
 }
 
 // =========================================================
-// Global Presets (CORREGIDO: SOLO CAMBIA RESOLUCIÓN, RESPETA ASPECTO)
+// Global Presets (INTELIGENTE: Detecta si estabas en Full o Crop)
 // =========================================================
 window.setPreset = function(w, h, btn) {
-    // 1. Establecer inputs de ancho/alto
+    // 1. DETECTAR ESTADO ACTUAL (Antes de cambiar nada)
+    // Checamos si el usuario está viendo la imagen completa (Max) o tiene barras negras.
+    const oldW = parseFloat(inputs.w.value) || 1920;
+    const oldH = parseFloat(inputs.h.value) || 1080;
+    const oldAspectVal = parseFloat(inputs.aspect.value) || 1.77778;
+    
+    const oldNativeAspect = oldW / oldH;
+    // Si la diferencia es mínima, es que estaba en Full Screen
+    const estabaEnFull = Math.abs(oldNativeAspect - oldAspectVal) < 0.02;
+
+    // 2. CAMBIAR RESOLUCIÓN (Inputs)
     if(inputs.w) inputs.w.value = w;
     if(inputs.h) inputs.h.value = h;
     autoAdjustThickness(w);
 
-    // 2. Sincronizar menú (Volver a root si es necesario)
+    // 3. SINCRONIZAR MENÚ (Volver a root si estamos en una carpeta)
     if (currentViewMode !== 'root') {
         currentViewMode = 'root';
         renderResolutionMenu();
@@ -904,13 +914,23 @@ window.setPreset = function(w, h, btn) {
         if(menuResoluciones.value !== key) menuResoluciones.value = 'custom'; 
     }
 
-    // 3. Visuales
+    // 4. APLICAR LÓGICA DE ASPECTO
+    if (estabaEnFull && h > 0) {
+        // Si estaba en Full, calculamos el nuevo aspecto nativo para SEGUIR en Full
+        const newNative = w / h;
+        if(inputs.aspect) inputs.aspect.value = parseFloat(newNative.toFixed(5));
+        
+        // Ponemos el dropdown en Custom y limpiamos botones
+        if(menuAspecto) menuAspecto.value = 'custom';
+        clearActiveButtons('#aspectBtnContainer');
+    }
+    // Si NO estaba en Full (tenía 1.85, 2.39), NO TOCAMOS EL ASPECTO. Se mantiene el recorte.
+
+    // 5. Visuales y Dibujo
     flashInput(inputs.w); 
     flashInput(inputs.h); 
-    if(inputs.aspect) flashInput(inputs.aspect); // Flash también en aspecto
+    if(estabaEnFull) flashInput(inputs.aspect); 
     highlightButton(btn); 
-    
-    // 4. Dibujar (Manteniendo el Aspect Ratio que ya tenías seleccionado)
     requestDraw();
 }
 
