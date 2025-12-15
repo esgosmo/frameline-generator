@@ -316,42 +316,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// 🔥 LISTENER DEL MENÚ DE RESOLUCIÓN (CORREGIDO)
+// 🔥 LISTENER DEL MENÚ DE RESOLUCIÓN (UNIFICADO Y DEFINITIVO)
 // ==========================================
 if (menuResoluciones) {
     menuResoluciones.addEventListener('change', () => {
         const val = menuResoluciones.value;
 
-        // A. SI ELIGE UNA CARPETA ("Ver más...")
+        // A. GESTIÓN DE NAVEGACIÓN
         if (val.startsWith('NAV_FOLDER_')) {
             const index = parseInt(val.replace('NAV_FOLDER_', ''));
-            currentViewMode = index; // Entrar a la carpeta
-            renderResolutionMenu(); // Redibujar
+            currentViewMode = index; 
+            renderResolutionMenu(); 
             return;
         }
-
-        // B. SI ELIGE VOLVER
         if (val === 'NAV_BACK') {
-            currentViewMode = 'root'; // Volver al inicio
+            currentViewMode = 'root'; 
             renderResolutionMenu();
-            // Intentar volver a HD
             if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
                 menuResoluciones.value = "1920,1080";
                 menuResoluciones.dispatchEvent(new Event('change'));
             }
             return;
         }
-
-        // C. SELECCIÓN NORMAL
         if (val === 'custom' || val === '') return;
 
-        const [nW, nH] = val.split(',');
+        // B. 🔥 DETECTAR SI ESTABAS EN "FULL" (ANTES DE CAMBIAR NADA)
+        // Leemos los inputs tal como están AHORA (resolución vieja)
+        const oldW = parseFloat(inputs.w.value) || 1920;
+        const oldH = parseFloat(inputs.h.value) || 1080;
+        const oldAspectVal = parseFloat(inputs.aspect.value) || 1.77778;
+        
+        // Calculamos el ratio nativo de la resolución vieja
+        const oldNativeAspect = oldW / oldH;
+        
+        // Si el aspecto actual es casi igual al nativo, es que el usuario NO tenía barras negras.
+        // Usamos una tolerancia de 0.02 para absorber pequeños redondeos.
+        const estabaEnFull = Math.abs(oldNativeAspect - oldAspectVal) < 0.02;
+
+        // C. AHORA SÍ, CAMBIAMOS A LA NUEVA RESOLUCIÓN
+        const [nW, nH] = val.split(',').map(Number);
         if(inputs.w) inputs.w.value = nW;
         if(inputs.h) inputs.h.value = nH;
 
         autoAdjustThickness(nW); 
         
-        // Limpiar botones azules
+        // D. APLICAR LÓGICA DE ASPECTO
+        if (estabaEnFull && nH > 0) {
+            // SI estaba en Full, calculamos el nuevo aspecto nativo y lo aplicamos
+            const newNativeAspect = nW / nH;
+            
+            if(inputs.aspect) inputs.aspect.value = parseFloat(newNativeAspect.toFixed(5));
+            if(menuAspecto) menuAspecto.value = 'custom';
+            
+            // Limpiamos botones de aspecto (porque ahora es custom/nativo)
+            clearActiveButtons('#aspectBtnContainer');
+        } 
+        // SI NO estaba en Full (tenía crop), NO tocamos el aspecto. Se queda el que estaba (ej. 1.85).
+
+        // E. LIMPIEZA VISUAL
         const contenedorRes = document.getElementById('resBtnContainer');
         if (contenedorRes) {
             contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
@@ -359,6 +381,8 @@ if (menuResoluciones) {
         
         flashInput(inputs.w);
         flashInput(inputs.h);
+        if (estabaEnFull) flashInput(inputs.aspect); // Flash para confirmar que cambió
+        
         requestDraw();
     });
 }
@@ -910,21 +934,26 @@ window.setOpacity = function(val, btn) {
 }
 
 
-// Función para igualar el aspecto a la resolución (Open Gate / Sin Framelines)
+// Función para quitar framelines (Igualar aspecto a resolución)
 window.setFullGate = function(btn) {
     const w = parseFloat(inputs.w.value);
     const h = parseFloat(inputs.h.value);
     
     if (h > 0) {
-        // 1. Calcular aspecto nativo
+        // 1. Calcular el aspecto nativo exacto
         const nativeAspect = w / h;
         
-        // 2. Usar la función existente para aplicarlo
-        // Usamos toFixed(5) para máxima precisión
-        setAspect(nativeAspect.toFixed(5), btn);
+        // 2. Aplicarlo al input
+        if(inputs.aspect) inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
         
-        // 3. Poner el dropdown en Custom para que se entienda que es manual
+        // 3. Poner el dropdown en Custom y limpiar botones
         if(menuAspecto) menuAspecto.value = 'custom';
+        clearActiveButtons('#aspectBtnContainer');
+        
+        // 4. Feedback visual
+        highlightButton(btn);
+        flashInput(inputs.aspect);
+        requestDraw();
     }
 }
 
@@ -1075,65 +1104,3 @@ function aplicarModoMobile() {
     }
 }
 
-// =========================================================
-// 🧮 LÓGICA DE CAMBIO DE RESOLUCIÓN (CON PROTECCIÓN DE ASPECTO)
-// =========================================================
-const resSelectElement = document.getElementById('resolutionSelect');
-
-if (resSelectElement) {
-    resSelectElement.addEventListener('change', function() {
-        const val = this.value;
-
-        // 1. Validaciones
-        if (!val || val.startsWith('NAV_') || val === 'custom') return;
-
-        // 2. Obtener NUEVAS dimensiones
-        const [newW, newH] = val.split(',').map(Number);
-        
-        // 3. Obtener dimensiones y aspecto ACTUALES (Antes del cambio)
-        const currentW = parseFloat(inputs.w.value) || 1920;
-        const currentH = parseFloat(inputs.h.value) || 1080;
-        const currentAspectVal = parseFloat(inputs.aspect.value) || 1.77777;
-        
-        // Calculamos el aspecto "Nativo" que tenía la resolución anterior
-        const currentNativeAspect = currentW / currentH;
-
-        // 4. 🔥 LÓGICA INTELIGENTE: ¿DEBEMOS CAMBIAR EL ASPECTO?
-        // Comparamos el aspecto que tiene puesto el usuario vs el nativo de su resolución actual.
-        // Si son casi iguales (diferencia menor a 0.01), significa que está en "Full Screen".
-        // Solo en ese caso actualizamos el aspecto a la nueva cámara.
-        const usuarioUsaFullFrame = Math.abs(currentNativeAspect - currentAspectVal) < 0.01;
-
-        // Actualizamos los inputs de resolución (siempre)
-        if (inputs.w) inputs.w.value = newW;
-        if (inputs.h) inputs.h.value = newH;
-
-        // Solo cambiamos el Aspect Ratio si el usuario NO tenía un crop personalizado
-        if (newH > 0 && usuarioUsaFullFrame) {
-            const newRealAspect = newW / newH;
-            
-            if(inputs.aspect) inputs.aspect.value = parseFloat(newRealAspect.toFixed(5));
-            if(menuAspecto) menuAspecto.value = 'custom';
-            
-            // Limpiar botones activos de aspecto
-            const btnContainer = document.getElementById('aspectBtnContainer');
-            if (btnContainer) {
-                btnContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-            }
-        }
-
-        // 5. Redibujar
-        if (typeof requestDraw === 'function') {
-            requestDraw();
-        } else {
-            draw();
-        }
-    });
-}
-
-// 🔥 FUERZA BRUTA: DIBUJAR AL FINAL DE LA CARGA DEL SCRIPT
-if (typeof requestDraw === 'function') {
-    requestDraw();
-} else {
-    draw();
-}
