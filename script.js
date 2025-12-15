@@ -860,38 +860,33 @@ if (btnInfo) {
     });
 }
 
-// Global Presets
+// =========================================================
+// Global Presets (CORREGIDO: SOLO CAMBIA RESOLUCIÓN, RESPETA ASPECTO)
+// =========================================================
 window.setPreset = function(w, h, btn) {
+    // 1. Establecer inputs de ancho/alto
     if(inputs.w) inputs.w.value = w;
     if(inputs.h) inputs.h.value = h;
     autoAdjustThickness(w);
 
-// 2. 🔥 CLAVE: Volver al menú principal para encontrar la opción "HD" o "UHD"
-    // Si no hacemos esto, dentro de la carpeta ARRI no existe "HD" a secas, y se pone Custom.
+    // 2. Sincronizar menú (Volver a root si es necesario)
     if (currentViewMode !== 'root') {
         currentViewMode = 'root';
-        renderResolutionMenu(); // Redibujamos el menú con las opciones generales
+        renderResolutionMenu();
     }
-
     const key = `${w},${h}`;
-    if(menuResoluciones) { menuResoluciones.value = key; if(menuResoluciones.value !== key) menuResoluciones.value = 'custom'; }
-   // 4. 🔥 CALCULAR Y APLICAR ASPECT RATIO NATIVO (Pixel Perfect para botones)
-    // Esto hace que al dar clic en HD, el aspecto se resetee a 1.77 (16:9)
-    if (h > 0) {
-        const realAspect = w / h;
-        if(inputs.aspect) inputs.aspect.value = parseFloat(realAspect.toFixed(5));
-        
-        // Poner el dropdown de aspecto en Custom
-        if(menuAspecto) menuAspecto.value = 'custom';
-        // Limpiar botones de aspecto activos
-        clearActiveButtons('#aspectBtnContainer');
+    if(menuResoluciones) { 
+        menuResoluciones.value = key; 
+        if(menuResoluciones.value !== key) menuResoluciones.value = 'custom'; 
     }
 
-    // 5. Visuales y Dibujo
+    // 3. Visuales
     flashInput(inputs.w); 
     flashInput(inputs.h); 
     if(inputs.aspect) flashInput(inputs.aspect); // Flash también en aspecto
     highlightButton(btn); 
+    
+    // 4. Dibujar (Manteniendo el Aspect Ratio que ya tenías seleccionado)
     requestDraw();
 }
 
@@ -912,6 +907,25 @@ window.setAspect = function(val, btn) {
 window.setOpacity = function(val, btn) {
     if(inputs.opacity) inputs.opacity.value = val;
     flashInput(inputs.opacity); highlightButton(btn); requestDraw();
+}
+
+
+// Función para igualar el aspecto a la resolución (Open Gate / Sin Framelines)
+window.setFullGate = function(btn) {
+    const w = parseFloat(inputs.w.value);
+    const h = parseFloat(inputs.h.value);
+    
+    if (h > 0) {
+        // 1. Calcular aspecto nativo
+        const nativeAspect = w / h;
+        
+        // 2. Usar la función existente para aplicarlo
+        // Usamos toFixed(5) para máxima precisión
+        setAspect(nativeAspect.toFixed(5), btn);
+        
+        // 3. Poner el dropdown en Custom para que se entienda que es manual
+        if(menuAspecto) menuAspecto.value = 'custom';
+    }
 }
 
 // Descarga
@@ -1062,7 +1076,7 @@ function aplicarModoMobile() {
 }
 
 // =========================================================
-// 🧮 LÓGICA DE CAMBIO DE RESOLUCIÓN (PIXEL PERFECT)
+// 🧮 LÓGICA DE CAMBIO DE RESOLUCIÓN (CON PROTECCIÓN DE ASPECTO)
 // =========================================================
 const resSelectElement = document.getElementById('resolutionSelect');
 
@@ -1070,39 +1084,45 @@ if (resSelectElement) {
     resSelectElement.addEventListener('change', function() {
         const val = this.value;
 
-        // 1. Validaciones: Si es navegación o custom, no calculamos nada automático
+        // 1. Validaciones
         if (!val || val.startsWith('NAV_') || val === 'custom') return;
 
-        // 2. Obtener dimensiones del valor (ej: "4448,1856")
-        const [w, h] = val.split(',').map(Number);
+        // 2. Obtener NUEVAS dimensiones
+        const [newW, newH] = val.split(',').map(Number);
         
-        const widthInput = document.getElementById('width');
-        const heightInput = document.getElementById('height');
-        const aspectInput = document.getElementById('aspect');
-        const aspectSelect = document.getElementById('aspectSelect');
+        // 3. Obtener dimensiones y aspecto ACTUALES (Antes del cambio)
+        const currentW = parseFloat(inputs.w.value) || 1920;
+        const currentH = parseFloat(inputs.h.value) || 1080;
+        const currentAspectVal = parseFloat(inputs.aspect.value) || 1.77777;
+        
+        // Calculamos el aspecto "Nativo" que tenía la resolución anterior
+        const currentNativeAspect = currentW / currentH;
 
-        // 3. Actualizar Inputs de Resolución
-        if (widthInput) widthInput.value = w;
-        if (heightInput) heightInput.value = h;
+        // 4. 🔥 LÓGICA INTELIGENTE: ¿DEBEMOS CAMBIAR EL ASPECTO?
+        // Comparamos el aspecto que tiene puesto el usuario vs el nativo de su resolución actual.
+        // Si son casi iguales (diferencia menor a 0.01), significa que está en "Full Screen".
+        // Solo en ese caso actualizamos el aspecto a la nueva cámara.
+        const usuarioUsaFullFrame = Math.abs(currentNativeAspect - currentAspectVal) < 0.01;
 
-        // 4. 🔥 CÁLCULO MATEMÁTICO DEL ASPECTO
-        if (h > 0) {
-            const realAspect = w / h;
+        // Actualizamos los inputs de resolución (siempre)
+        if (inputs.w) inputs.w.value = newW;
+        if (inputs.h) inputs.h.value = newH;
+
+        // Solo cambiamos el Aspect Ratio si el usuario NO tenía un crop personalizado
+        if (newH > 0 && usuarioUsaFullFrame) {
+            const newRealAspect = newW / newH;
             
-            // Ponemos el valor exacto en el input (ej. 2.39655)
-            if (aspectInput) aspectInput.value = parseFloat(realAspect.toFixed(5));
+            if(inputs.aspect) inputs.aspect.value = parseFloat(newRealAspect.toFixed(5));
+            if(menuAspecto) menuAspecto.value = 'custom';
             
-            // Cambiamos el dropdown de aspecto a "Custom" para que no se pelee con los presets
-            if (aspectSelect) aspectSelect.value = 'custom';
-            
-            // Limpiamos los botones activos de Aspecto
+            // Limpiar botones activos de aspecto
             const btnContainer = document.getElementById('aspectBtnContainer');
             if (btnContainer) {
                 btnContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
             }
         }
 
-        // 5. Redibujar el Canvas (ESTO ESTABA MAL UBICADO ANTES)
+        // 5. Redibujar
         if (typeof requestDraw === 'function') {
             requestDraw();
         } else {
@@ -1112,7 +1132,6 @@ if (resSelectElement) {
 }
 
 // 🔥 FUERZA BRUTA: DIBUJAR AL FINAL DE LA CARGA DEL SCRIPT
-// Esto asegura que si todo lo demás falló, esto dibuje las líneas iniciales.
 if (typeof requestDraw === 'function') {
     requestDraw();
 } else {
