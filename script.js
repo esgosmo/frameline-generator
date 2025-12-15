@@ -846,6 +846,14 @@ window.setPreset = function(w, h, btn) {
     if(inputs.w) inputs.w.value = w;
     if(inputs.h) inputs.h.value = h;
     autoAdjustThickness(w);
+
+// 2. 🔥 CLAVE: Volver al menú principal para encontrar la opción "HD" o "UHD"
+    // Si no hacemos esto, dentro de la carpeta ARRI no existe "HD" a secas, y se pone Custom.
+    if (currentViewMode !== 'root') {
+        currentViewMode = 'root';
+        renderResolutionMenu(); // Redibujamos el menú con las opciones generales
+    }
+
     const key = `${w},${h}`;
     if(menuResoluciones) { menuResoluciones.value = key; if(menuResoluciones.value !== key) menuResoluciones.value = 'custom'; }
     flashInput(inputs.w); flashInput(inputs.h); highlightButton(btn); requestDraw();
