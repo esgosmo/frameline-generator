@@ -53,7 +53,6 @@ const inputs = {
     // Radios de escala
     scaleFit: getEl('scaleFit'),
     scaleFill: getEl('scaleFill'),
-    scaleCrop: getEl('scaleCrop'),
     scaleCrop: getEl('scaleCrop')
 };
 
@@ -298,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// LÓGICA DE DRAG & DROP 
+// 🔥 LISTENER DEL MENÚ DE RESOLUCIÓN (CORREGIDO)
 // ==========================================
 if (menuResoluciones) {
     menuResoluciones.addEventListener('change', () => {
@@ -371,9 +370,7 @@ const showImageToggle = document.getElementById('showImageToggle');
 const sizeWarning = document.getElementById('sizeWarning'); 
 
 if (imageLoader) {
-    // Variable para limpiar memoria cuando cambiamos de foto
     let currentObjectUrl = null;
-
     imageLoader.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -457,7 +454,7 @@ if (imageLoader) {
         }
     });
 }
-// Clear Function
+
 window.removeImage = function() {
     userImage = null;
     if(imageLoader) imageLoader.value = "";
@@ -472,15 +469,11 @@ window.removeImage = function() {
     draw();
 }
 
-// Listeners
 if (showImageToggle) showImageToggle.addEventListener('change', requestDraw);
 if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', requestDraw);
 if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', requestDraw);
 if (inputs.scaleCrop) inputs.scaleCrop.addEventListener('change', requestDraw);
-// 5. Lógica para el ojito (Show/Hide)
-if (showImageToggle) {
-    showImageToggle.addEventListener('change', draw);
-}
+
 
 // ==========================================
 // HELPERS
@@ -563,7 +556,6 @@ function autoAdjustThickness(width) {
 function draw() {
     if (!inputs.w || !inputs.h) return;
 
-    // A. LEER VALORES
     const rawW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
     const rawH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
@@ -593,10 +585,6 @@ function draw() {
 
     if (isCropMode) {
         height = Math.round(width / targetAspect);
-        
-        // Regla de Video: Siempre números pares para evitar problemas de códec
-        // Lo voy a quitar, prefiero la precisión matemática
-        // if (height % 2 !== 0) height--;
     }
 
     if (canvas.width !== width) canvas.width = width;
@@ -609,28 +597,15 @@ function draw() {
     if (userImage && mostrarImagen) {
         try {
             const isFill = inputs.scaleFill && inputs.scaleFill.checked;
-            // Si es Crop, la imagen SIEMPRE debe comportarse como Fill (cubrir todo)
             const shouldUseFillLogic = isFill || isCropMode;
-            
-            // 2. Calcular la proporción de escalado (Scale Ratio)
-            // Calculamos cuánto hay que estirar el ancho y el alto
             const ratioW = width / userImage.width;
             const ratioH = height / userImage.height;
             let renderRatio;
+            if (shouldUseFillLogic) renderRatio = Math.max(ratioW, ratioH);
+            else renderRatio = Math.min(ratioW, ratioH);
 
-          if (shouldUseFillLogic) {
-                // En modo Crop o Fill, usamos Max para cubrir todo el área
-                renderRatio = Math.max(ratioW, ratioH);
-            } else {
-                // En modo Fit, usamos Min para ver la imagen entera
-                renderRatio = Math.min(ratioW, ratioH);
-            }
-
-            // 3. Calcular nuevas dimensiones finales
             const newW = userImage.width * renderRatio;
             const newH = userImage.height * renderRatio;
-
-            // 4. Centrar la imagen matemáticamente
             const posX = (width - newW) / 2;
             const posY = (height - newH) / 2;
             ctx.drawImage(userImage, posX, posY, newW, newH);
@@ -638,62 +613,25 @@ function draw() {
     }
 
     let visibleW, visibleH;
-    let offsetX, offsetY; // Declaramos aquí para usarlas fuera
+    let offsetX, offsetY;
 
     if (isCropMode) {
-        // 🔥 CORRECCIÓN DEFINITIVA PARA CROP:
-        // En modo Crop, el "Visible Area" ES el canvas entero.
-        // Forzamos que coincidan exactamente para evitar líneas de 1px.
-        visibleW = width;
-        visibleH = height;
-        
-        // Cero márgenes, porque no hay barras negras
-        offsetX = 0;
-        offsetY = 0;
-    } 
-    else {
-        // --- LÓGICA ESTÁNDAR (FIT / FILL) ---
-        
-        // 1. Calcular tamaño base
-        if (targetAspect > screenAspect) {
-            visibleW = width;
-            visibleH = width / targetAspect;
-        } else {
-            visibleH = height;
-            visibleW = height * targetAspect;
-        }
+        visibleW = width; visibleH = height; offsetX = 0; offsetY = 0;
+    } else {
+        if (targetAspect > screenAspect) { visibleW = width; visibleH = width / targetAspect; } 
+        else { visibleH = height; visibleW = height * targetAspect; }
+        visibleW = Math.round(visibleW * scaleFactor);
+        visibleH = Math.round(visibleH * scaleFactor);
+        const barHeight = Math.floor((height - visibleH) / 2);
+        const barWidth = Math.floor((width - visibleW) / 2);
+        offsetX = barWidth; offsetY = barHeight;
+    }
 
-    // 2. Aplicar Escala y REDONDEAR (Vital para evitar bordes borrosos)
-    // Math.round fuerza al pixel entero más cercano
-    visibleW = Math.round(visibleW * scaleFactor);
-    visibleH = Math.round(visibleH * scaleFactor);
-
-    // 3. Asegurar que sean números pares (Opcional, ayuda al centrado perfecto)
-    // Voy a comentarlas, prefiero la precisión matemática
-    //if (visibleW % 2 !== 0) visibleW--;
-    // if (visibleH % 2 !== 0) visibleH--;
-
-    // 4. Calcular Matte (Barras) con enteros
-    // Math.floor asegura que no queden medios píxeles sueltos
-    const barHeight = Math.floor((height - visibleH) / 2);
-    const barWidth = Math.floor((width - visibleW) / 2);
-    offsetX = barWidth;
-    offsetY = barHeight;
-     }
-
-// E. MATTE
-    // 🔥 CAMBIO: Solo dibujamos las barras negras si NO estamos en modo Crop.
-    // En modo Crop, el borde del canvas es el límite natural.
     if (!isCropMode) {
         ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-        
-        // Barra Superior
         ctx.fillRect(0, 0, width, offsetY); 
-        // Barra Inferior
         ctx.fillRect(0, height - offsetY, width, offsetY); 
-        // Barra Izquierda
         ctx.fillRect(0, offsetY, offsetX, visibleH); 
-        // Barra Derecha
         ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
     }
 
@@ -723,19 +661,8 @@ function draw() {
             else { secH = height; secW = height * secAspect; }
             secW = secW * scaleFactor;
         }
-
-       // 2. 🔥 CORRECCIÓN: REDONDEAR Y FORZAR PARES (Igual que Main Frame)
-       
-        secW = Math.round(secW);
-        secH = Math.round(secH);
-
-        // Voy a comentarlas, prefiero la precisión matemática
-       // if (secW % 2 !== 0) secW--; // Si es 1215 -> 1214
-       // if (secH % 2 !== 0) secH--; // Si es impar -> par
-
-        // 3. CALCULAR POSICIÓN
-        secX = (width - secW) / 2;
-        secY = (height - secH) / 2;
+        secW = Math.round(secW); secH = Math.round(secH);
+        secX = (width - secW) / 2; secY = (height - secH) / 2;
 
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
         ctx.lineWidth = secThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
@@ -783,7 +710,6 @@ function draw() {
             }
        }
 
-        // --- B. DIBUJAR SECONDARY FRAMELINE TEXT ---
         if (drawSec && inputs.secAspect) {
             ctx.fillStyle = inputs.secColor.value;
             const txtSecAsp = obtenerRatioTexto(Math.round(secW), Math.round(secH));
@@ -830,66 +756,7 @@ Object.values(inputs).forEach(input => {
     }
 });
 
-// ==========================================
-// LÓGICA DEL MENÚ DE RESOLUCIÓN
-// ==========================================
-// ==========================================
-// LÓGICA DEL MENÚ DE RESOLUCIÓN (NAVEGACIÓN)
-// ==========================================
-if (menuResoluciones) {
-    menuResoluciones.addEventListener('change', () => {
-        const val = menuResoluciones.value;
-
-        // A. SI ELIGE UNA CARPETA ("Ver más...")
-        if (val.startsWith('NAV_FOLDER_')) {
-            const index = parseInt(val.replace('NAV_FOLDER_', ''));
-            currentViewMode = index; // Entrar a la carpeta
-            renderResolutionMenu(); // Redibujar
-            
-            // Auto-seleccionar el primer item real para UX
-            if (menuResoluciones.options.length > 2) {
-                menuResoluciones.selectedIndex = 2;
-                menuResoluciones.dispatchEvent(new Event('change'));
-            }
-            return;
-        }
-
-        // B. SI ELIGE VOLVER
-        if (val === 'NAV_BACK') {
-            currentViewMode = 'root'; // Volver al inicio
-            renderResolutionMenu();
-            // Intentar volver a HD
-            if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
-                menuResoluciones.value = "1920,1080";
-                menuResoluciones.dispatchEvent(new Event('change'));
-            }
-            return;
-        }
-
-        // C. SELECCIÓN NORMAL (Resolución)
-        if (val === 'custom' || val === '') return;
-
-        const [nW, nH] = val.split(',');
-        if(inputs.w) inputs.w.value = nW;
-        if(inputs.h) inputs.h.value = nH;
-
-        autoAdjustThickness(nW); 
-        
-        // Limpiar botones azules
-        const contenedorRes = document.getElementById('resBtnContainer');
-        if (contenedorRes) {
-            contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
-        }
-        
-        flashInput(inputs.w);
-        flashInput(inputs.h);
-        requestDraw();
-    });
-}
-
-// ==========================================
-// LÓGICA DEL MENÚ DE ASPECTO (FRAMELINE)
-// ==========================================
+// Listener Aspecto
 if (menuAspecto) {
     menuAspecto.addEventListener('change', () => {
         if (cajaAspecto) cajaAspecto.classList.remove('hidden');
@@ -979,6 +846,14 @@ window.setPreset = function(w, h, btn) {
     if(inputs.w) inputs.w.value = w;
     if(inputs.h) inputs.h.value = h;
     autoAdjustThickness(w);
+
+// 2. 🔥 CLAVE: Volver al menú principal para encontrar la opción "HD" o "UHD"
+    // Si no hacemos esto, dentro de la carpeta ARRI no existe "HD" a secas, y se pone Custom.
+    if (currentViewMode !== 'root') {
+        currentViewMode = 'root';
+        renderResolutionMenu(); // Redibujamos el menú con las opciones generales
+    }
+
     const key = `${w},${h}`;
     if(menuResoluciones) { menuResoluciones.value = key; if(menuResoluciones.value !== key) menuResoluciones.value = 'custom'; }
     flashInput(inputs.w); flashInput(inputs.h); highlightButton(btn); requestDraw();
@@ -1002,73 +877,40 @@ window.setOpacity = function(val, btn) {
     flashInput(inputs.opacity); highlightButton(btn); requestDraw();
 }
 
-// ==========================================
-// 8. DESCARGA INTELIGENTE (CORREGIDA)
-// ==========================================
+// Descarga
 btnDownload.addEventListener('click', () => {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
-    
-    // Obtener aspecto limpio para el nombre
     let asp = "ratio";
-    if (inputs.aspect) {
-        // Limpiamos caracteres raros y dos puntos
-        asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
-    }
-
-    // 2. Detectar Estados
+    if (inputs.aspect) asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
     const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
-
-    // Creamos el elemento de descarga
     const a = document.createElement('a');
 
-    if (hasPhoto) {
-        // --- CASO A: CON FOTO (JPG) -> LLEVA MARCA DE AGUA ---
-        
-        // 1. DIBUJAR LA MARCA DE AGUA (Temporalmente)
-        ctx.save(); // Guardar estado actual del canvas
-        
-        // Configuración Sutil (Dinámica según el tamaño de la imagen)
-        const fontSize = Math.max(10, Math.round(w * 0.012)); // 1.5% del ancho
-        const margin = fontSize; // Margen proporcional al tamaño de letra
-
+    if (isCropMode) {
+        const type = hasPhoto ? 'image/jpeg' : 'image/png';
+        const quality = hasPhoto ? 1.0 : undefined;
+        const ext = hasPhoto ? 'jpg' : 'png';
+        a.href = canvas.toDataURL(type, quality);
+        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
+    } else if (hasPhoto) {
+        ctx.save(); 
+        const fontSize = Math.max(10, Math.round(w * 0.012)); 
+        const margin = fontSize; 
         ctx.font = `500 ${fontSize}px Arial, sans-serif`;
         ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
-        ctx.textAlign = "right";
-        ctx.textBaseline = "bottom";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-        ctx.shadowBlur = 4;
-        
+        ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)"; ctx.shadowBlur = 4;
         ctx.fillText("frameline-generator.com", w - margin, h - margin);
         ctx.restore(); 
         a.href = canvas.toDataURL('image/jpeg', 0.9);
         a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
-
-        // Borrar marca de agua visualmente (Redibujar rápido)
-        setTimeout(() => {
-             if(typeof requestDraw === 'function') requestDraw(); else draw();
-        }, 0); 
-    }
-    
-    // =========================================================
-    // RUTA C: MODO TEMPLATE (Solo Líneas / PNG Transparente)
-    // =========================================================
-    else {
-        // PNG Transparente sin fondo ni marca
+        setTimeout(() => { if(typeof requestDraw === 'function') requestDraw(); else draw(); }, 0); 
+    } else {
         a.href = canvas.toDataURL('image/png');
         a.download = `Frameline_${w}x${h}_${asp}.png`;
     }
-
-    // --- TRACKING ---
-    if (typeof gtag === 'function') {
-        gtag('event', 'download_file', {
-            'event_category': 'Engagement',
-            'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template')
-        });
-    }
-
-    // Ejecutar descarga
+    if (typeof gtag === 'function') { gtag('event', 'download_file', { 'event_category': 'Engagement', 'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') }); }
     a.click();
 });
 
@@ -1113,42 +955,24 @@ if (resetBtn) {
         const secColorInput = document.getElementById('secFrameColor');
         if (secColorInput) secColorInput.value = "#0000FF";
         
-        // 2. Ocultar Paneles y Checkboxes
-        const hideById = (id) => {
-            const el = document.getElementById(id);
-            if (el) el.classList.add('hidden');
-        };
-        const uncheckById = (id) => {
-            const el = document.getElementById(id);
-            if (el) el.checked = false;
-        };
-
-       
-        hideById('aspectGroup'); // Oculta Manual Ratio y Frameline Scale
-        hideById('secFrameControls'); // Oculta opciones secundarias
-        hideById('advancedGroup'); // Oculta Advanced
-        hideById('infoPanel'); // Oculta Info
-        // ---------------------------------------
-
-        uncheckById('secFrameOn');
-        uncheckById('safeActionToggle');
-        uncheckById('safeTitleToggle');
-        if(inputs.safeActionVal) inputs.safeActionVal.value = 93; // Volver a 93%
-        if(inputs.safeTitleVal) inputs.safeTitleVal.value = 90;   // Volver a 90%
-        uncheckById('showLabelsToggle');
-        uncheckById('showResLabelsToggle');
-        uncheckById('secFrameFit');
-        uncheckById('scaleFill');
-        const fitRadio = document.getElementById('scaleFit');
-        if(fitRadio) fitRadio.checked = true;
+        const hideById = (id) => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); };
+        const uncheckById = (id) => { const el = document.getElementById(id); if (el) el.checked = false; };
+        hideById('aspectGroup'); hideById('secFrameControls'); hideById('advancedGroup'); hideById('infoPanel');
+        
+        uncheckById('secFrameOn'); uncheckById('safeActionToggle'); uncheckById('safeTitleToggle');
+        if(inputs.safeActionVal) inputs.safeActionVal.value = 93;
+        if(inputs.safeTitleVal) inputs.safeTitleVal.value = 90;
+        uncheckById('showLabelsToggle'); uncheckById('showResLabelsToggle');
+        uncheckById('secFrameFit'); uncheckById('scaleFill');
+        const fitRadio = document.getElementById('scaleFit'); if(fitRadio) fitRadio.checked = true;
 
         const arrowEl = document.getElementById('arrow'); if(arrowEl) arrowEl.innerText = "▼";
         const infoArrow = document.getElementById('infoArrow'); if(infoArrow) infoArrow.innerText = "▼";
         if (typeof removeImage === "function") removeImage();
 
-        // 3. Resetear Menús
-        currentViewMode = 'root'; // Volver a la raíz
-        renderResolutionMenu();   // Redibujar menú
+        // RESETEAR MENÚS Y NAVEGACIÓN
+        currentViewMode = 'root';
+        renderResolutionMenu();
         if(menuResoluciones) menuResoluciones.value = "1920,1080"; 
         
         if(menuAspecto) menuAspecto.value = "2.38695";
