@@ -54,8 +54,6 @@ const inputs = {
     scaleFit: getEl('scaleFit'),
     scaleFill: getEl('scaleFill'),
     scaleCrop: getEl('scaleCrop')
-    scaleFill: getEl('scaleFill'),
-    scaleCrop: getEl('scaleCrop')
 };
 
 // ==========================================
