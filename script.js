@@ -1188,6 +1188,10 @@ function aplicarModoMobile() {
 }
 
 // =========================================================
+// 👇 PEGA ESTO AL FINAL DEL SCRIPT (REEMPLAZANDO LO ANTERIOR) 👇
+// =========================================================
+
+// =========================================================
 // 🧮 LÓGICA DE CAMBIO DE RESOLUCIÓN (PIXEL PERFECT)
 // =========================================================
 const resSelectElement = document.getElementById('resolutionSelect');
@@ -1228,10 +1232,19 @@ if (resSelectElement) {
             }
         }
 
-        // 5. Redibujar el Canvas
-      window.onload = function() {
-    if (typeof requestDraw === 'function') requestDraw();
-    else draw();
-    };
+        // 5. Redibujar el Canvas (ESTO ESTABA MAL UBICADO ANTES)
+        if (typeof requestDraw === 'function') {
+            requestDraw();
+        } else {
+            draw();
+        }
     });
+}
+
+// 🔥 FUERZA BRUTA: DIBUJAR AL FINAL DE LA CARGA DEL SCRIPT
+// Esto asegura que si todo lo demás falló, esto dibuje las líneas iniciales.
+if (typeof requestDraw === 'function') {
+    requestDraw();
+} else {
+    draw();
 }
