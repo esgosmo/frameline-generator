@@ -262,7 +262,7 @@ function renderResolutionMenu() {
     if (currentViewMode === 'root' && resSelect.value === 'custom') {
           resSelect.value = "1920,1080"; 
           // Opcional: si quieres asegurar que los inputs cambien a 1920x1080 visualmente:
-          // setTimeout(() => resSelect.dispatchEvent(new Event('change')), 10);
+           setTimeout(() => resSelect.dispatchEvent(new Event('change')), 10);
     }
 }
 
