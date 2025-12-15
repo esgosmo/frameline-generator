@@ -875,8 +875,26 @@ window.setPreset = function(w, h, btn) {
 
     const key = `${w},${h}`;
     if(menuResoluciones) { menuResoluciones.value = key; if(menuResoluciones.value !== key) menuResoluciones.value = 'custom'; }
-    flashInput(inputs.w); flashInput(inputs.h); highlightButton(btn); requestDraw();
+   // 4. 🔥 CALCULAR Y APLICAR ASPECT RATIO NATIVO (Pixel Perfect para botones)
+    // Esto hace que al dar clic en HD, el aspecto se resetee a 1.77 (16:9)
+    if (h > 0) {
+        const realAspect = w / h;
+        if(inputs.aspect) inputs.aspect.value = parseFloat(realAspect.toFixed(5));
+        
+        // Poner el dropdown de aspecto en Custom
+        if(menuAspecto) menuAspecto.value = 'custom';
+        // Limpiar botones de aspecto activos
+        clearActiveButtons('#aspectBtnContainer');
+    }
+
+    // 5. Visuales y Dibujo
+    flashInput(inputs.w); 
+    flashInput(inputs.h); 
+    if(inputs.aspect) flashInput(inputs.aspect); // Flash también en aspecto
+    highlightButton(btn); 
+    requestDraw();
 }
+
 window.setAspect = function(val, btn) {
     if(cajaAspecto) cajaAspecto.classList.remove('hidden');
     if(inputs.aspect) inputs.aspect.value = val;
