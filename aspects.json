@@ -2,6 +2,7 @@
   {
     "group": "Cinema",
     "options": [
+      { "name": "2.66:1 (Original Cinemascope)", "value": "2.66" },
       { "name": "2.55:1 (Cinemascope 55)", "value": "2.55" },
       { "name": "2.39:1 (Anamorphic / Scope)", "value": "2.38695" },
       { "name": "2:1 (Univisium)", "value": "2.0" },
