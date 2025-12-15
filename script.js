@@ -125,7 +125,8 @@ function renderResolutionMenu() {
             //Voy a poner las categorías que aún no he completado, pero la idea es
             // que solo sea Broadcast y DCI los que no se expandan.
             const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI")
-             || nombre.includes("Social Media") || nombre.includes("Sony");
+             || nombre.includes("Social Media") || nombre.includes("Sony") || nombre.includes("RED")
+             || nombre.includes("Blackmagic");
             
             let itemsAMostrar = items;
             let hayBotonVerMas = false;
