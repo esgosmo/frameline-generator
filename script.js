@@ -995,3 +995,53 @@ function aplicarModoMobile() {
         if (fitRadio && fillRadio) { fitRadio.checked = true; fillRadio.checked = false; }
     }
 }
+
+// =========================================================
+// 🧮 LÓGICA DE CAMBIO DE RESOLUCIÓN (PIXEL PERFECT)
+// =========================================================
+const resSelectElement = document.getElementById('resolutionSelect');
+
+if (resSelectElement) {
+    resSelectElement.addEventListener('change', function() {
+        const val = this.value;
+
+        // 1. Validaciones: Si es navegación o custom, no calculamos nada automático
+        if (!val || val.startsWith('NAV_') || val === 'custom') return;
+
+        // 2. Obtener dimensiones del valor (ej: "4448,1856")
+        const [w, h] = val.split(',').map(Number);
+        
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const aspectInput = document.getElementById('aspect');
+        const aspectSelect = document.getElementById('aspectSelect');
+
+        // 3. Actualizar Inputs de Resolución
+        if (widthInput) widthInput.value = w;
+        if (heightInput) heightInput.value = h;
+
+        // 4. 🔥 CÁLCULO MATEMÁTICO DEL ASPECTO
+        if (h > 0) {
+            const realAspect = w / h;
+            
+            // Ponemos el valor exacto en el input (ej. 2.39655)
+            if (aspectInput) aspectInput.value = parseFloat(realAspect.toFixed(5));
+            
+            // Cambiamos el dropdown de aspecto a "Custom" para que no se pelee con los presets
+            if (aspectSelect) aspectSelect.value = 'custom';
+            
+            // Limpiamos los botones activos de Aspecto
+            const btnContainer = document.getElementById('aspectBtnContainer');
+            if (btnContainer) {
+                btnContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            }
+        }
+
+        // 5. Redibujar el Canvas
+        if (typeof requestDraw === 'function') {
+            requestDraw();
+        } else if (typeof draw === 'function') {
+            draw();
+        }
+    });
+}
