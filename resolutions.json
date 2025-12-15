@@ -80,6 +80,7 @@
       { "name": "Alexa Mini LF S35 16:9 3.2K ProRes", "value": "3200,1800" },
       { "name": "Alexa Mini LF S35 4:3 2.8K ProRes", "value": "3072,2160" },
       { "name": "Alexa Mini LF S35 16:9 HD ProRes", "value": "3072,2160" },
+      
       { "name": "──────", "type": "separator" },
 
       { "name": "▼ Alexa Mini", "type": "header" },
