@@ -71,25 +71,35 @@ async function cargarDatosExternos() {
         // 2. Renderizar Menú Híbrido
         renderResolutionMenu(); // Ya no lleva 'all'
 
-        // 3. Cargar Aspectos
-        const aspResponse = await fetch('aspects.json');
-        const aspData = await aspResponse.json();
-        llenarSelectSimple('aspectSelect', aspData);
-        llenarSelectSimple('secAspectSelect', aspData);
-
-        // FORZAR 2.39 POR DEFECTO
+     // --- CONFIGURACIÓN INICIAL POR DEFECTO ---
+        
+        // A. Forzar Aspecto 2.39 (2.38695) en el input y en el dropdown
+        if(inputs.aspect) inputs.aspect.value = "2.38695";
+        
         const aspectSelect = document.getElementById('aspectSelect');
-        if (aspectSelect && aspectSelect.querySelector('option[value="2.39"]')) {
-            aspectSelect.value = "2.39";
-        } else if (aspectSelect && aspectSelect.querySelector('option[value="2.38695"]')) {
-            aspectSelect.value = "2.38695";
+        if (aspectSelect) {
+            // Intentar seleccionar la opción del dropdown si existe
+            if (aspectSelect.querySelector('option[value="2.38695"]')) {
+                aspectSelect.value = "2.38695";
+            } else {
+                aspectSelect.value = "custom"; // Si no, custom
+            }
         }
 
-        // FORZAR 9:16 EN EL SECUNDARIO
+        // B. Activar Labels por defecto
+        if (inputs.showLabels) inputs.showLabels.checked = true;
+        if (inputs.showResLabels) inputs.showResLabels.checked = true;
+
+        // C. Forzar 9:16 en secundario
         const secSelect = document.getElementById('secAspectSelect');
         if (secSelect && secSelect.querySelector('option[value="9:16"]')) {
             secSelect.value = "9:16";
         }
+        if (inputs.secAspect) inputs.secAspect.value = "9:16";
+
+        // 🔥 DIBUJAR TODO AHORA QUE ESTÁ LISTO
+        if (typeof requestDraw === 'function') requestDraw();
+        else draw();
 
     } catch (error) {
         console.error("Error loading JSONs:", error);
