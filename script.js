@@ -69,35 +69,44 @@ async function cargarDatosExternos() {
         resolucionesData = await resResponse.json(); 
 
         // 2. Renderizar Menú Híbrido
-        renderResolutionMenu(); // Ya no lleva 'all'
+        renderResolutionMenu(); 
 
-     // --- CONFIGURACIÓN INICIAL POR DEFECTO ---
-        
-        // A. Forzar Aspecto 2.39 (2.38695) en el input y en el dropdown
-        if(inputs.aspect) inputs.aspect.value = "2.38695";
-        
+        // 3. Cargar Aspectos
+        const aspResponse = await fetch('aspects.json');
+        const aspData = await aspResponse.json();
+        llenarSelectSimple('aspectSelect', aspData);
+        llenarSelectSimple('secAspectSelect', aspData);
+
+        // --- CONFIGURACIÓN INICIAL (DEFAULTS) ---
+
+        // A. FORZAR EL VALOR MATEMÁTICO (Esto es lo importante para que se vea el frameline)
+        if (inputs.aspect) inputs.aspect.value = "2.38695";
+
+        // B. Sincronizar el Dropdown visualmente
         const aspectSelect = document.getElementById('aspectSelect');
         if (aspectSelect) {
-            // Intentar seleccionar la opción del dropdown si existe
+            // Intentamos seleccionar el option que tenga ese valor
             if (aspectSelect.querySelector('option[value="2.38695"]')) {
                 aspectSelect.value = "2.38695";
+            } else if (aspectSelect.querySelector('option[value="2.39"]')) {
+                aspectSelect.value = "2.39";
             } else {
-                aspectSelect.value = "custom"; // Si no, custom
+                aspectSelect.value = "custom";
             }
         }
 
-        // B. Activar Labels por defecto
+        // C. Activar los Labels (Textos)
         if (inputs.showLabels) inputs.showLabels.checked = true;
         if (inputs.showResLabels) inputs.showResLabels.checked = true;
 
-        // C. Forzar 9:16 en secundario
+        // D. Forzar 9:16 en secundario
         const secSelect = document.getElementById('secAspectSelect');
         if (secSelect && secSelect.querySelector('option[value="9:16"]')) {
             secSelect.value = "9:16";
         }
         if (inputs.secAspect) inputs.secAspect.value = "9:16";
 
-        // 🔥 DIBUJAR TODO AHORA QUE ESTÁ LISTO
+        // 🔥 E. DIBUJAR FINAL (Obligatorio para que aparezca al cargar)
         if (typeof requestDraw === 'function') requestDraw();
         else draw();
 
