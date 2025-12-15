@@ -958,13 +958,22 @@ if (quickFrameBtn && inputs.thickness) {
 
 draw();
 
-// Reset Total (CORREGIDO PARA NAVEGACIÓN)
+// Reset Total (CONFIGURADO PARA INICIAR CON FRAMELINES VISIBLES)
 const resetBtn = document.getElementById('resetAllBtn');
 if (resetBtn) {
     resetBtn.addEventListener('click', () => {
+        // 1. Resolución HD
         if(inputs.w) inputs.w.value = 1920;
         if(inputs.h) inputs.h.value = 1080;
-        if(inputs.aspect) inputs.aspect.value = 2.38695;
+        
+        // 2. Aspecto Scope (2.39)
+        if(inputs.aspect) inputs.aspect.value = "2.38695"; 
+        
+        // 3. Labels ACTIVADOS
+        if(inputs.showLabels) inputs.showLabels.checked = true;
+        if(inputs.showResLabels) inputs.showResLabels.checked = true;
+
+        // Resto de valores default
         if(inputs.opacity) inputs.opacity.value = 0;
         if(textoOpacidad) textoOpacidad.innerText = "100%";
         if(inputs.scale) inputs.scale.value = 100;
@@ -974,35 +983,46 @@ if (resetBtn) {
         const secColorInput = document.getElementById('secFrameColor');
         if (secColorInput) secColorInput.value = "#0000FF";
         
+        // Ocultar paneles
         const hideById = (id) => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); };
         const uncheckById = (id) => { const el = document.getElementById(id); if (el) el.checked = false; };
+        
         hideById('aspectGroup'); hideById('secFrameControls'); hideById('advancedGroup'); hideById('infoPanel');
         
-        uncheckById('secFrameOn'); uncheckById('safeActionToggle'); uncheckById('safeTitleToggle');
+        uncheckById('secFrameOn'); 
+        uncheckById('safeActionToggle'); 
+        uncheckById('safeTitleToggle');
+        
+        uncheckById('secFrameFit'); 
+        uncheckById('scaleFill');
+        const fitRadio = document.getElementById('scaleFit'); if(fitRadio) fitRadio.checked = true;
+
         if(inputs.safeActionVal) inputs.safeActionVal.value = 93;
         if(inputs.safeTitleVal) inputs.safeTitleVal.value = 90;
-        uncheckById('showLabelsToggle'); uncheckById('showResLabelsToggle');
-        uncheckById('secFrameFit'); uncheckById('scaleFill');
-        const fitRadio = document.getElementById('scaleFit'); if(fitRadio) fitRadio.checked = true;
 
         const arrowEl = document.getElementById('arrow'); if(arrowEl) arrowEl.innerText = "▼";
         const infoArrow = document.getElementById('infoArrow'); if(infoArrow) infoArrow.innerText = "▼";
         if (typeof removeImage === "function") removeImage();
 
-        // RESETEAR MENÚS Y NAVEGACIÓN
+        // Resetear Menú Resolución
         currentViewMode = 'root';
         renderResolutionMenu();
         if(menuResoluciones) menuResoluciones.value = "1920,1080"; 
         
+        // Resetear Dropdowns de Aspecto
         if(menuAspecto) menuAspecto.value = "2.38695";
         if(menuSecAspect) menuSecAspect.value = "9:16";
         if (inputs.secAspect) inputs.secAspect.value = "9:16";
 
+        // Limpiar botones UI
         const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
         clearContainer('resBtnContainer'); clearContainer('aspectBtnContainer'); clearContainer('opacityBtnContainer');
+        
         const qBtn = document.getElementById('quickFrameBtn');
         const qTxt = document.getElementById('quickFrameText');
         if(qBtn) { qBtn.style.color = "#007bff"; qBtn.querySelector('span').innerText = "⍉"; if(qTxt) qTxt.innerText = "On"; }
+        
+        // Dibujar
         flashInput(inputs.w); flashInput(inputs.h); requestDraw();
     });
 }
