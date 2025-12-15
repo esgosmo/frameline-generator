@@ -1222,10 +1222,9 @@ if (resSelectElement) {
         }
 
         // 5. Redibujar el Canvas
-        if (typeof requestDraw === 'function') {
-            requestDraw();
-        } else if (typeof draw === 'function') {
-            draw();
-        }
+      window.onload = function() {
+    if (typeof requestDraw === 'function') requestDraw();
+    else draw();
+    };
     });
 }
