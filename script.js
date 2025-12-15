@@ -123,7 +123,10 @@ function renderResolutionMenu() {
             optgroup.label = nombre;
             
             // Regla: Broadcast y DCI muestran todo. El resto solo Top 3.
-            const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI") || nombre.includes("Social Media");
+            //Voy a poner las categorías que aún no he completado, pero la idea es
+            // que solo sea Broadcast y DCI los que no se expandan.
+            const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI")
+             || nombre.includes("Social Media") || nombre.includes("Sony");
             
             let itemsAMostrar = items;
             let hayBotonVerMas = false;

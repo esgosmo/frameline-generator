@@ -23,12 +23,7 @@
     "items": [
         { "name": "Vertical 9:16 (1080 x 1920)", "value": "1080,1920" },
         { "name": "Portrait 4:5 (1080 x 1350)", "value": "1080,1350" },
-        { "name": "Square (1080 x 1080)", "value": "1080,1080" },
-
-	      { "name": "── More Resolutions ──", "type": "separator" },
-
-	      { "name": "WIP", "value": "100,100" },
-        { "name": "WIP", "value": "100,100" }
+        { "name": "Square (1080 x 1080)", "value": "1080,1080" }
     ]
   },
   {
