@@ -49,6 +49,7 @@ const inputs = {
     secFit: getEl('secFrameFit'),
     showLabels: getEl('showLabelsToggle'), 
     showResLabels: getEl('showResLabelsToggle'),
+    showCanvasRes: getEl('showCanvasResToggle'),
     
     // Radios de escala
     scaleFit: getEl('scaleFit'),
