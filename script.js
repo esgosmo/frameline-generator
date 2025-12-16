@@ -941,7 +941,9 @@ window.setFullGate = function(btn) {
         isFullGateMode = true; // <-- Importante: Encendemos la bandera Full
 
         const nativeAspect = w / h;
-        if(inputs.aspect) inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
+        if(inputs.aspect) {
+            inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
+        }
         if(menuAspecto) menuAspecto.value = 'custom';
         
         flashInput(inputs.aspect);
