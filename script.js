@@ -584,21 +584,25 @@ function autoAdjustThickness(width) {
 }
 
 function activarBotonHD() {
-    // Busca el contenedor de botones de resolución
     const container = document.getElementById('resBtnContainer');
-    if (container) {
-        // Busca todos los botones dentro
-        const btns = container.querySelectorAll('button');
-        // Quita la selección a todos primero
-        btns.forEach(b => b.classList.remove('active'));
+    if (!container) return;
+    
+    // 1. Apagar todos primero
+    const btns = container.querySelectorAll('button');
+    btns.forEach(b => b.classList.remove('active'));
+
+    // 2. Buscar SOLAMENTE el botón de HD (excluyendo UHD)
+    btns.forEach(btn => {
+        const txt = btn.innerText.trim(); // Limpia espacios
         
-        // Busca el que tenga el texto "HD" y actívalo
-        btns.forEach(btn => {
-            if (btn.innerText.includes('HD') || btn.innerText.includes('1920')) {
-                btn.classList.add('active');
-            }
-        });
-    }
+        // La lógica: 
+        // - Si es exactamente "HD"
+        // - O si contiene "HD" PERO NO contiene "UHD"
+        // - O si contiene "1920" (por si cambias el texto)
+        if (txt === 'HD' || (txt.includes('HD') && !txt.includes('UHD')) || txt.includes('1920')) {
+            btn.classList.add('active');
+        }
+    });
 }
 
 // ==========================================
@@ -1104,6 +1108,8 @@ if (resetBtn) {
         // Limpiar botones UI
         const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
         clearContainer('resBtnContainer'); clearContainer('aspectBtnContainer'); clearContainer('opacityBtnContainer');
+
+        activarBotonHD();
         
         const qBtn = document.getElementById('quickFrameBtn');
         const qTxt = document.getElementById('quickFrameText');
