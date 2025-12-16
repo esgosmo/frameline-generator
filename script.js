@@ -919,24 +919,32 @@ window.setPreset = function(w, h, btn) {
     requestDraw();
 }
 
-// Función para modo MAX / FULL
-window.setFullGate = function(btn) {
-    const w = parseFloat(inputs.w.value);
-    const h = parseFloat(inputs.h.value);
-    
-    if (h > 0) {
-        // 1. Activamos modo Full Gate
-        isFullGateMode = true;
+// Función para presets de aspecto (2.39, 1.85, 4:3...)
+window.setAspect = function(val, btn) {
+    // 1. Desactivamos modo Full Gate porque elegimos un aspecto específico
+    isFullGateMode = false; 
 
-        const nativeAspect = w / h;
-        if(inputs.aspect) inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
-        
-        if(menuAspecto) menuAspecto.value = 'custom';
-        
-        // No usamos highlightButton aquí, dejamos que el actualizador visual lo haga
-        flashInput(inputs.aspect);
-        requestDraw();
+    if(cajaAspecto) cajaAspecto.classList.remove('hidden');
+    
+    // Convertir '4:3' a número si es necesario
+    let finalVal = val;
+    if (val === '4:3') finalVal = (4/3).toFixed(5);
+    
+    if(inputs.aspect) inputs.aspect.value = finalVal;
+    if(menuAspecto) { menuAspecto.value = val; if(menuAspecto.value != val) menuAspecto.value = 'custom'; }
+
+    const currentThick = parseInt(inputs.thickness ? inputs.thickness.value : 0) || 0;
+    if (currentThick === 0) {
+        const currentW = parseInt(inputs.w.value) || 1920;
+        const idealThickness = (currentW > 3500) ? 6 : 2;
+        if (inputs.thickness) inputs.thickness.value = idealThickness;
+        if (typeof lastThickness !== 'undefined') lastThickness = idealThickness;
+        if (typeof updateQuickBtnState === 'function') updateQuickBtnState();
     }
+    flashInput(inputs.aspect); 
+    
+    // No usamos highlightButton aquí, dejamos que el actualizador visual lo haga
+    requestDraw();
 }
 
 window.setOpacity = function(val, btn) {
