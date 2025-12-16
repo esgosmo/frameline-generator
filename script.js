@@ -319,6 +319,8 @@ function llenarSelectSimple(id, datos) {
 document.addEventListener('DOMContentLoaded', () => {
     cargarDatosExternos();
     aplicarModoMobile();
+    activarBotonHD();     // Prender botón HD al arrancar
+
 });
 
 
@@ -579,6 +581,24 @@ function autoAdjustThickness(width) {
     const currentVal = parseInt(inputs.thickness.value) || 0;
     if (currentVal === 0) lastThickness = idealThickness;
     else { inputs.thickness.value = idealThickness; lastThickness = idealThickness; }
+}
+
+function activarBotonHD() {
+    // Busca el contenedor de botones de resolución
+    const container = document.getElementById('resBtnContainer');
+    if (container) {
+        // Busca todos los botones dentro
+        const btns = container.querySelectorAll('button');
+        // Quita la selección a todos primero
+        btns.forEach(b => b.classList.remove('active'));
+        
+        // Busca el que tenga el texto "HD" y actívalo
+        btns.forEach(btn => {
+            if (btn.innerText.includes('HD') || btn.innerText.includes('1920')) {
+                btn.classList.add('active');
+            }
+        });
+    }
 }
 
 // ==========================================
