@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// 🔥 LISTENER DEL MENÚ DE RESOLUCIÓN (UNIFICADO Y DEFINITIVO)
+// 🔥 LISTENER DEL MENÚ DE RESOLUCIÓN (USANDO VARIABLE GLOBAL)
 // ==========================================
 if (menuResoluciones) {
     menuResoluciones.addEventListener('change', () => {
@@ -340,40 +340,23 @@ if (menuResoluciones) {
         }
         if (val === 'custom' || val === '') return;
 
-        // B. 🔥 DETECTAR SI ESTABAS EN "FULL" (ANTES DE CAMBIAR NADA)
-        // Leemos los inputs tal como están AHORA (resolución vieja)
-        const oldW = parseFloat(inputs.w.value) || 1920;
-        const oldH = parseFloat(inputs.h.value) || 1080;
-        const oldAspectVal = parseFloat(inputs.aspect.value) || 1.77778;
-        
-        // Calculamos el ratio nativo de la resolución vieja
-        const oldNativeAspect = oldW / oldH;
-        
-        // Si el aspecto actual es casi igual al nativo, es que el usuario NO tenía barras negras.
-        // Usamos una tolerancia de 0.02 para absorber pequeños redondeos.
-        const estabaEnFull = Math.abs(oldNativeAspect - oldAspectVal) < 0.02;
-
-        // C. AHORA SÍ, CAMBIAMOS A LA NUEVA RESOLUCIÓN
+        // B. CAMBIAR RESOLUCIÓN
         const [nW, nH] = val.split(',').map(Number);
         if(inputs.w) inputs.w.value = nW;
         if(inputs.h) inputs.h.value = nH;
 
         autoAdjustThickness(nW); 
         
-        // D. APLICAR LÓGICA DE ASPECTO
-        if (estabaEnFull && nH > 0) {
-            // SI estaba en Full, calculamos el nuevo aspecto nativo y lo aplicamos
+        // C. APLICAR LÓGICA DE ASPECTO SEGÚN LA VARIABLE
+        // Si la bandera está encendida, forzamos el nuevo aspecto nativo.
+        if (isFullGateMode && nH > 0) {
             const newNativeAspect = nW / nH;
-            
             if(inputs.aspect) inputs.aspect.value = parseFloat(newNativeAspect.toFixed(5));
             if(menuAspecto) menuAspecto.value = 'custom';
-            
-            // Limpiamos botones de aspecto (porque ahora es custom/nativo)
-            clearActiveButtons('#aspectBtnContainer');
         } 
-        // SI NO estaba en Full (tenía crop), NO tocamos el aspecto. Se queda el que estaba (ej. 1.85).
+        // Si isFullGateMode es false, NO tocamos el aspecto (se queda en 1.85, 2.39, etc.)
 
-        // E. LIMPIEZA VISUAL
+        // D. LIMPIEZA VISUAL
         const contenedorRes = document.getElementById('resBtnContainer');
         if (contenedorRes) {
             contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
@@ -381,7 +364,7 @@ if (menuResoluciones) {
         
         flashInput(inputs.w);
         flashInput(inputs.h);
-        if (estabaEnFull) flashInput(inputs.aspect); // Flash para confirmar que cambió
+        if (isFullGateMode) flashInput(inputs.aspect);
         
         requestDraw();
     });
@@ -936,46 +919,47 @@ window.setPreset = function(w, h, btn) {
     requestDraw();
 }
 
-window.setAspect = function(val, btn) {
-    // 1. Desactivamos modo Full Gate porque elegimos un aspecto específico
-    isFullGateMode = false;
-    if(cajaAspecto) cajaAspecto.classList.remove('hidden');
-    if(inputs.aspect) inputs.aspect.value = val;
-    if(menuAspecto) { menuAspecto.value = val; if(menuAspecto.value != val) menuAspecto.value = 'custom'; }
-    const currentThick = parseInt(inputs.thickness ? inputs.thickness.value : 0) || 0;
-    if (currentThick === 0) {
-        const currentW = parseInt(inputs.w.value) || 1920;
-        const idealThickness = (currentW > 3500) ? 6 : 2;
-        if (inputs.thickness) inputs.thickness.value = idealThickness;
-        if (typeof lastThickness !== 'undefined') lastThickness = idealThickness;
-        if (typeof updateQuickBtnState === 'function') updateQuickBtnState();
+// Función para modo MAX / FULL
+window.setFullGate = function(btn) {
+    const w = parseFloat(inputs.w.value);
+    const h = parseFloat(inputs.h.value);
+    
+    if (h > 0) {
+        // 1. Activamos modo Full Gate
+        isFullGateMode = true;
+
+        const nativeAspect = w / h;
+        if(inputs.aspect) inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
+        
+        if(menuAspecto) menuAspecto.value = 'custom';
+        
+        // No usamos highlightButton aquí, dejamos que el actualizador visual lo haga
+        flashInput(inputs.aspect);
+        requestDraw();
     }
-    flashInput(inputs.aspect); highlightButton(btn); requestDraw();
 }
+
 window.setOpacity = function(val, btn) {
     if(inputs.opacity) inputs.opacity.value = val;
     flashInput(inputs.opacity); highlightButton(btn); requestDraw();
 }
 
 
-// Función para quitar framelines (Igualar aspecto a resolución)
+// Función para modo MAX / FULL
 window.setFullGate = function(btn) {
     const w = parseFloat(inputs.w.value);
     const h = parseFloat(inputs.h.value);
     
     if (h > 0) {
-        // 1. Calcular el aspecto nativo exacto
+        // 1. Activamos modo Full Gate
+        isFullGateMode = true;
+
         const nativeAspect = w / h;
-        
-        // 2. Aplicarlo al input
         if(inputs.aspect) inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
         
-        // 3. Poner el dropdown en Custom y limpiar botones
         if(menuAspecto) menuAspecto.value = 'custom';
-        clearActiveButtons('#aspectBtnContainer');
         
-        // 4. Feedback visual
-        highlightButton(btn);
+        // No usamos highlightButton aquí, dejamos que el actualizador visual lo haga
         flashInput(inputs.aspect);
         requestDraw();
     }
@@ -1128,56 +1112,50 @@ function aplicarModoMobile() {
     }
 }
 
+
 // =========================================================
-// 💡 ACTUALIZADOR VISUAL DE BOTONES (ILUMINA EL CORRECTO)
+// 💡 ACTUALIZADOR VISUAL DE BOTONES (LOGICA ESTRICTA)
 // =========================================================
 function updateAspectButtonsVisuals() {
     const btnContainer = document.getElementById('aspectBtnContainer');
     if (!btnContainer) return;
 
-    // 1. Obtener datos actuales
-    const currentW = parseFloat(inputs.w.value) || 0;
-    const currentH = parseFloat(inputs.h.value) || 1;
     const currentAsp = parseFloat(inputs.aspect.value) || 0;
-    
-    // Calcular aspecto nativo (Full / Max)
-    const nativeAsp = currentW / currentH;
+    const epsilon = 0.015; // Un poco más de tolerancia
 
-    // Tolerancia para comparar decimales (0.01 es suficiente)
-    const epsilon = 0.01;
-
-    // 2. Limpiar todos los botones
+    // Limpiar todos
     const buttons = btnContainer.querySelectorAll('button');
     buttons.forEach(btn => btn.classList.remove('active'));
 
-    // 3. Buscar cuál botón coincide con la realidad
     buttons.forEach(btn => {
         const txt = btn.innerText.toLowerCase();
 
-        // CASO A: Botón MAX / FULL
+        // 1. CASO MAX / FULL
+        // Solo se enciende si la variable explícita es TRUE
         if (txt.includes('max') || txt.includes('full')) {
-            // Se enciende si el aspecto actual es igual a la resolución nativa
-            if (Math.abs(currentAsp - nativeAsp) < epsilon) {
+            if (isFullGateMode) {
                 btn.classList.add('active');
             }
         }
-        // CASO B: Botón 2.39 (Scope)
-        else if (txt.includes('2.39')) {
-            // Se enciende si el aspecto es ~2.38695 y NO es el nativo (para evitar doble encendido en sensores scope)
-            if (Math.abs(currentAsp - 2.38695) < epsilon && Math.abs(currentAsp - nativeAsp) >= epsilon) {
-                btn.classList.add('active');
+        // 2. CASO BOTONES NUMÉRICOS (Solo si NO estamos en Max)
+        else if (!isFullGateMode) {
+            
+            if (txt.includes('2.39')) {
+                // Checamos cercanía a 2.38695 o 2.39
+                if (Math.abs(currentAsp - 2.38695) < epsilon || Math.abs(currentAsp - 2.39) < epsilon) {
+                    btn.classList.add('active');
+                }
             }
-        }
-        // CASO C: Botón 1.85
-        else if (txt.includes('1.85')) {
-            if (Math.abs(currentAsp - 1.85) < epsilon && Math.abs(currentAsp - nativeAsp) >= epsilon) {
-                btn.classList.add('active');
+            else if (txt.includes('1.85')) {
+                if (Math.abs(currentAsp - 1.85) < epsilon) {
+                    btn.classList.add('active');
+                }
             }
-        }
-        // CASO D: Botón 4:3
-        else if (txt.includes('4:3')) {
-            if (Math.abs(currentAsp - (4/3)) < epsilon && Math.abs(currentAsp - nativeAsp) >= epsilon) {
-                btn.classList.add('active');
+            else if (txt.includes('4:3')) {
+                // 4:3 es 1.33333... comparamos matemáticamente
+                if (Math.abs(currentAsp - (4/3)) < epsilon) {
+                    btn.classList.add('active');
+                }
             }
         }
     });
