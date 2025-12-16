@@ -788,7 +788,7 @@ function draw() {
     // 🔥 NUEVO: CANVAS NAME / LABEL (Corregido)
     // ===============================================
     if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
-        const fontSize = Math.max(4, Math.round(width / 80)); 
+        const fontSize = Math.max(12, Math.round(width / 80)); 
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         ctx.fillStyle = inputs.color ? inputs.color.value : '#00FF00';
         
@@ -822,7 +822,7 @@ function draw() {
         const padding = Math.max(10, width * 0.02);
 
         // Sombra y Borde (Stroke) para legibilidad máxima
-        ctx.lineWidth = fontSize * 0.15; // Grosor proporcional a la letra
+        ctx.lineWidth = fontSize * 0.12; // Grosor proporcional a la letra
         ctx.strokeStyle = "rgba(0, 0, 0, 0.8)"; // Borde negro casi opaco
         ctx.strokeText(finalText, padding, height - padding); 
         
