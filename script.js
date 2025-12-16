@@ -783,6 +783,34 @@ function draw() {
             }
         }
     }
+
+// ===============================================
+    // 🔥 NUEVO: CANVAS RESOLUTION LABEL
+    // ===============================================
+    if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
+        // Usamos el mismo tamaño de fuente y color que el resto
+        const fontSize = Math.max(12, Math.round(width / 80)); 
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        ctx.fillStyle = inputs.color ? inputs.color.value : '#00FF00';
+        
+        // Posicionamiento: Esquina INFERIOR IZQUIERDA
+        // Esto permite que el texto sea muy largo hacia la derecha sin cortarse
+        ctx.textAlign = "left"; 
+        ctx.textBaseline = "bottom";
+        
+        const txtCanvas = `Canvas: ${width} x ${height}`;
+        const padding = Math.max(10, width * 0.02); // Un poco de margen relativo
+
+        // Sombra suave para que se lea si hay imagen de fondo
+        ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+        ctx.shadowBlur = 4;
+        ctx.lineWidth = 3;
+        ctx.strokeText(txtCanvas, padding, height - padding); // Borde negro opcional para legibilidad
+        ctx.shadowBlur = 0; // Reset sombra para el relleno
+        
+        ctx.fillText(txtCanvas, padding, height - padding);
+    }
+
     updateAspectButtonsVisuals();
 }
 
