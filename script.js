@@ -940,6 +940,8 @@ window.setFullGate = function(btn) {
     if (h > 0) {
         isFullGateMode = true; // <-- Importante: Encendemos la bandera Full
 
+        if(cajaAspecto) cajaAspecto.classList.remove('hidden');
+
         const nativeAspect = w / h;
         if(inputs.aspect) {
             inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
