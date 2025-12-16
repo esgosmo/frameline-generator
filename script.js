@@ -49,6 +49,7 @@ const inputs = {
     secFit: getEl('secFrameFit'),
     showLabels: getEl('showLabelsToggle'), 
     showResLabels: getEl('showResLabelsToggle'),
+    showCanvasRes: getEl('showCanvasResToggle'),
     
     // Radios de escala
     scaleFit: getEl('scaleFit'),
@@ -782,6 +783,53 @@ function draw() {
             }
         }
     }
+
+    // ===============================================
+    // 🔥 NUEVO: CANVAS NAME / LABEL (Corregido)
+    // ===============================================
+    if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
+        const fontSize = Math.max(12, Math.round(width / 80)); 
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        ctx.fillStyle = inputs.color ? inputs.color.value : '#00FF00';
+        
+        ctx.textAlign = "left"; 
+        ctx.textBaseline = "bottom";
+
+        // 1. Obtener el texto base
+        let finalText = "";
+        
+        // Verificamos si el menú existe y si NO está en 'custom'
+        // (Si menuResoluciones.value es 'custom', significa que el usuario movió los sliders manualmente)
+        const isCustom = !menuResoluciones || menuResoluciones.value === 'custom';
+
+        if (!isCustom && menuResoluciones.selectedIndex >= 0) {
+            // A. Es un Preset: Obtenemos el nombre del dropdown
+            const rawText = menuResoluciones.options[menuResoluciones.selectedIndex].text;
+            
+            // B. LIMPIEZA: Usamos una expresión regular (Regex) para borrar 
+            // cualquier cosa que esté entre paréntesis al final, incluyendo el espacio antes.
+            // Ej: "Arri Alexa (3200x1800)" -> "Arri Alexa"
+            finalText = rawText.replace(/\s*\(.*?\)\s*$/, '').trim();
+            
+            // Seguridad: Si por alguna razón el texto queda vacío, poner la resolución
+            if (!finalText) finalText = `${width} x ${height}`;
+            
+        } else {
+            // C. Es Custom: Mostramos solo números
+            finalText = `Custom: ${width} x ${height}`;
+        }
+
+        const padding = Math.max(10, width * 0.02);
+
+        // Sombra y Borde (Stroke) para legibilidad máxima
+        ctx.lineWidth = fontSize * 0.12; // Grosor proporcional a la letra
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.8)"; // Borde negro casi opaco
+        ctx.strokeText(finalText, padding, height - padding); 
+        
+        // Relleno de color
+        ctx.fillText(finalText, padding, height - padding);
+    }
+
     updateAspectButtonsVisuals();
 }
 
@@ -1083,6 +1131,7 @@ if (resetBtn) {
         uncheckById('secFrameOn'); 
         uncheckById('safeActionToggle'); 
         uncheckById('safeTitleToggle');
+        uncheckById('showCanvasResToggle');
         
         uncheckById('secFrameFit'); 
         uncheckById('scaleFill');
