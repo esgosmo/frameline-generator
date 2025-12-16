@@ -945,6 +945,8 @@ window.setFullGate = function(btn) {
         if(menuAspecto) menuAspecto.value = 'custom';
         
         flashInput(inputs.aspect);
+        // AGREGADO: Forzamos el encendido visual inmediato del botón
+        highlightButton(btn);
         requestDraw();
     }
 }
@@ -1119,7 +1121,7 @@ function updateAspectButtonsVisuals() {
         const txt = btn.innerText.toLowerCase();
 
         // 1. Si estamos en modo MAX/FULL (Variable explícita)
-        if (txt.includes('max') || txt.includes('full')) {
+        if (txt.includes('max') || txt.includes('full') || txt.includes('canvas') || txt.includes('open')) {
             if (isFullGateMode) btn.classList.add('active');
         }
         // 2. Si NO estamos en modo Max (Botones numéricos)
