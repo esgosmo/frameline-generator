@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ==========================================
-// 🔥 LISTENER DEL MENÚ DE RESOLUCIÓN 
+// 🔥 LISTENER DEL MENÚ DE RESOLUCIÓN (USANDO VARIABLE GLOBAL)
 // ==========================================
 if (menuResoluciones) {
     menuResoluciones.addEventListener('change', () => {
@@ -339,7 +339,6 @@ if (menuResoluciones) {
         if (val === 'NAV_BACK') {
             currentViewMode = 'root'; 
             renderResolutionMenu();
-            // Fallback visual a 1080p si volvemos
             if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
                 menuResoluciones.value = "1920,1080";
                 menuResoluciones.dispatchEvent(new Event('change'));
@@ -348,46 +347,36 @@ if (menuResoluciones) {
         }
         if (val === 'custom' || val === '') return;
 
-        // B. CAMBIAR RESOLUCIÓN MATEMÁTICA
+        // B. CAMBIAR RESOLUCIÓN
         const [nW, nH] = val.split(',').map(Number);
-        
-        // Actualizamos inputs (sin disparar eventos automáticos para evitar bucles)
         if(inputs.w) inputs.w.value = nW;
         if(inputs.h) inputs.h.value = nH;
 
         autoAdjustThickness(nW); 
         
-        // C. LÓGICA FULL GATE (CRUCIAL)
-        // Si ya estábamos en Full Gate, calculamos el nuevo aspecto nativo
-        // y MANTENEMOS la bandera isFullGateMode en true.
+        // C. APLICAR LÓGICA DE ASPECTO SEGÚN LA VARIABLE
+        // Si la bandera está encendida, forzamos el nuevo aspecto nativo.
         if (isFullGateMode && nH > 0) {
             const newNativeAspect = nW / nH;
             if(inputs.aspect) inputs.aspect.value = parseFloat(newNativeAspect.toFixed(5));
             if(menuAspecto) menuAspecto.value = 'custom';
-            
-            // Efecto visual en el input de aspecto
-            flashInput(inputs.aspect);
         } 
+        // Si isFullGateMode es false, NO tocamos el aspecto (se queda en 1.85, 2.39, etc.)
 
-        // D. LIMPIEZA VISUAL DE BOTONES DE RESOLUCIÓN (Top Menu)
+        // D. LIMPIEZA VISUAL
         const contenedorRes = document.getElementById('resBtnContainer');
         if (contenedorRes) {
             contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
         }
         
-        // E. FINALIZAR
         flashInput(inputs.w);
         flashInput(inputs.h);
+        if (isFullGateMode) flashInput(inputs.aspect);
         
-        // Solicitamos dibujar (esto llamará a updateAspectButtonsVisuals internamente)
         requestDraw();
-        
-        // 🔥 ACTUALIZACIÓN FORZADA DE UI:
-        // Por seguridad, forzamos la actualización de botones de aspecto inmediatamente
-        // para asegurar que el botón "Max/Full" se quede prendido.
-        setTimeout(() => updateAspectButtonsVisuals(), 50);
     });
 }
+
 
 // ==========================================
 // DRAG & DROP & IMAGE LOADER (Sin Cambios)
@@ -1124,24 +1113,17 @@ function updateAspectButtonsVisuals() {
     const epsilon = 0.015; 
 
     const buttons = btnContainer.querySelectorAll('button');
-    
-    // 1. Limpiamos TODOS primero
     buttons.forEach(btn => btn.classList.remove('active'));
 
     buttons.forEach(btn => {
         const txt = btn.innerText.toLowerCase();
 
-        // CASO A: Estamos en modo FULL / MAX
-        if (isFullGateMode) {
-            // Buscamos cualquier botón que parezca ser el de Full Gate
-            // Agregamos 'open', 'gate', 'sensor' por si acaso cambias el texto del botón
-            if (txt.includes('max') || txt.includes('full') || txt.includes('open') || txt.includes('gate')) {
-                btn.classList.add('active');
-            }
+        // 1. Si estamos en modo MAX/FULL (Variable explícita)
+        if (txt.includes('max') || txt.includes('full')) {
+            if (isFullGateMode) btn.classList.add('active');
         }
-        // CASO B: NO estamos en modo Full (Modo Normal)
-        else {
-            // Solo iluminamos si coincide matemáticamente el aspecto
+        // 2. Si NO estamos en modo Max (Botones numéricos)
+        else if (!isFullGateMode) {
             if (txt.includes('2.39') && (Math.abs(currentAsp - 2.38695) < epsilon || Math.abs(currentAsp - 2.39) < epsilon)) {
                 btn.classList.add('active');
             }
@@ -1149,11 +1131,7 @@ function updateAspectButtonsVisuals() {
                 btn.classList.add('active');
             }
             else if (txt.includes('4:3') && Math.abs(currentAsp - (4/3)) < epsilon) {
-                btn.classList.add('active');
-            }
-            // Agrega aquí más condiciones si tienes botones como 16:9
-            else if ((txt.includes('16:9') || txt.includes('1.78')) && Math.abs(currentAsp - 1.777) < epsilon) {
-                btn.classList.add('active');
+                btn.classList.add('active'); // Esto arregla el 4:3
             }
         }
     });
