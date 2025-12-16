@@ -1052,6 +1052,8 @@ if (resetBtn) {
         const secColorInput = document.getElementById('secFrameColor');
         if (secColorInput) secColorInput.value = "#0000FF";
         
+        isFullGateMode = false; // Apagar modo full al resetear
+
         // Ocultar paneles
         const hideById = (id) => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); };
         const uncheckById = (id) => { const el = document.getElementById(id); if (el) el.checked = false; };
