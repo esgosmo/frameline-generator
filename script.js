@@ -788,7 +788,7 @@ function draw() {
     // 🔥 NUEVO: CANVAS NAME / LABEL (Corregido)
     // ===============================================
     if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
-        const fontSize = Math.max(12, Math.round(width / 80)); 
+        const fontSize = Math.max(10, Math.round(width / 80)); 
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         ctx.fillStyle = inputs.color ? inputs.color.value : '#00FF00';
         
