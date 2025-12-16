@@ -106,7 +106,7 @@
     "category": "RED",
     "items": [
       { "name": "V-Raptor 8K VV 17:9", "value": "8192,4320" },
-      { "name": "V-Raptor [X] 8K Open Gate (3:2)", "value": "8192,5760" },
+      { "name": "V-Raptor [X] 8K Open Gate 3:2", "value": "8192,5760" },
       { "name": "V-Raptor 7K 17:9", "value": "7168,3780" },
       { "name": "Komodo-X 6K 17:9", "value": "6144,3240" },
       { "name": "Komodo 6K 2.4:1", "value": "6144,2592" },
