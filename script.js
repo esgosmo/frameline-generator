@@ -1112,6 +1112,7 @@ if (resetBtn) {
         uncheckById('secFrameOn'); 
         uncheckById('safeActionToggle'); 
         uncheckById('safeTitleToggle');
+        uncheckById('showCanvasResToggle');
         
         uncheckById('secFrameFit'); 
         uncheckById('scaleFill');
