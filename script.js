@@ -117,6 +117,8 @@ async function cargarDatosExternos() {
         if (typeof requestDraw === 'function') requestDraw();
         else draw();
 
+        activarBotonHD();
+
     } catch (error) {
         console.error("Error loading JSONs:", error);
     }
@@ -319,8 +321,6 @@ function llenarSelectSimple(id, datos) {
 document.addEventListener('DOMContentLoaded', () => {
     cargarDatosExternos();
     aplicarModoMobile();
-    activarBotonHD();     // Prender botón HD al arrancar
-
 });
 
 
