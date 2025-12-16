@@ -407,6 +407,7 @@ if (dropZone && fileInput) {
 // Variables Imagen
 let userImage = null;
 let lastThickness = 2;
+let isFullGateMode = false; // Variable para saber si estamos en modo MAX
 const imageLoader = document.getElementById('imageLoader');
 const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
@@ -936,6 +937,8 @@ window.setPreset = function(w, h, btn) {
 }
 
 window.setAspect = function(val, btn) {
+    // 1. Desactivamos modo Full Gate porque elegimos un aspecto específico
+    isFullGateMode = false;
     if(cajaAspecto) cajaAspecto.classList.remove('hidden');
     if(inputs.aspect) inputs.aspect.value = val;
     if(menuAspecto) { menuAspecto.value = val; if(menuAspecto.value != val) menuAspecto.value = 'custom'; }
