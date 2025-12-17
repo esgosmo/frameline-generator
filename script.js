@@ -345,6 +345,7 @@ if (menuResoluciones) {
             if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
                 menuResoluciones.value = "1920,1080";
                 menuResoluciones.dispatchEvent(new Event('change'));
+                activarBotonHD();
             }
             return;
         }
