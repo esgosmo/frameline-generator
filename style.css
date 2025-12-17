@@ -583,3 +583,60 @@ input[type="range"] {
     border-color: #007bff; /* Borde Azul */
     background-color: #2a2a2a;
 }
+
+/* =========================================
+   ESTILOS DEL FOOTER (LEGAL & PRIVACY)
+   ========================================= */
+
+/* 1. Estilo Base (Computadora) */
+#legalFooter {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(17, 17, 17, 0.95);
+    color: #666;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 11px;
+    border-top: 1px solid #333;
+    z-index: 100;
+}
+
+#legalFooter a {
+    color: #888;
+    text-decoration: underline;
+    margin-left: 5px;
+}
+
+/* 2. Estilo Móvil (Celular Vertical) */
+@media (max-width: 768px) {
+    /* Ocultamos el texto largo */
+    .hide-on-mobile {
+        display: none !important;
+    }
+
+    /* Hacemos la barra invisible y que deje pasar los clics */
+    #legalFooter {
+        background-color: transparent !important;
+        border-top: none !important;
+        text-align: right !important; /* Botón a la derecha */
+        padding: 5px 10px !important;
+        pointer-events: none; /* MAGIA: Permite picar botones que estén DEBAJO del footer */
+    }
+
+    /* Estilo botón flotante para Privacy */
+    #legalFooter .privacy-link-container {
+        pointer-events: auto; /* Reactivamos el clic SOLO para este botón */
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 4px 8px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    
+    #legalFooter a {
+        color: #ccc !important;
+        text-decoration: none !important;
+        font-size: 10px;
+    }
+}
