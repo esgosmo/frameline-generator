@@ -1223,3 +1223,28 @@ function updateAspectButtonsVisuals() {
     });
 }
 
+// Lógica del Footer / Modal de Privacidad
+const privacyBtn = document.getElementById('openPrivacy');
+const privacyModal = document.getElementById('privacyModal');
+const closePrivacy = document.getElementById('closePrivacy');
+
+if (privacyBtn && privacyModal && closePrivacy) {
+    // Abrir
+    privacyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        privacyModal.classList.remove('hidden');
+    });
+    
+    // Cerrar con la X
+    closePrivacy.addEventListener('click', () => {
+        privacyModal.classList.add('hidden');
+    });
+
+    // Cerrar clicando afuera
+    privacyModal.addEventListener('click', (e) => {
+        if (e.target === privacyModal) {
+            privacyModal.classList.add('hidden');
+        }
+    });
+}
+
