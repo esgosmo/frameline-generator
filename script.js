@@ -456,7 +456,20 @@ if (imageLoader) {
                 if(inputs.w) inputs.w.value = img.width;
                 if(inputs.h) inputs.h.value = img.height;
                 if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
+                // --- CORRECCIÓN ---
+                // Si estamos dentro de una carpeta (ej. Arri), volvemos al menú principal
+                // porque dentro de Arri NO existe la opción 'custom'.
+                if (typeof currentViewMode !== 'undefined' && currentViewMode !== 'root') {
+                    currentViewMode = 'root';
+                    renderResolutionMenu();
+                }
+                
+                // Borramos cualquier nombre "fantasma" que tuviéramos guardado
+                if (typeof savedLabelName !== 'undefined') savedLabelName = "";
+
+                // Ahora sí, seleccionamos Custom (que ya existe porque volvimos a root)
                 if(menuResoluciones) menuResoluciones.value = 'custom';
+                // ------------------
                 const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
                 clearContainer('resBtnContainer');
                 flashInput(inputs.w); flashInput(inputs.h);
