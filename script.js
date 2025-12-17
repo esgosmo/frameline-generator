@@ -345,7 +345,11 @@ if (menuResoluciones) {
             if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
                 menuResoluciones.value = "1920,1080";
                 menuResoluciones.dispatchEvent(new Event('change'));
-                activarBotonHD();
+                // 2. 🔥 SOLUCIÓN: setTimeout
+                // Esperamos 50ms a que termine la limpieza y ENTONCES prendemos el botón.
+                setTimeout(() => {
+                    activarBotonHD();
+                }, 50);
             }
             return;
         }
