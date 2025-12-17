@@ -478,27 +478,23 @@
     </div>
 
     <script src="script.js"></script>
-<footer style="background-color: #111; color: #666; padding: 20px; text-align: center; font-size: 11px; margin-top: 40px; border-top: 1px solid #333;">
-    <p>
-        <strong>Disclaimer:</strong> This tool is an independent project and is not affiliated with, endorsed by, or associated with ARRI, Sony, RED, Blackmagic Design, Canon, or any other camera manufacturer. All trademarks, logos, and brand names are the property of their respective owners and are used here for descriptive/compatibility purposes only.
-    </p>
-    <p style="margin-top: 10px;">
-        &copy; 2025 Frameline Generator Tool. 
-        <a href="#" id="openPrivacy" style="color: #888; text-decoration: underline; margin-left: 10px;">Privacy Policy</a>
-    </p>
+
+<footer id="legalFooter">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        
+        <span class="hide-on-mobile">
+            <strong>Disclaimer:</strong> Not affiliated with ARRI, Sony, RED or others. Trademarks belong to their owners.
+            <span style="color: #444; margin: 0 10px;">|</span>
+            &copy; 2025 Frameline Generator. 
+        </span>
+
+        <span class="privacy-link-container">
+            <a href="#" id="openPrivacy">Privacy Policy</a>
+        </span>
+        
+    </div>
 </footer>
 
-<div id="privacyModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-    <div style="background: #222; padding: 30px; max-width: 500px; color: #ddd; border: 1px solid #444; border-radius: 8px; position: relative;">
-        <button id="closePrivacy" style="position: absolute; top: 10px; right: 15px; background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">&times;</button>
-        <h3 style="margin-top: 0;">Privacy Policy</h3>
-        <p style="font-size: 13px; line-height: 1.6;">
-            <strong>Data Collection:</strong> We use Google Analytics to collect anonymous usage data (e.g., page views, device type, region) to improve the tool. We do not store any personal information, uploaded images, or IP addresses on our servers. All image processing happens locally in your browser.
-        </p>
-        <p style="font-size: 13px; line-height: 1.6; margin-top: 15px;">
-            <strong>Cookies:</strong> This site uses standard cookies from Google Analytics. By using this tool, you consent to this collection.
-        </p>
-    </div>
-</div>
+</footer>
 </body>
 </html>
