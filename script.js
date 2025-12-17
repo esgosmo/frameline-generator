@@ -1086,44 +1086,6 @@ btnDownload.addEventListener('click', () => {
     }
     if (typeof gtag === 'function') { gtag('event', 'download_file', { 'event_category': 'Engagement', 'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') }); }
     a.click();
-    // Descarga
-btnDownload.addEventListener('click', () => {
-    // --- 1. TU LÓGICA ACTUAL (Déjala igual) ---
-    const w = parseInt(inputs.w.value) || 1920;
-    const h = parseInt(inputs.h.value) || 1080;
-    let asp = "ratio";
-    if (inputs.aspect) asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
-    const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
-    const a = document.createElement('a');
-
-    if (isCropMode) {
-        const type = hasPhoto ? 'image/jpeg' : 'image/png';
-        const quality = hasPhoto ? 1.0 : undefined;
-        const ext = hasPhoto ? 'jpg' : 'png';
-        a.href = canvas.toDataURL(type, quality);
-        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
-    } else if (hasPhoto) {
-        ctx.save(); 
-        const fontSize = Math.max(10, Math.round(w * 0.012)); 
-        const margin = fontSize; 
-        ctx.font = `500 ${fontSize}px Arial, sans-serif`;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
-        ctx.textAlign = "right"; ctx.textBaseline = "bottom";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.5)"; ctx.shadowBlur = 4;
-        ctx.fillText("frameline-generator.com", w - margin, h - margin);
-        ctx.restore(); 
-        a.href = canvas.toDataURL('image/jpeg', 0.9);
-        a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
-        setTimeout(() => { if(typeof requestDraw === 'function') requestDraw(); else draw(); }, 0); 
-    } else {
-        a.href = canvas.toDataURL('image/png');
-        a.download = `Frameline_${w}x${h}_${asp}.png`;
-    }
-    if (typeof gtag === 'function') { gtag('event', 'download_file', { 'event_category': 'Engagement', 'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') }); }
-    
-    a.click(); // <-- Aquí termina la descarga real
-
     // ===============================================
     // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO)
     // ===============================================
@@ -1153,7 +1115,6 @@ btnDownload.addEventListener('click', () => {
         btnDownload.disabled = false;
         btnDownload.style.cursor = "pointer";
     }, 2000);
-});
 });
 
 // Quick Toggle
