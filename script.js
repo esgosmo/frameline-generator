@@ -65,6 +65,7 @@ let currentViewMode = 'root'; // Variable para controlar la navegación de carpe
 let userImage = null;        
 let lastThickness = 2;       
 let isFullGateMode = false; // Variable para saber si estamos en modo MAX 
+let savedLabelName = ""; // NUEVO: Variable para recordar el nombre al volver atrás
 
 // ==========================================
 // CARGADOR DE DATOS EXTERNOS (JSON)
@@ -330,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 if (menuResoluciones) {
     menuResoluciones.addEventListener('change', () => {
+        savedLabelName = ""; // <--- Resetear siempre que el usuario elija algo nuevo
         const val = menuResoluciones.value;
 
         // A. GESTIÓN DE NAVEGACIÓN
@@ -340,11 +342,31 @@ if (menuResoluciones) {
             return;
         }
         if (val === 'NAV_BACK') {
+            const currentW = inputs.w.value;
+            const currentH = inputs.h.value;
+            const targetVal = `${currentW},${currentH}`;
+            
+            // 2. 🔥 NUEVO: Guardar el nombre actual (ej. "Arri 3.2K") antes de salir
+            // Solo si no es custom
+            if (menuResoluciones.selectedIndex >= 0 && menuResoluciones.value !== 'custom') {
+                 const rawText = menuResoluciones.options[menuResoluciones.selectedIndex].text;
+                 // Limpiamos paréntesis aquí mismo
+                 savedLabelName = rawText.replace(/\s*\(.*?\)\s*$/, '').trim();
+            }
+
+          // 3. Renderizar Root
             currentViewMode = 'root'; 
             renderResolutionMenu();
-            if (menuResoluciones.querySelector('option[value="1920,1080"]')) {
-                menuResoluciones.value = "1920,1080";
-                menuResoluciones.dispatchEvent(new Event('change'));
+
+            // 4. Intentar seleccionar
+            menuResoluciones.value = targetVal;
+
+            // 5. Si no existe en el root, se pone en custom, PERO ya guardamos el nombre en 'savedLabelName'
+            if (menuResoluciones.value !== targetVal) {
+                menuResoluciones.value = 'custom';
+            } else {
+                // Si SÍ existe (ej. HD), borramos la memoria para usar el nombre oficial del menú
+                savedLabelName = "";
             }
             return;
         }
@@ -802,22 +824,22 @@ function draw() {
         // (Si menuResoluciones.value es 'custom', significa que el usuario movió los sliders manualmente)
         const isCustom = !menuResoluciones || menuResoluciones.value === 'custom';
 
-        if (!isCustom && menuResoluciones.selectedIndex >= 0) {
-            // A. Es un Preset: Obtenemos el nombre del dropdown
+        // 1. PRIORIDAD: ¿Hay un nombre guardado en memoria (del Back)?
+        if (savedLabelName !== "") {
+            finalText = savedLabelName;
+        }
+        // 2. Si es un Preset normal del menú
+        else if (!isCustom && menuResoluciones.selectedIndex >= 0) {
             const rawText = menuResoluciones.options[menuResoluciones.selectedIndex].text;
-            
-            // B. LIMPIEZA: Usamos una expresión regular (Regex) para borrar 
-            // cualquier cosa que esté entre paréntesis al final, incluyendo el espacio antes.
-            // Ej: "Arri Alexa (3200x1800)" -> "Arri Alexa"
             finalText = rawText.replace(/\s*\(.*?\)\s*$/, '').trim();
-            
-            // Seguridad: Si por alguna razón el texto queda vacío, poner la resolución
-            if (!finalText) finalText = `${width} x ${height}`;
             
         } else {
             // C. Es Custom: Mostramos solo números
             finalText = `Custom: ${width} x ${height}`;
         }
+
+        // Seguridad:
+        if (!finalText) finalText = `${width} x ${height}`;
 
         const padding = Math.max(10, width * 0.02);
 
@@ -901,8 +923,8 @@ if (inputs.secAspect) {
 }
 
 // Sincronización Manual W/H
-if (inputs.w) { inputs.w.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; clearActiveButtons('.presets'); }); }
-if (inputs.h) { inputs.h.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; clearActiveButtons('.presets'); }); }
+if (inputs.w) { inputs.w.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; savedLabelName = ""; clearActiveButtons('.presets'); }); }
+if (inputs.h) { inputs.h.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; savedLabelName = ""; clearActiveButtons('.presets'); }); }
 if (inputs.aspect) {
     inputs.aspect.addEventListener('input', () => {
         if (menuAspecto) menuAspecto.value = 'custom';
