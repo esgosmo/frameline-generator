@@ -291,11 +291,13 @@ function renderResolutionMenu() {
     
     // CASO 3: Fallback para Root
     // Si estamos en el menú principal y está seleccionado "Custom" (o nada útil), forzamos HD.
+    /*
     if (currentViewMode === 'root' && resSelect.value === 'custom') {
           resSelect.value = "1920,1080"; 
           // Opcional: si quieres asegurar que los inputs cambien a 1920x1080 visualmente:
            setTimeout(() => resSelect.dispatchEvent(new Event('change')), 10);
     }
+           */
 }
 
 // Función auxiliar para Aspectos
@@ -341,43 +343,38 @@ if (menuResoluciones) {
             renderResolutionMenu(); 
             return;
         }
-     if (val === 'NAV_BACK') {
+        if (val === 'NAV_BACK') {
             const currentW = inputs.w.value;
             const currentH = inputs.h.value;
             const targetVal = `${currentW},${currentH}`;
             
-            // 🔥 SOLUCIÓN: BUSCAR EN LOS DATOS (JSON)
-            // En lugar de leer el Dropdown (que ahora está seleccionando "Back"),
-            // buscamos en la lista de datos actual cuál ítem coincide con la resolución que tenemos puesta.
+            // 1. BUSCAR NOMBRE EN EL JSON ANTES DE SALIR
             if (currentViewMode !== 'root' && resolucionesData[currentViewMode]) {
                 const items = resolucionesData[currentViewMode].items;
-                // Buscamos el objeto que tenga el mismo valor (ej: "3200,1800")
-                const foundItem = items.find(item => item.value === targetVal);
-                
-                if (foundItem) {
-                    // Si lo encontramos, guardamos SU nombre real
-                    savedLabelName = foundItem.name.replace(/\s*\(.*?\)\s*$/, '').trim();
+                if (items) {
+                    const foundItem = items.find(item => item.value === targetVal);
+                    if (foundItem) {
+                        savedLabelName = foundItem.name.replace(/\s*\(.*?\)\s*$/, '').trim();
+                    }
                 }
             }
 
-            // 3. Renderizar Root
+            // 2. Renderizar Root
             currentViewMode = 'root'; 
             renderResolutionMenu();
 
-            // 4. Intentar seleccionar la resolución en el menú principal
+            // 3. Intentar seleccionar la resolución
             menuResoluciones.value = targetVal;
 
-            // 5. Gestión del fallback
+            // 4. Si no existe en Root, ponemos Custom PERO MANTENEMOS EL NOMBRE
             if (menuResoluciones.value !== targetVal) {
                 menuResoluciones.value = 'custom';
-                // Aquí NO borramos savedLabelName, para que el draw() use el nombre que acabamos de guardar
             } else {
-                // Si la resolución SÍ existe en el menú principal (ej. HD),
-                // borramos la memoria para que use el nombre oficial del menú root
+                // Si sí existe (ej. HD), borramos la memoria para usar el nombre normal
                 savedLabelName = "";
             }
             
-            // Forzamos un redibujado para actualizar el texto
+            // Importante: No disparamos eventos, solo dibujamos
             requestDraw();
             return;
         }
