@@ -1096,7 +1096,7 @@ btnDownload.addEventListener('click', () => {
     const originalColor = btnDownload.style.backgroundColor;
 
     // 2. Cambiamos el estado a "ÉXITO"
-    btnDownload.innerText = "Downloaded! ✓";
+    btnDownload.innerText = "Downloaded!";
     btnDownload.style.backgroundColor = "#28a745"; // Verde Éxito
     btnDownload.style.borderColor = "#28a745";
     btnDownload.style.color = "#fff";
