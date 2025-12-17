@@ -341,33 +341,44 @@ if (menuResoluciones) {
             renderResolutionMenu(); 
             return;
         }
-        if (val === 'NAV_BACK') {
+     if (val === 'NAV_BACK') {
             const currentW = inputs.w.value;
             const currentH = inputs.h.value;
             const targetVal = `${currentW},${currentH}`;
             
-            // 2. 🔥 NUEVO: Guardar el nombre actual (ej. "Arri 3.2K") antes de salir
-            // Solo si no es custom
-            if (menuResoluciones.selectedIndex >= 0 && menuResoluciones.value !== 'custom') {
-                 const rawText = menuResoluciones.options[menuResoluciones.selectedIndex].text;
-                 // Limpiamos paréntesis aquí mismo
-                 savedLabelName = rawText.replace(/\s*\(.*?\)\s*$/, '').trim();
+            // 🔥 SOLUCIÓN: BUSCAR EN LOS DATOS (JSON)
+            // En lugar de leer el Dropdown (que ahora está seleccionando "Back"),
+            // buscamos en la lista de datos actual cuál ítem coincide con la resolución que tenemos puesta.
+            if (currentViewMode !== 'root' && resolucionesData[currentViewMode]) {
+                const items = resolucionesData[currentViewMode].items;
+                // Buscamos el objeto que tenga el mismo valor (ej: "3200,1800")
+                const foundItem = items.find(item => item.value === targetVal);
+                
+                if (foundItem) {
+                    // Si lo encontramos, guardamos SU nombre real
+                    savedLabelName = foundItem.name.replace(/\s*\(.*?\)\s*$/, '').trim();
+                }
             }
 
-          // 3. Renderizar Root
+            // 3. Renderizar Root
             currentViewMode = 'root'; 
             renderResolutionMenu();
 
-            // 4. Intentar seleccionar
+            // 4. Intentar seleccionar la resolución en el menú principal
             menuResoluciones.value = targetVal;
 
-            // 5. Si no existe en el root, se pone en custom, PERO ya guardamos el nombre en 'savedLabelName'
+            // 5. Gestión del fallback
             if (menuResoluciones.value !== targetVal) {
                 menuResoluciones.value = 'custom';
+                // Aquí NO borramos savedLabelName, para que el draw() use el nombre que acabamos de guardar
             } else {
-                // Si SÍ existe (ej. HD), borramos la memoria para usar el nombre oficial del menú
+                // Si la resolución SÍ existe en el menú principal (ej. HD),
+                // borramos la memoria para que use el nombre oficial del menú root
                 savedLabelName = "";
             }
+            
+            // Forzamos un redibujado para actualizar el texto
+            requestDraw();
             return;
         }
         if (val === 'custom' || val === '') return;
