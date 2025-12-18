@@ -1137,7 +1137,6 @@ btnDownload.addEventListener('click', async () =>   {
         mostrarFeedbackExito(btnDownload);
     }
 
-});
     // ===============================================
     // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO)
     // ===============================================
@@ -1167,7 +1166,7 @@ btnDownload.addEventListener('click', async () =>   {
         btnDownload.disabled = false;
         btnDownload.style.cursor = "pointer";
     }, 2000);
-
+});
 
 // Quick Toggle
 const quickFrameBtn = document.getElementById('quickFrameBtn');
