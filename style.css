@@ -585,56 +585,85 @@ input[type="range"] {
 }
 
 /* =========================================
-   ESTILOS DEL FOOTER (LEGAL & PRIVACY)
+   ESTILOS DEL FOOTER (HÍBRIDO: FIXED DESKTOP / STATIC MOBILE)
    ========================================= */
 
-/* 1. Estilo Base (Computadora) */
+/* --- VERSIÓN DESKTOP (PC) --- */
+/* Forzamos al elemento a salir del sidebar y ocupar toda la pantalla abajo */
 #legalFooter {
-    position: fixed;
+    position: fixed;       /* Flotante siempre visible */
     bottom: 0;
     left: 0;
-    width: 100%;
-    background-color: rgba(17, 17, 17, 0.95);
-    color: #666;
-    padding: 10px 20px;
-    text-align: center;
-    font-size: 11px;
+    width: 100%;           /* Ocupa TODO el ancho, no solo la izquierda */
+    
+    background-color: rgba(17, 17, 17, 0.95); /* Fondo oscuro elegante */
     border-top: 1px solid #333;
-    z-index: 100;
+    padding: 12px 0;
+    text-align: center;    /* Centrado en medio de la pantalla */
+    z-index: 999;          /* Siempre encima de todo */
+    
+    font-size: 11px;
+    color: #666;
 }
 
 #legalFooter a {
     color: #888;
-    text-decoration: underline;
-    margin-left: 5px;
+    text-decoration: none;
+    margin: 0 8px;
+    transition: color 0.2s;
 }
 
-/* 2. ESTILO PARA MÓVIL (CELULARES)
-   Aquí cambiamos las reglas: Se vuelve estático y parte del flujo. */
+#legalFooter a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* Opcional: Ocultar texto largo si quieres */
+.desktop-text { display: inline; }
+
+
+/* --- VERSIÓN MÓVIL (CELULAR) --- */
+/* Aquí cambiamos radicalmente el comportamiento */
 @media (max-width: 768px) {
     
     #legalFooter {
-        /* ROMPEMOS LA POSICIÓN FIJA */
-        position: static !important; /* Ya no flota, obedece al scroll */
-        display: block;
-        width: 100%;       /* Ocupa el ancho disponible */
+        /* 1. DEJAMOS DE FLOTAR */
+        position: static !important; /* Se mete en el flujo normal */
         
-        /* Limpieza visual para móvil */
-        background-color: transparent; /* Sin fondo de barra */
+        /* 2. LIMPIEZA VISUAL PARA QUE ENCAJE EN EL SIDEBAR */
+        width: 100%;
+        background-color: transparent; /* Sin fondo negro */
         border: none;                  /* Sin borde superior */
-        margin-top: 20px;              /* Separado del botón de PayPal */
-        margin-bottom: 40px;           /* Espacio extra al final para scroll cómodo */
+        text-align: center;
+        
+        /* 3. UBICACIÓN */
+        margin-top: 25px;    /* Espacio debajo de PayPal */
+        margin-bottom: 50px; /* Espacio final para scroll */
         padding: 0;
+        z-index: auto;
     }
 
-    /* Ajuste de texto para móvil */
-    #legalFooter a, #legalFooter span {
-        font-size: 12px;   /* Un pelín más grande para dedos táctiles */
-        color: #555;       /* Color sutil */
+    /* Ocultamos el texto largo del disclaimer en móvil para ahorrar espacio */
+    .desktop-text {
+        display: none; 
+    }
+    
+    /* Hacemos los enlaces un poco más grandes para el dedo */
+    #legalFooter a {
+        font-size: 12px;
+        color: #555;
         display: inline-block;
+        margin: 0 5px;
+        padding: 5px;
+    }
+    
+    #legalFooter .copyright {
+        display: block; /* Copyright en nueva línea */
+        margin-top: 5px;
+        font-size: 10px;
+        color: #444;
     }
 }
-
 
 
 
