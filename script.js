@@ -1346,5 +1346,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+// Botón "Disclaimer" abra la misma ventana
+const disclaimerBtn = document.getElementById('openDisclaimer');
+
+if(disclaimerBtn) {
+    disclaimerBtn.addEventListener('click', function(e) {
+        e.preventDefault(); // Evita que salte la página
+        modal.classList.remove('hidden'); // Muestra la ventana
+        modal.style.display = 'flex'; // Asegura que se vea (por si usas display flex)
+    });
+}
+
 });
 
