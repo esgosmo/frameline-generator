@@ -1064,7 +1064,7 @@ window.setOpacity = function(val, btn) {
 }
 
 // Descarga
-btnDownload.addEventListener('click', async () => {
+btnDownload.addEventListener('click', async () =>   {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
     let asp = "ratio";
@@ -1112,30 +1112,32 @@ btnDownload.addEventListener('click', async () => {
     const blob = dataURItoBlob(dataUrl);
     const file = new File([blob], fileName, { type: blob.type });
 
-    // Verificamos si el navegador soporta compartir archivos (Celulares)
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+// SOLO compartimos si es Móvil Y el navegador lo soporta.
+    // En Desktop (aunque soporte compartir) preferimos descargar directo.
+    if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
             await navigator.share({
                 files: [file],
                 title: 'Frameline Generator',
                 text: 'Created with frameline-generator.com'
             });
-            // Si el usuario compartió con éxito, mostramos feedback
             mostrarFeedbackExito(btnDownload);
         } catch (error) {
-            // Si el usuario canceló o hubo error, no hacemos nada (o podrías hacer fallback a descarga)
-            console.log('Share canceled or failed', error);
+            // Si el usuario cancela en el celular, no pasa nada.
+            console.log('Share canceled', error);
         }
     } else {
-        // --- FALLBACK PARA COMPUTADORA (Descarga clásica) ---
+        // --- MODO COMPUTADORA (Descarga Directa) ---
         const a = document.createElement('a');
         a.href = dataUrl;
         a.download = fileName;
+        document.body.appendChild(a); // Fix para Firefox a veces
         a.click();
+        document.body.removeChild(a);
         mostrarFeedbackExito(btnDownload);
     }
 
-
+});
     // ===============================================
     // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO)
     // ===============================================
@@ -1165,7 +1167,7 @@ btnDownload.addEventListener('click', async () => {
         btnDownload.disabled = false;
         btnDownload.style.cursor = "pointer";
     }, 2000);
-});
+
 
 // Quick Toggle
 const quickFrameBtn = document.getElementById('quickFrameBtn');
