@@ -1320,44 +1320,42 @@ function updateAspectButtonsVisuals() {
 }
 
 // ==========================================
-// 6. LÓGICA DE PRIVACY POLICY Y DISCLAIMER
+// 6. LÓGICA DE PRIVACY POLICY (Footer)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const privacyBtn = document.getElementById('openPrivacy');
-    const disclaimerBtn = document.getElementById('openDisclaimer'); // <--- Agregamos esto aquí
     const privacyModal = document.getElementById('privacyModal');
     const closePrivacy = document.getElementById('closePrivacy');
 
-    // Verificamos que el modal y el botón de cerrar existan para evitar errores
-    if (privacyModal && closePrivacy) {
-
-        // 1. Abrir con botón Privacy
-        if (privacyBtn) {
-            privacyBtn.addEventListener('click', (e) => {
-                e.preventDefault(); 
-                privacyModal.classList.remove('hidden');
-            });
-        }
-
-        // 2. Abrir con botón Disclaimer (NUEVO)
-        if (disclaimerBtn) {
-            disclaimerBtn.addEventListener('click', (e) => {
-                e.preventDefault(); 
-                // AQUÍ ESTABA EL ERROR: Usamos 'privacyModal', no 'modal'
-                privacyModal.classList.remove('hidden'); 
-            });
-        }
+    if (privacyBtn && privacyModal && closePrivacy) {
+        // Al picar "Privacy Policy", quitamos la clase hidden
+        privacyBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Evita que la página salte hacia arriba
+            privacyModal.classList.remove('hidden');
+        });
         
-        // 3. Cerrar con la X
+        // Al picar la "X", cerramos
         closePrivacy.addEventListener('click', () => {
             privacyModal.classList.add('hidden');
         });
 
-        // 4. Cerrar picando fuera
+        // Al picar fuera de la caja (en el fondo oscuro), cerramos
         privacyModal.addEventListener('click', (e) => {
             if (e.target === privacyModal) {
                 privacyModal.classList.add('hidden');
             }
         });
     }
+// Botón "Disclaimer" abra la misma ventana
+const disclaimerBtn = document.getElementById('openDisclaimer');
+
+if(disclaimerBtn) {
+    disclaimerBtn.addEventListener('click', function(e) {
+        e.preventDefault(); // Evita que salte la página
+        modal.classList.remove('hidden'); // Muestra la ventana
+        modal.style.display = 'flex'; // Asegura que se vea (por si usas display flex)
+    });
+}
+
 });
+
