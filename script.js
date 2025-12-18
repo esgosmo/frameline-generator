@@ -1209,27 +1209,41 @@ window.setOpacity = function(val, btn) {
 }
 
 // ==========================================
-// DESCARGAR PNG 
+// DESCARGAR PNG (CORREGIDO Y ROBUSTO)
 // ==========================================
-btnDownload.addEventListener('click', async () =>   {
+btnDownload.addEventListener('click', async () => {
+    // 1. Obtener valores actuales
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
+    
     let asp = "ratio";
-    if (inputs.aspect) asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
-    const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
-    const a = document.createElement('a');
+    if (inputs.aspect) {
+        // Reemplazar caracteres no permitidos en nombres de archivo
+        asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
+    }
 
-    // Determinamos nombre y tipo
-    let fileName, dataUrl;
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
+    // Verifica si hay una imagen cargada Y si el toggle de "Mostrar Imagen" está activo
+    const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
+
+    // 2. Generar el DataURL (La imagen en código)
+    let fileName, dataUrl, mimeType;
 
     if (isCropMode) {
-        const type = hasPhoto ? 'image/jpeg' : 'image/png';
-        const quality = hasPhoto ? 1.0 : undefined;
+        // --- MODO CROP ---
+        // Si hay foto usamos JPG (menos peso), si no, PNG (transparencia)
+        mimeType = hasPhoto ? 'image/jpeg' : 'image/png';
+        const quality = hasPhoto ? 0.9 : undefined; // Calidad 90% si es JPG
+        
+        // 🔥 AQUÍ ESTABA EL ERROR ANTES: No guardábamos dataUrl
+        dataUrl = canvas.toDataURL(mimeType, quality);
+        
         const ext = hasPhoto ? 'jpg' : 'png';
-        a.href = canvas.toDataURL(type, quality);
-        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
+        fileName = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
+        
     } else if (hasPhoto) {
+        // --- MODO PREVIEW (Foto pero sin recortar canvas) ---
+        // Dibujamos marca de agua temporal solo para la descarga
         ctx.save(); 
         const fontSize = Math.max(10, Math.round(w * 0.012)); 
         const margin = fontSize; 
@@ -1240,52 +1254,75 @@ btnDownload.addEventListener('click', async () =>   {
         ctx.fillText("frameline-generator.com", w - margin, h - margin);
         ctx.restore(); 
 
-        dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        mimeType = 'image/jpeg';
+        dataUrl = canvas.toDataURL(mimeType, 0.9);
         fileName = `Frameline_${w}x${h}_${asp}_preview.jpg`;
 
+        // Redibujamos rápido para quitar la marca de agua de la pantalla del usuario
         setTimeout(() => { if(typeof requestDraw === 'function') requestDraw(); else draw(); }, 0); 
+
     } else {
-        dataUrl = canvas.toDataURL('image/png');
+        // --- MODO SOLO LÍNEAS (TEMPLATE) ---
+        mimeType = 'image/png';
+        dataUrl = canvas.toDataURL(mimeType);
         fileName = `Frameline_${w}x${h}_${asp}.png`;
     }
-    if (typeof gtag === 'function') { gtag('event', 'download_file', { 'event_category': 'Engagement', 'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') }); }
-    a.click();
+
+    // Analytics (Opcional)
+    if (typeof gtag === 'function') { 
+        gtag('event', 'download_file', { 
+            'event_category': 'Engagement', 
+            'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') 
+        }); 
+    }
 
     // ===============================================
-    // 🔥 LÓGICA INTELIGENTE: COMPARTIR O DESCARGAR
+    // 3. INTENTAR COMPARTIR (MÓVIL) O DESCARGAR (PC)
     // ===============================================
     
-    // Convertimos la DataURL a un objeto File real
-    const blob = dataURItoBlob(dataUrl);
-    const file = new File([blob], fileName, { type: blob.type });
-
-    // Detectamos si es un dispositivo móvil
+    // Detectamos si es móvil
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let shareSuccess = false;
 
-    // SOLO compartimos si es Móvil Y el navegador lo soporta.
-    // En Desktop (aunque soporte compartir) preferimos descargar directo.
-    if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+    // Solo intentamos compartir si es móvil y el navegador lo permite
+    if (isMobile && navigator.canShare && navigator.share) {
         try {
-            await navigator.share({
-                files: [file],
-                title: 'Frameline Generator',
-                text: 'Created with frameline-generator.com'
-            });
-            mostrarFeedbackExito(btnDownload);
+            const blob = dataURItoBlob(dataUrl);
+            const file = new File([blob], fileName, { type: mimeType });
+            
+            // Verificamos si el archivo es compartible (algunos navegadores rechazan archivos muy grandes)
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Frameline Generator',
+                    text: 'Created with frameline-generator.com'
+                });
+                shareSuccess = true; // ¡Éxito!
+            }
         } catch (error) {
-            // Si el usuario cancela en el celular, no pasa nada.
-            console.log('Share canceled', error);
+            console.log('Share skipped or canceled:', error);
+            // Si falla compartir (ej. usuario cancela), no hacemos nada más, 
+            // porque el menú ya se abrió.
+            // PERO si el error es técnico, el fallback de abajo asegura la descarga.
+            if (error.name !== 'AbortError') {
+                 shareSuccess = false; 
+            } else {
+                return; // Si el usuario canceló voluntariamente, no forzamos descarga.
+            }
         }
-    } else {
-        // --- MODO COMPUTADORA (Descarga Directa) ---
+    }
+
+    // 4. FALLBACK: DESCARGA CLÁSICA
+    // Se ejecuta si estamos en PC, O si falló el compartir en Móvil
+    if (!shareSuccess) {
         const a = document.createElement('a');
         a.href = dataUrl;
         a.download = fileName;
-        document.body.appendChild(a); // Fix para Firefox a veces
+        document.body.appendChild(a); 
         a.click();
         document.body.removeChild(a);
-        mostrarFeedbackExito(btnDownload);
     }
+
 
     // ===============================================
     // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO) LO DEJÉ AQUÍ COMENTADO POR SI ALGÚN DÍA QUIERO PONERLO OTRA VEZ O MEJORARLO.
