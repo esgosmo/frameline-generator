@@ -357,81 +357,6 @@ canvas {
         /* Quitar sombras exageradas en móvil si molestan */
         box-shadow: 0 0 10px rgba(0,0,0,0.5); 
     }
-
-    /* =========================================
-   ESTILOS DEL FOOTER RESPONSIVO
-   ========================================= */
-
-/* 1. Estilo Base (Computadora - SE QUEDA IGUAL) */
-#legalFooter {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: #111; /* Color sólido */
-    color: #666;
-    padding: 15px 20px;
-    text-align: center;
-    font-size: 11px;
-    border-top: 1px solid #333;
-    z-index: 100;
-}
-
-#legalFooter a {
-    color: #888;
-    text-decoration: underline;
-    margin-left: 5px;
-}
-
-/* 2. Estilo Móvil (Celular - CAMBIO RADICAL) */
-@media (max-width: 768px) {
-    
-    #legalFooter {
-        /* 🔥 EL CAMBIO CLAVE: Deja de flotar */
-        position: relative !important; 
-        bottom: auto !important;
-        
-        /* Aspecto visual: Barra negra al final */
-        background-color: #111 !important;
-        border-top: 1px solid #333 !important;
-        text-align: center !important;
-        padding: 30px 20px 40px 20px !important; /* Buen padding para que respire */
-        margin-top: 40px; /* Separación de los botones de arriba */
-        
-        /* Reactivamos clics y visibilidad */
-        pointer-events: auto !important;
-        width: 100%;
-    }
-
-    /* 🔥 AHORA SÍ MOSTRAMOS EL TEXTO EN MÓVIL */
-    /* Como ya está al final y no estorba, es mejor mostrar el disclaimer legal completo */
-    .hide-on-mobile {
-        display: inline !important; 
-    }
-    
-    /* Quitamos el estilo de "botón flotante" que le habíamos puesto al link */
-    #legalFooter .privacy-link-container {
-        background-color: transparent !important;
-        padding: 0;
-        display: inline;
-    }
-    
-    #legalFooter a {
-        font-size: 11px; /* Tamaño normal */
-    }
-    
-    /* Ajustamos el texto para que no se vea amontonado en celular */
-    #legalFooter span {
-        display: block; /* Pone el texto en líneas separadas para leer mejor */
-        margin-bottom: 8px;
-        line-height: 1.5;
-    }
-    
-    /* Ocultamos la barrita separadora vertical "|" en móvil */
-    #legalFooter span span[style*="color: #444"] {
-        display: none;
-    }
-}
 }
 
 /* =======================================================
@@ -684,35 +609,53 @@ input[type="range"] {
     margin-left: 5px;
 }
 
-/* 2. Estilo Móvil (Celular Vertical) */
+/* 2. Estilo Móvil (Celular - CAMBIO RADICAL) */
 @media (max-width: 768px) {
-    /* Ocultamos el texto largo */
-    .hide-on-mobile {
-        display: none !important;
-    }
-
-    /* Hacemos la barra invisible y que deje pasar los clics */
+    
     #legalFooter {
-        background-color: transparent !important;
-        border-top: none !important;
-        text-align: right !important; /* Botón a la derecha */
-        padding: 5px 10px !important;
-        pointer-events: none; /* MAGIA: Permite picar botones que estén DEBAJO del footer */
+        /* 🔥 EL CAMBIO CLAVE: Deja de flotar */
+        position: relative !important; 
+        bottom: auto !important;
+        
+        /* Aspecto visual: Barra negra al final */
+        background-color: #111 !important;
+        border-top: 1px solid #333 !important;
+        text-align: center !important;
+        padding: 30px 20px 40px 20px !important; /* Buen padding para que respire */
+        margin-top: 40px; /* Separación de los botones de arriba */
+        
+        /* Reactivamos clics y visibilidad */
+        pointer-events: auto !important;
+        width: 100%;
     }
 
-    /* Estilo botón flotante para Privacy */
+    /* 🔥 AHORA SÍ MOSTRAMOS EL TEXTO EN MÓVIL */
+    /* Como ya está al final y no estorba, es mejor mostrar el disclaimer legal completo */
+    .hide-on-mobile {
+        display: inline !important; 
+    }
+    
+    /* Quitamos el estilo de "botón flotante" que le habíamos puesto al link */
     #legalFooter .privacy-link-container {
-        pointer-events: auto; /* Reactivamos el clic SOLO para este botón */
-        background-color: rgba(0, 0, 0, 0.6);
-        padding: 4px 8px;
-        border-radius: 4px;
-        display: inline-block;
+        background-color: transparent !important;
+        padding: 0;
+        display: inline;
     }
     
     #legalFooter a {
-        color: #ccc !important;
-        text-decoration: none !important;
-        font-size: 10px;
+        font-size: 11px; /* Tamaño normal */
+    }
+    
+    /* Ajustamos el texto para que no se vea amontonado en celular */
+    #legalFooter span {
+        display: block; /* Pone el texto en líneas separadas para leer mejor */
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+    
+    /* Ocultamos la barrita separadora vertical "|" en móvil */
+    #legalFooter span span[style*="color: #444"] {
+        display: none;
     }
 }
 
