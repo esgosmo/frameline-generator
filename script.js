@@ -789,6 +789,64 @@ function draw() {
 
     const rawW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
     const rawH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+
+    // --- 🛡️ ZONA DE SEGURIDAD MÓVIL (FRENO DE MANO) ---
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // Límite de seguridad: 
+    // 4K (3840x2160) = 8,294,400 pixeles.
+    // 6K (6144x3160) = 19,415,040 pixeles.
+    // 8K (7680x4320) = 33,177,600 pixeles. (Mortal para móviles)
+    
+    // Ponemos el límite en ~20 Megapixeles (aprox 5K/6K). 
+    // Todo lo que supere esto en celular activará la protección.
+    const PIXEL_LIMIT = 20000000; 
+    const currentPixels = rawW * rawH;
+
+    // Referencia al warning para mostrar mensajes
+    const warningEl = document.getElementById('sizeWarning');
+
+    if (isMobile && currentPixels > PIXEL_LIMIT) {
+        // A. ACTIVAR ALERTA
+        if (warningEl) {
+            warningEl.innerHTML = `
+                ⛔ <strong>Mobile Safety Limit:</strong><br>
+                8K/High-Res rendering is disabled on mobile to prevent crashes.<br>
+                Preview is capped at 4K.
+            `;
+            warningEl.classList.remove('hidden');
+            // Estilo rojo de peligro
+            warningEl.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+            warningEl.style.borderColor = "#ff4444";
+            warningEl.style.color = "#ff8888";
+        }
+
+        // B. REDUCIR LA RESOLUCIÓN DE RENDERIZADO (Solo visualmente)
+        // Mantenemos la proporción (Aspect Ratio) pero bajamos la escala a algo seguro.
+        const safetyScale = Math.sqrt(PIXEL_LIMIT / currentPixels); // Matemática para reducir área propocionalmente
+        
+        // Sobreescribimos rawW y rawH SOLO para el dibujo del canvas actual.
+        // (Los inputs del usuario siguen diciendo "7680", no se los cambiamos)
+        rawW = Math.round(rawW * safetyScale);
+        rawH = Math.round(rawH * safetyScale);
+
+        // Opcional: Console log para ti
+        console.warn(`Mobile crash prevention: Downscaling canvas from inputs to ${rawW}x${rawH}`);
+    } else {
+        // Si todo está bien, ocultamos o reseteamos el warning (si no hay otro warning activo)
+        // Nota: Si ya tenías un warning de "Large File", esto podría ocultarlo, 
+        // pero el warning de render es más urgente.
+        if (warningEl && warningEl.innerText.includes("Mobile Safety")) {
+            warningEl.classList.add('hidden');
+            // Reset de estilos por si acaso
+            warningEl.style.backgroundColor = "";
+            warningEl.style.borderColor = "";
+            warningEl.style.color = "";
+        }
+    }
+    // -----------------------------------------------------------
+
+
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
 
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
