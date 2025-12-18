@@ -585,40 +585,29 @@ input[type="range"] {
 }
 
 /* =========================================
-   ESTILOS DEL FOOTER (HÍBRIDO)
+   ESTILOS DEL FOOTER (LEGAL & PRIVACY)
    ========================================= */
 
-/* 1. MODO ESCRITORIO (PC) - Fijo y elegante abajo */
+/* 1. Estilo Base (Computadora) */
 #legalFooter {
     position: fixed;
     bottom: 0;
     left: 0;
-    width: 300px; /* Ancho de tu barra lateral */
-    background-color: #252525; /* Mismo color que el sidebar para tapar si hay scroll */
-    border-top: 1px solid #333;
-    padding: 15px;
+    width: 100%;
+    background-color: rgba(17, 17, 17, 0.95);
+    color: #666;
+    padding: 10px 20px;
     text-align: center;
     font-size: 11px;
-    z-index: 50;
+    border-top: 1px solid #333;
+    z-index: 100;
 }
 
 #legalFooter a {
     color: #888;
-    text-decoration: none;
-    margin: 0 5px;
-    transition: color 0.2s;
-}
-
-#legalFooter a:hover {
-    color: #ccc;
     text-decoration: underline;
+    margin-left: 5px;
 }
-
-/* Ajuste para que el contenido del sidebar no quede tapado por el footer fijo en PC */
-.sidebar {
-    padding-bottom: 80px; /* Espacio extra al final del scroll */
-}
-
 
 /* 2. MODO CELULAR (MÓVIL) - Estático y scrolleable */
 @media (max-width: 768px) {
