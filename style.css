@@ -609,28 +609,29 @@ input[type="range"] {
     margin-left: 5px;
 }
 
-/* 2. MODO CELULAR (MÓVIL) - Estático y scrolleable */
+/* 2. ESTILO PARA MÓVIL (CELULARES)
+   Aquí cambiamos las reglas: Se vuelve estático y parte del flujo. */
 @media (max-width: 768px) {
     
     #legalFooter {
         /* ROMPEMOS LA POSICIÓN FIJA */
-        position: static !important; /* Ahora es un bloque normal */
-        width: 100%;
+        position: static !important; /* Ya no flota, obedece al scroll */
+        display: block;
+        width: 100%;       /* Ocupa el ancho disponible */
         
-        /* Quitamos estilos de "barra fija" */
-        background-color: transparent;
-        border: none;
-        
-        /* Espaciado para que respire debajo de PayPal */
-        margin-top: 25px;
-        margin-bottom: 50px; /* Espacio final para poder scrollear cómodo */
+        /* Limpieza visual para móvil */
+        background-color: transparent; /* Sin fondo de barra */
+        border: none;                  /* Sin borde superior */
+        margin-top: 20px;              /* Separado del botón de PayPal */
+        margin-bottom: 40px;           /* Espacio extra al final para scroll cómodo */
         padding: 0;
     }
 
-    #legalFooter a {
-        font-size: 12px; /* Un poco más legible en móvil */
+    /* Ajuste de texto para móvil */
+    #legalFooter a, #legalFooter span {
+        font-size: 12px;   /* Un pelín más grande para dedos táctiles */
+        color: #555;       /* Color sutil */
         display: inline-block;
-        padding: 5px; /* Área de toque más grande */
     }
 }
 
