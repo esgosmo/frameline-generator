@@ -609,54 +609,32 @@ input[type="range"] {
     margin-left: 5px;
 }
 
-/* 2. Estilo Móvil (Celular - CAMBIO RADICAL) */
+/* 2. ESTILO PARA MÓVIL (CELULARES)
+   Aquí cambiamos las reglas: Se vuelve estático y parte del flujo. */
 @media (max-width: 768px) {
     
     #legalFooter {
-        /* 🔥 EL CAMBIO CLAVE: Deja de flotar */
-        position: relative !important; 
-        bottom: auto !important;
+        /* ROMPEMOS LA POSICIÓN FIJA */
+        position: static !important; /* Ya no flota, obedece al scroll */
+        display: block;
+        width: 100%;       /* Ocupa el ancho disponible */
         
-        /* Aspecto visual: Barra negra al final */
-        background-color: #111 !important;
-        border-top: 1px solid #333 !important;
-        text-align: center !important;
-        padding: 30px 20px 40px 20px !important; /* Buen padding para que respire */
-        margin-top: 40px; /* Separación de los botones de arriba */
-        
-        /* Reactivamos clics y visibilidad */
-        pointer-events: auto !important;
-        width: 100%;
+        /* Limpieza visual para móvil */
+        background-color: transparent; /* Sin fondo de barra */
+        border: none;                  /* Sin borde superior */
+        margin-top: 20px;              /* Separado del botón de PayPal */
+        margin-bottom: 40px;           /* Espacio extra al final para scroll cómodo */
+        padding: 0;
     }
 
-    /* 🔥 AHORA SÍ MOSTRAMOS EL TEXTO EN MÓVIL */
-    /* Como ya está al final y no estorba, es mejor mostrar el disclaimer legal completo */
-    .hide-on-mobile {
-        display: inline !important; 
-    }
-    
-    /* Quitamos el estilo de "botón flotante" que le habíamos puesto al link */
-    #legalFooter .privacy-link-container {
-        background-color: transparent !important;
-        padding: 0;
-        display: inline;
-    }
-    
-    #legalFooter a {
-        font-size: 11px; /* Tamaño normal */
-    }
-    
-    /* Ajustamos el texto para que no se vea amontonado en celular */
-    #legalFooter span {
-        display: block; /* Pone el texto en líneas separadas para leer mejor */
-        margin-bottom: 8px;
-        line-height: 1.5;
-    }
-    
-    /* Ocultamos la barrita separadora vertical "|" en móvil */
-    #legalFooter span span[style*="color: #444"] {
-        display: none;
+    /* Ajuste de texto para móvil */
+    #legalFooter a, #legalFooter span {
+        font-size: 12px;   /* Un pelín más grande para dedos táctiles */
+        color: #555;       /* Color sutil */
+        display: inline-block;
     }
 }
+
+
 
 
