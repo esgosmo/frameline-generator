@@ -1063,7 +1063,9 @@ window.setOpacity = function(val, btn) {
     flashInput(inputs.opacity); highlightButton(btn); requestDraw();
 }
 
-// Descarga
+// ==========================================
+// DESCARGAR PNG 
+// ==========================================
 btnDownload.addEventListener('click', async () =>   {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
@@ -1146,10 +1148,12 @@ btnDownload.addEventListener('click', async () =>   {
     
     // 1. Guardamos el texto original para no perderlo
     // (Usamos un atributo data para seguridad, o una variable local)
+    /*
     const originalText = btnDownload.innerText; 
     const originalColor = btnDownload.style.backgroundColor;
 
     // 2. Cambiamos el estado a "ÉXITO"
+    
     btnDownload.innerText = "Downloaded!";
     btnDownload.style.backgroundColor = "#28a745"; // Verde Éxito
     btnDownload.style.borderColor = "#28a745";
@@ -1169,6 +1173,7 @@ btnDownload.addEventListener('click', async () =>   {
         btnDownload.disabled = false;
         btnDownload.style.cursor = "pointer";
     }, 2000);
+    */
 });
 
 // Quick Toggle
