@@ -782,7 +782,7 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// 4. FUNCIÓN DRAW (SOPORTE URSA CINE 17K)
+// 4. FUNCIÓN DRAW (CORREGIDA: LÍMITES 8K DCI + MENSAJES DINÁMICOS)
 // ==========================================
 function draw() {
     if (!inputs.w || !inputs.h) return;
@@ -799,23 +799,23 @@ function draw() {
         logicH = Math.round(logicW / targetAspect);
     }
 
-    // 3. SEGURIDAD MÓVIL (CONFIGURADA PARA 17K)
+    // 3. SEGURIDAD MÓVIL (AJUSTADA)
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    // Detectamos si vamos a renderizar una foto
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
 
-    // --- DEFINICIÓN DE LÍMITES EXTREMOS ---
-    // URSA CINE 17K es 17520 x 8040 = ~141,000,000 pixeles.
+    // --- DEFINICIÓN DE LÍMITES ---
+    // 8K UHD = ~33.1 MP
+    // 8K DCI = ~35.4 MP
+    // URSA 17K = ~141 MP
     
-    // CASO A (CON FOTO): Límite 35 MP (Aprox 8K). 
-    // Renderizar texturas de imagen a 17K en móvil es imposible por hardware. 
-    // Se limita a 8K para que puedan ver la preview sin crash.
+    // CASO A (CON FOTO): Subimos el límite a 36 MP.
+    // Esto permite que el 8K DCI pase LIMPIO sin advertencias.
+    // Todo lo que sea mayor a 8K DCI (ej: 12K, 17K) activará la protección.
     
-    // CASO B (SOLO LÍNEAS): Límite 145 MP.
-    // Esto permite generar el PNG transparente de la URSA 17K sin problemas.
+    // CASO B (SOLO LÍNEAS): Límite 150 MP.
+    // Esto soporta la URSA 17K completa.
     
-    const PIXEL_LIMIT = hasPhoto ? 35000000 : 145000000; 
+    const PIXEL_LIMIT = hasPhoto ? 36000000 : 150000000; 
     
     const currentPixels = logicW * logicH;
     
@@ -827,12 +827,19 @@ function draw() {
 
     if (isMobile && currentPixels > PIXEL_LIMIT) {
         
-        // Mensaje personalizado
+        // --- MENSAJERÍA INTELIGENTE ---
+        // Ya no dice "17K" siempre. Detecta qué tan grande es la locura.
         let msg = "";
+        const isExtreme = logicW > 12000; // Si el ancho es mayor a 12K, es "Extremo"
+
         if (hasPhoto) {
-            msg = "⛔ <strong>Mobile Safety:</strong> 17K with image is too heavy for mobiles. Preview capped at 8K.";
+            if (isExtreme) {
+                msg = "⛔ <strong>Mobile Safety:</strong> Extreme Res (12K/17K) with image capped at 8K.";
+            } else {
+                msg = "⛔ <strong>Mobile Safety:</strong> Resolution >8K DCI capped for stability.";
+            }
         } else {
-            msg = "⛔ <strong>Mobile Safety:</strong> Resolution exceeds 17K limit. Capped for stability.";
+            msg = "⛔ <strong>Mobile Safety:</strong> Canvas exceeds device limit. Capped.";
         }
 
         if (warningEl) {
@@ -927,9 +934,6 @@ function draw() {
     if (isNaN(rawThick)) rawThick = 2;
     if (rawThick > 10) { rawThick = 10; if(inputs.thickness) inputs.thickness.value = 10; }
     
-    // Ajuste proporcional para que la línea se vea en 17K
-    // En resoluciones monstruosas, el grosor 2px casi no se ve.
-    // Opcional: Podrías multiplicar esto por un factor si finalW > 10000
     const mainThickness = Math.max(0, rawThick);
     const mainOffset = mainThickness / 2;
     
@@ -1033,10 +1037,6 @@ function draw() {
             finalText = rawText.replace(/\s*\(.*?\)\s*$/, '').trim();
             if (!finalText) finalText = `${finalW} x ${finalH}`;
         } else {
-            // AQUÍ MOSTRAMOS LA VERDAD: "Custom: 17520 x 8040"
-            // Aunque internamente lo hayamos bajado, al usuario le mostramos
-            // lo que él pidió (logicW/H) para que no se confunda, 
-            // ya que al descargarlo sin foto SÍ saldrá en 17K.
             finalText = `Custom: ${logicW} x ${logicH}`; 
         }
         const padding = Math.max(10, finalW * 0.02);
