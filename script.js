@@ -782,45 +782,61 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// 4. FUNCIÓN DRAW (CORREGIDA: Crop + Safety)
+// 4. FUNCIÓN DRAW (SOPORTE URSA CINE 17K)
 // ==========================================
 function draw() {
-    // Si no hay inputs, no hacemos nada
     if (!inputs.w || !inputs.h) return;
 
-    // 1. Obtener dimensiones ORIGINALES que quiere el usuario
+    // 1. Obtener dimensiones ORIGINALES
     let logicW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
     let logicH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
 
-    // 2. APLICAR LÓGICA DE "CROP TO ASPECT RATIO" (Antes de la seguridad)
-    // Si el usuario quiere recortar el canvas, recalculamos la altura lógica aquí.
+    // 2. LÓGICA DE "CROP"
     const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
 
     if (isCropMode) {
-        // En modo Crop, la altura depende exclusivamente del ancho y el aspecto
         logicH = Math.round(logicW / targetAspect);
     }
 
-    // 3. APLICAR SEGURIDAD MÓVIL (FRENO DE MANO)
-    // Ahora que sabemos el tamaño REAL (logicW x logicH), vemos si es peligroso.
+    // 3. SEGURIDAD MÓVIL (CONFIGURADA PARA 17K)
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const PIXEL_LIMIT = 20000000; // ~20 Megapixeles (Límite seguro para evitar crash)
+    
+    // Detectamos si vamos a renderizar una foto
+    const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
+
+    // --- DEFINICIÓN DE LÍMITES EXTREMOS ---
+    // URSA CINE 17K es 17520 x 8040 = ~141,000,000 pixeles.
+    
+    // CASO A (CON FOTO): Límite 35 MP (Aprox 8K). 
+    // Renderizar texturas de imagen a 17K en móvil es imposible por hardware. 
+    // Se limita a 8K para que puedan ver la preview sin crash.
+    
+    // CASO B (SOLO LÍNEAS): Límite 145 MP.
+    // Esto permite generar el PNG transparente de la URSA 17K sin problemas.
+    
+    const PIXEL_LIMIT = hasPhoto ? 35000000 : 145000000; 
+    
     const currentPixels = logicW * logicH;
     
-    // Variables finales que usará el canvas
+    // Variables finales
     let finalW = logicW;
     let finalH = logicH;
 
     const warningEl = document.getElementById('sizeWarning');
 
     if (isMobile && currentPixels > PIXEL_LIMIT) {
-        // ¡PELIGRO! Reducimos proporcionalmente
+        
+        // Mensaje personalizado
+        let msg = "";
+        if (hasPhoto) {
+            msg = "⛔ <strong>Mobile Safety:</strong> 17K with image is too heavy for mobiles. Preview capped at 8K.";
+        } else {
+            msg = "⛔ <strong>Mobile Safety:</strong> Resolution exceeds 17K limit. Capped for stability.";
+        }
+
         if (warningEl) {
-            warningEl.innerHTML = `
-                ⛔ <strong>Mobile Safety:</strong> High-Res preview capped at ~5K to prevent crashes.<br>
-                Aspect ratio and cropping are preserved.
-            `;
+            warningEl.innerHTML = msg;
             warningEl.classList.remove('hidden');
             warningEl.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
             warningEl.style.borderColor = "#ff4444";
@@ -832,7 +848,7 @@ function draw() {
         finalH = Math.round(logicH * safetyScale);
 
     } else {
-        // Si todo está bien, limpiamos el warning (si es de seguridad móvil)
+        // Limpiamos warning SOLO si era el de seguridad móvil
         if (warningEl && warningEl.innerText.includes("Mobile Safety")) {
             warningEl.classList.add('hidden');
         }
@@ -842,113 +858,78 @@ function draw() {
     if (canvas.width !== finalW) canvas.width = finalW;
     if (canvas.height !== finalH) canvas.height = finalH;
     
-    // Limpiamos
     ctx.clearRect(0, 0, finalW, finalH);
-    
-    // Aspecto real de la pantalla (canvas)
     const screenAspect = finalW / finalH;
 
-
-    // 5. DIBUJAR IMAGEN DE FONDO
-    const mostrarImagen = !showImageToggle || showImageToggle.checked;
-    
-    if (userImage && mostrarImagen) {
+    // 5. DIBUJAR IMAGEN
+    if (hasPhoto) {
         try {
             const isFill = inputs.scaleFill && inputs.scaleFill.checked;
-            // Si es Crop Mode, forzamos que la imagen llene el espacio (Fill)
             const shouldUseFillLogic = isFill || isCropMode;
             
             const ratioW = finalW / userImage.width;
             const ratioH = finalH / userImage.height;
             
             let renderRatio;
-            if (shouldUseFillLogic) {
-                // Scale Full: Usamos el ratio mayor para cubrir todo
-                renderRatio = Math.max(ratioW, ratioH);
-            } else {
-                // Scale Fit: Usamos el ratio menor para que quepa
-                renderRatio = Math.min(ratioW, ratioH);
-            }
+            if (shouldUseFillLogic) renderRatio = Math.max(ratioW, ratioH);
+            else renderRatio = Math.min(ratioW, ratioH);
 
             const newImgW = userImage.width * renderRatio;
             const newImgH = userImage.height * renderRatio;
             
-            // Centrar la imagen
             const posX = (finalW - newImgW) / 2;
             const posY = (finalH - newImgH) / 2;
             
             ctx.drawImage(userImage, posX, posY, newImgW, newImgH);
             
-        } catch (e) { console.error("Error drawing image:", e); }
+        } catch (e) { console.error("Draw image error:", e); }
     }
 
-
-    // 6. CÁLCULO DE FRAMELINES (ZONA VISIBLE)
-    let visibleW, visibleH;
-    let offsetX, offsetY;
-
-    // Obtener valores de escala/zoom del usuario
+    // 6. CÁLCULO ZONA VISIBLE (Frameline)
+    let visibleW, visibleH, offsetX, offsetY;
+    
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
     const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
-    // Opacidad del matte
     let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
     if (isNaN(opacityVal)) opacityVal = 100;
     const opacity = opacityVal / 100;
     if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
-
     if (isCropMode) {
-        // En Crop Mode, el canvas YA tiene el tamaño del aspecto.
-        // La zona visible es TODO el canvas.
-        visibleW = finalW;
-        visibleH = finalH;
-        offsetX = 0;
-        offsetY = 0;
+        visibleW = finalW; visibleH = finalH; offsetX = 0; offsetY = 0;
     } else {
-        // En modo normal (Overlay), calculamos las barras negras
         if (targetAspect > screenAspect) { 
-            // Letterbox (Barras arriba/abajo)
-            visibleW = finalW; 
-            visibleH = finalW / targetAspect; 
+            visibleW = finalW; visibleH = finalW / targetAspect; 
         } else { 
-            // Pillarbox (Barras lados)
-            visibleH = finalH; 
-            visibleW = finalH * targetAspect; 
+            visibleH = finalH; visibleW = finalH * targetAspect; 
         }
-        
-        // Aplicar el zoom del usuario (Scale Frameline)
         visibleW = Math.round(visibleW * scaleFactor);
         visibleH = Math.round(visibleH * scaleFactor);
         
-        // Centrar el recuadro
-        const barHeight = Math.floor((finalH - visibleH) / 2);
-        const barWidth = Math.floor((finalW - visibleW) / 2);
-        offsetX = barWidth; 
-        offsetY = barHeight;
+        offsetX = Math.floor((finalW - visibleW) / 2); 
+        offsetY = Math.floor((finalH - visibleH) / 2);
     }
 
-    // 7. DIBUJAR MATTE (OSCURIDAD)
+    // 7. MATTE
     if (!isCropMode) {
         ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-        // Arriba
         ctx.fillRect(0, 0, finalW, offsetY); 
-        // Abajo
         ctx.fillRect(0, finalH - offsetY, finalW, offsetY); 
-        // Izquierda
         ctx.fillRect(0, offsetY, offsetX, visibleH); 
-        // Derecha
         ctx.fillRect(finalW - offsetX, offsetY, offsetX, visibleH); 
     }
 
-    // 8. DIBUJAR LÍNEAS PRINCIPALES
+    // 8. LÍNEAS PRINCIPALES
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
-    // Límite de grosor
     if (rawThick > 10) { rawThick = 10; if(inputs.thickness) inputs.thickness.value = 10; }
     
+    // Ajuste proporcional para que la línea se vea en 17K
+    // En resoluciones monstruosas, el grosor 2px casi no se ve.
+    // Opcional: Podrías multiplicar esto por un factor si finalW > 10000
     const mainThickness = Math.max(0, rawThick);
     const mainOffset = mainThickness / 2;
     
@@ -957,80 +938,60 @@ function draw() {
         ctx.lineWidth = mainThickness; 
         ctx.setLineDash([]); 
         ctx.beginPath();
-        // Ajuste fino para que la línea quede nítida
         ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
         ctx.stroke();
     }
 
-    // 9. DIBUJAR LÍNEA SECUNDARIA
+    // 9. LÍNEA SECUNDARIA
     let secX = 0, secY = 0, secW = 0, secH = 0;
     let drawSec = false;
-    const secThickness = mainThickness; 
 
-    if (inputs.secOn && inputs.secOn.checked && secThickness > 0) {
+    if (inputs.secOn && inputs.secOn.checked && mainThickness > 0) {
         drawSec = true;
         const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
         const fitInside = inputs.secFit && inputs.secFit.checked;
 
         if (fitInside) {
-            // Ajustar dentro del frameline principal
             const mainFrameAspect = visibleW / visibleH;
             if (secAspect > mainFrameAspect) { secW = visibleW; secH = visibleW / secAspect; } 
             else { secH = visibleH; secW = visibleH * secAspect; }
         } else {
-            // Ajustar al canvas total
             if (secAspect > screenAspect) { secW = finalW; secH = finalW / secAspect; } 
             else { secH = finalH; secW = finalH * secAspect; }
-            
-            // Si estamos en modo normal, aplicamos el zoom del usuario también
             if (!isCropMode) {
                 secW = secW * scaleFactor;
-                secH = secW / secAspect; // Mantener ratio
+                secH = secW / secAspect;
             }
         }
-        
-        secW = Math.round(secW); 
-        secH = Math.round(secH);
-        secX = (finalW - secW) / 2; 
-        secY = (finalH - secH) / 2;
+        secW = Math.round(secW); secH = Math.round(secH);
+        secX = (finalW - secW) / 2; secY = (finalH - secH) / 2;
 
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
-        ctx.lineWidth = secThickness; 
-        ctx.setLineDash([10, 5]); 
-        ctx.beginPath();
-        ctx.rect(secX, secY, secW, secH);
-        ctx.stroke();
+        ctx.lineWidth = mainThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
+        ctx.rect(secX, secY, secW, secH); ctx.stroke();
     }
 
-    // 10. SAFE AREAS (Action / Title)
-    let safeThickness = 0;
-    if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
-
+    // 10. SAFE AREAS
+    let safeThickness = (mainThickness > 0) ? Math.max(1, Math.round(mainThickness / 2)) : 0;
     if (safeThickness > 0) {
         const drawSafe = (pct, dashed) => {
             const p = pct / 100;
-            const sW = visibleW * p; 
-            const sH = visibleH * p;
-            const sX = (finalW - sW) / 2; 
-            const sY = (finalH - sH) / 2;
-            
+            const sW = visibleW * p; const sH = visibleH * p;
+            const sX = (finalW - sW) / 2; const sY = (finalH - sH) / 2;
             ctx.lineWidth = safeThickness;
             if(inputs.color) ctx.strokeStyle = inputs.color.value;
-            ctx.setLineDash(dashed ? [5, 5] : []); 
-            ctx.beginPath();
-            ctx.rect(sX, sY, sW, sH); 
-            ctx.stroke();
+            ctx.setLineDash(dashed ? [5, 5] : []); ctx.beginPath();
+            ctx.rect(sX, sY, sW, sH); ctx.stroke();
         };
         if (inputs.safeActionOn && inputs.safeActionOn.checked) drawSafe(parseFloat(inputs.safeActionVal.value)||93, false);
         if (inputs.safeTitleOn && inputs.safeTitleOn.checked) drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
     }
 
-    // 11. ETIQUETAS DE TEXTO (Aspecto / Resolución)
+    // 11. ETIQUETAS
     const showAspect = inputs.showLabels && inputs.showLabels.checked;
     const showRes = inputs.showResLabels && inputs.showResLabels.checked;
 
     if (showAspect || showRes) {
-        // Calculamos tamaño de fuente relativo al canvas SEGURO
         const fontSize = Math.max(12, Math.round(finalW / 80)); 
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         ctx.textBaseline = "top";
@@ -1042,50 +1003,42 @@ function draw() {
             const txtAsp = obtenerRatioTexto(Math.round(visibleW), Math.round(visibleH));
             const txtRes = `${Math.round(visibleW)} x ${Math.round(visibleH)}`;
             
-            if (showAspect) { 
-                ctx.textAlign = "left"; 
-                ctx.fillText(txtAsp, offsetX + padding, offsetY + padding); 
-            }
+            if (showAspect) { ctx.textAlign = "left"; ctx.fillText(txtAsp, offsetX + padding, offsetY + padding); }
             if (showRes) {
                 ctx.textAlign = showAspect ? "right" : "left"; 
                 const posX = showAspect ? (offsetX + visibleW - padding) : (offsetX + padding);
                 const posY = showAspect ? (offsetY + padding) : (offsetY + padding + lineHeight); 
-                // Ajuste rápido si se enciman en pantallas verticales
                 ctx.fillText(txtRes, posX, offsetY + padding);
             }
        }
-       
-       // Etiquetas de línea secundaria...
        if (drawSec && inputs.secAspect) {
             ctx.fillStyle = inputs.secColor.value;
             const txtSecAsp = obtenerRatioTexto(Math.round(secW), Math.round(secH));
-            // ... lógica de texto secundario (simplificada para no alargar) ...
             ctx.textAlign = "left";
             if (showAspect) ctx.fillText(txtSecAsp, secX + padding, secY + padding);
        }
     }
 
-    // 12. CANVAS LABEL (Nombre de resolución abajo a la izquierda)
+    // 12. CANVAS LABEL
     if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
         const fontSize = Math.max(12, Math.round(finalW / 80)); 
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         ctx.fillStyle = inputs.color ? inputs.color.value : '#00FF00';
-        ctx.textAlign = "left"; 
-        ctx.textBaseline = "bottom";
+        ctx.textAlign = "left"; ctx.textBaseline = "bottom";
 
         let finalText = "";
         const isCustom = !menuResoluciones || menuResoluciones.value === 'custom';
-
         if (!isCustom && menuResoluciones.selectedIndex >= 0) {
             const rawText = menuResoluciones.options[menuResoluciones.selectedIndex].text;
             finalText = rawText.replace(/\s*\(.*?\)\s*$/, '').trim();
             if (!finalText) finalText = `${finalW} x ${finalH}`;
         } else {
-            // Nota: Aquí mostramos la resolución FINAL (segura)
-            // Podrías mostrar logicW x logicH si prefieres mentirle al usuario sobre la res de preview
-            finalText = `Custom: ${finalW} x ${finalH}`; 
+            // AQUÍ MOSTRAMOS LA VERDAD: "Custom: 17520 x 8040"
+            // Aunque internamente lo hayamos bajado, al usuario le mostramos
+            // lo que él pidió (logicW/H) para que no se confunda, 
+            // ya que al descargarlo sin foto SÍ saldrá en 17K.
+            finalText = `Custom: ${logicW} x ${logicH}`; 
         }
-
         const padding = Math.max(10, finalW * 0.02);
         ctx.lineWidth = fontSize * 0.12; 
         ctx.strokeStyle = "rgba(0, 0, 0, 0.8)"; 
