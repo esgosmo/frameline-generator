@@ -624,6 +624,18 @@ function activarBotonHD() {
     });
 }
 
+// Convierte DataURL a Archivo (Blob) para poder compartirlo
+function dataURItoBlob(dataURI) {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], {type: mimeString});
+}
+
 // ==========================================
 // 4. FUNCIÓN DRAW (PRINCIPAL)
 // ==========================================
@@ -1052,7 +1064,7 @@ window.setOpacity = function(val, btn) {
 }
 
 // Descarga
-btnDownload.addEventListener('click', () => {
+btnDownload.addEventListener('click', async () => {
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
     let asp = "ratio";
@@ -1060,6 +1072,9 @@ btnDownload.addEventListener('click', () => {
     const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
     const a = document.createElement('a');
+
+    // Determinamos nombre y tipo
+    let fileName, dataUrl;
 
     if (isCropMode) {
         const type = hasPhoto ? 'image/jpeg' : 'image/png';
@@ -1077,15 +1092,50 @@ btnDownload.addEventListener('click', () => {
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)"; ctx.shadowBlur = 4;
         ctx.fillText("frameline-generator.com", w - margin, h - margin);
         ctx.restore(); 
-        a.href = canvas.toDataURL('image/jpeg', 0.9);
-        a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
+
+        dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        fileName = `Frameline_${w}x${h}_${asp}_preview.jpg`;
+
         setTimeout(() => { if(typeof requestDraw === 'function') requestDraw(); else draw(); }, 0); 
     } else {
-        a.href = canvas.toDataURL('image/png');
-        a.download = `Frameline_${w}x${h}_${asp}.png`;
+        dataUrl = canvas.toDataURL('image/png');
+        fileName = `Frameline_${w}x${h}_${asp}.png`;
     }
     if (typeof gtag === 'function') { gtag('event', 'download_file', { 'event_category': 'Engagement', 'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') }); }
     a.click();
+
+    // ===============================================
+    // 🔥 LÓGICA INTELIGENTE: COMPARTIR O DESCARGAR
+    // ===============================================
+    
+    // Convertimos la DataURL a un objeto File real
+    const blob = dataURItoBlob(dataUrl);
+    const file = new File([blob], fileName, { type: blob.type });
+
+    // Verificamos si el navegador soporta compartir archivos (Celulares)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({
+                files: [file],
+                title: 'Frameline Generator',
+                text: 'Created with frameline-generator.com'
+            });
+            // Si el usuario compartió con éxito, mostramos feedback
+            mostrarFeedbackExito(btnDownload);
+        } catch (error) {
+            // Si el usuario canceló o hubo error, no hacemos nada (o podrías hacer fallback a descarga)
+            console.log('Share canceled or failed', error);
+        }
+    } else {
+        // --- FALLBACK PARA COMPUTADORA (Descarga clásica) ---
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = fileName;
+        a.click();
+        mostrarFeedbackExito(btnDownload);
+    }
+
+
     // ===============================================
     // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO)
     // ===============================================
