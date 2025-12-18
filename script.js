@@ -1112,7 +1112,10 @@ btnDownload.addEventListener('click', async () =>   {
     const blob = dataURItoBlob(dataUrl);
     const file = new File([blob], fileName, { type: blob.type });
 
-// SOLO compartimos si es Móvil Y el navegador lo soporta.
+    // Detectamos si es un dispositivo móvil
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // SOLO compartimos si es Móvil Y el navegador lo soporta.
     // En Desktop (aunque soporte compartir) preferimos descargar directo.
     if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
