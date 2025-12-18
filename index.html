@@ -60,6 +60,19 @@
       gtag('config', 'G-1PN3PY15DP');
     </script>
     
+<script>
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Crash Detection:", message, "Line:", lineno);
+        // Si usas Google Analytics, esto registra el crash
+        if (typeof gtag === 'function') {
+            gtag('event', 'exception', {
+                'description': message + ' @ ' + lineno,
+                'fatal': true
+            });
+        }
+    };
+</script>
+
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.min.js"></script>
 </head>

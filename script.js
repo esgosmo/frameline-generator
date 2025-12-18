@@ -402,109 +402,241 @@ if (dropZone && fileInput) {
     });
 }
 
+/// ==========================================
+// CARGADOR DE IMÁGENES OPTIMIZADO (ANTI-CRASH)
+// ==========================================
+
 // Variables Imagen
 const imageLoader = document.getElementById('imageLoader');
 const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 const sizeWarning = document.getElementById('sizeWarning'); 
 
+// Variable global para limpiar memoria
+let currentObjectUrl = null;
+
 if (imageLoader) {
-    let currentObjectUrl = null;
-    imageLoader.addEventListener('change', (e) => {
+    imageLoader.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // 1. Limpieza inicial
         if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
 
+        // 2. Validaciones de nombre
         let fileName = file.name;
         if (fileName.toLowerCase().includes('temp') || fileName.length > 50) {
              const ext = fileName.split('.').pop();
              fileName = ext ? `Image_Loaded.${ext}` : "Image_Loaded";
         }
 
-        const isValid = file.type.startsWith('image/') || fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
-        if (!isValid) { alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF."); imageLoader.value = ""; return; }
+        const isTiff = fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
+        const isValid = file.type.startsWith('image/') || isTiff;
 
+        if (!isValid) { 
+            alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF."); 
+            imageLoader.value = ""; 
+            return; 
+        }
+
+        // 3. UI: Feedback inmediato "Procesando..."
         const zone = document.querySelector('.upload-zone');
         const textSpan = zone ? zone.querySelector('.upload-text') : null;
         if (zone && textSpan) {
-            textSpan.innerText = "Image Loaded"; 
+            textSpan.innerText = "⏳ Processing..."; 
             zone.classList.add('has-file'); 
-            zone.style.borderColor = "#007bff"; 
+            zone.style.borderColor = "#ffcc00"; // Amarillo
         }
 
-        const limitBytes = 20 * 1024 * 1024;
+        // 4. Advertencia inicial de peso (MB)
+        const limitBytes = 20 * 1024 * 1024; // 20MB
         let isHeavyFile = (file.size > limitBytes);
         if(sizeWarning) {
             sizeWarning.classList.add('hidden');
-            if (isHeavyFile) { sizeWarning.innerText = "⚠️ Large file size (>20MB)"; sizeWarning.classList.remove('hidden'); }
+            if (isHeavyFile) { 
+                sizeWarning.innerText = "⚠️ Large file size (>20MB). Processing..."; 
+                sizeWarning.classList.remove('hidden'); 
+            }
         }
 
-        const finalizarCarga = (blobUrl) => {
-            currentObjectUrl = blobUrl;
-            const img = new Image();
-            img.onload = () => {
-                userImage = img;
-                const limitRes = 6000; 
-                if (img.width > limitRes || img.height > limitRes) {
-                    if (sizeWarning) {
-                        const msg = isHeavyFile ? "⚠️ Large file & large resolution (>6K) Performance may lag." : "⚠️ Large resolution (>6K). Performance may lag.";
-                        sizeWarning.innerText = msg;
-                        sizeWarning.classList.remove('hidden');
-                    }
-                }
-                if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
-                if(inputs.w) inputs.w.value = img.width;
-                if(inputs.h) inputs.h.value = img.height;
-                if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
-                // --- CORRECCIÓN ---
-                // Si estamos dentro de una carpeta (ej. Arri), volvemos al menú principal
-                // porque dentro de Arri NO existe la opción 'custom'.
-                if (typeof currentViewMode !== 'undefined' && currentViewMode !== 'root') {
-                    currentViewMode = 'root';
-                    renderResolutionMenu();
-                }
-                
-                // Borramos cualquier nombre "fantasma" que tuviéramos guardado
-                if (typeof savedLabelName !== 'undefined') savedLabelName = "";
-
-                // Ahora sí, seleccionamos Custom (que ya existe porque volvimos a root)
-                if(menuResoluciones) menuResoluciones.value = 'custom';
-                // ------------------
-                const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
-                clearContainer('resBtnContainer');
-                flashInput(inputs.w); flashInput(inputs.h);
-                if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
-                if(typeof requestDraw === 'function') requestDraw(); else draw();
-            };
-            img.onerror = () => { alert("Error loading image."); if(window.removeImage) window.removeImage(); };
-            img.src = blobUrl;
-        };
-
-        const isTiff = fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
-        if (isTiff) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    if (typeof UTIF === 'undefined') throw new Error("UTIF missing");
-                    const buffer = event.target.result;
-                    const ifds = UTIF.decode(buffer);
-                    UTIF.decodeImage(buffer, ifds[0]);
-                    const rgba = UTIF.toRGBA8(ifds[0]); 
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = ifds[0].width; tempCanvas.height = ifds[0].height;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    const imageData = tempCtx.createImageData(ifds[0].width, ifds[0].height);
-                    imageData.data.set(rgba);
-                    tempCtx.putImageData(imageData, 0, 0);
-                    tempCanvas.toBlob((blob) => { const tiffUrl = URL.createObjectURL(blob); finalizarCarga(tiffUrl); }, 'image/png');
-                } catch (err) { console.error(err); alert("Error processing TIFF."); if(window.removeImage) window.removeImage(); }
-            };
-            reader.readAsArrayBuffer(file);
-        } else {
-            const objectUrl = URL.createObjectURL(file);
-            finalizarCarga(objectUrl);
-        }
+        // 5. Ejecución diferida (setTimeout) para que la UI se actualice antes de congelarse
+        setTimeout(() => {
+            if (isTiff) {
+                procesarTiff(file, (url) => finalizarCarga(url, isHeavyFile, zone, textSpan));
+            } else {
+                const objectUrl = URL.createObjectURL(file);
+                finalizarCarga(objectUrl, isHeavyFile, zone, textSpan);
+            }
+        }, 50);
     });
+}
+
+// --- LÓGICA DE OPTIMIZACIÓN Y REDIMENSIONADO ---
+function finalizarCarga(blobUrl, isHeavyFile, zone, textSpan) {
+    if (currentObjectUrl && currentObjectUrl !== blobUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+    }
+    currentObjectUrl = blobUrl;
+
+    const tempImg = new Image();
+    
+    tempImg.onload = () => {
+        // DETECCIÓN DE DISPOSITIVO
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        // LÍMITES SEGÚN DISPOSITIVO
+        // Móvil: 4096px (Seguro para evitar crashes de RAM)
+        // Desktop: 12000px (Permisivo para 8K/12K)
+        const MAX_SAFE_SIZE = isMobile ? 4096 : 12000; 
+        
+        let wasResized = false; 
+
+        // Si la imagen excede el límite seguro del dispositivo...
+        if (tempImg.width > MAX_SAFE_SIZE || tempImg.height > MAX_SAFE_SIZE) {
+            
+            // Calculamos nueva escala
+            const scale = Math.min(MAX_SAFE_SIZE / tempImg.width, MAX_SAFE_SIZE / tempImg.height);
+            const newW = Math.round(tempImg.width * scale);
+            const newH = Math.round(tempImg.height * scale);
+
+            console.log(`⚠️ Optimization: Resizing from ${tempImg.width}x${tempImg.height} to ${newW}x${newH}`);
+
+            // Redimensionamos en un canvas temporal
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = newW;
+            offCanvas.height = newH;
+            const ctx = offCanvas.getContext('2d');
+            ctx.drawImage(tempImg, 0, 0, newW, newH);
+
+            // Convertimos a imagen optimizada (JPG 90%)
+            const optimizedUrl = offCanvas.toDataURL('image/jpeg', 0.90);
+            const optimizedImg = new Image();
+            optimizedImg.src = optimizedUrl;
+            
+            optimizedImg.onload = () => {
+                aplicarImagenAlSistema(optimizedImg, isHeavyFile, true, zone, textSpan);
+                // Limpieza
+                tempImg.src = ""; 
+                offCanvas.width = 1; 
+            };
+            wasResized = true;
+
+        } else {
+            // Si es segura, usamos la original
+            aplicarImagenAlSistema(tempImg, isHeavyFile, false, zone, textSpan);
+        }
+    };
+
+    tempImg.onerror = () => { 
+        alert("Error loading image."); 
+        resetUploadZone(zone, textSpan);
+        if(window.removeImage) window.removeImage();
+    };
+
+    tempImg.src = blobUrl;
+}
+
+// --- APLICAR IMAGEN Y CONFIGURAR UI ---
+function aplicarImagenAlSistema(img, isHeavyFile, wasResized, zone, textSpan) {
+    userImage = img; // Asignación Global
+
+    // Feedback Visual Final
+    if (zone && textSpan) {
+        textSpan.innerText = "Image Loaded"; 
+        zone.style.borderColor = "#007bff"; // Azul
+    }
+
+    // Manejo de Advertencias (Smart Warning)
+    if (sizeWarning) {
+        sizeWarning.classList.add('hidden'); 
+        
+        if (wasResized) {
+            // Caso: Celular optimizado
+            sizeWarning.innerText = "ℹ️ Image optimized for performance.";
+            sizeWarning.classList.remove('hidden');
+        } 
+        else if (img.width > 6000 || img.height > 6000) {
+            // Caso: Desktop con imagen gigante (sin recortar)
+            const msg = isHeavyFile 
+                ? "⚠️ Large file & resolution (>6K). Performance may lag." 
+                : "⚠️ Large resolution (>6K). Performance may lag.";
+            sizeWarning.innerText = msg;
+            sizeWarning.classList.remove('hidden');
+        }
+        else if (isHeavyFile) {
+            // Caso: Archivo pesado pero resolución normal
+            sizeWarning.innerText = "⚠️ Large file size (>20MB).";
+            sizeWarning.classList.remove('hidden');
+        }
+    }
+
+    // Mostrar panel
+    if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
+
+    // Configurar Inputs
+    if(inputs.w) inputs.w.value = img.width;
+    if(inputs.h) inputs.h.value = img.height;
+    if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
+
+    // Lógica de Menús y Carpetas (Resetear si estamos dentro de Arri/Red/etc)
+    if (typeof currentViewMode !== 'undefined' && currentViewMode !== 'root') {
+        currentViewMode = 'root';
+        if (typeof renderResolutionMenu === 'function') renderResolutionMenu();
+    }
+    
+    // Limpiar selección anterior
+    if (typeof savedLabelName !== 'undefined') savedLabelName = "";
+    if(menuResoluciones) menuResoluciones.value = 'custom';
+
+    const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
+    clearContainer('resBtnContainer');
+    
+    // Efectos y Dibujado
+    flashInput(inputs.w); 
+    flashInput(inputs.h);
+    if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
+    
+    if(typeof requestDraw === 'function') requestDraw(); 
+    else draw();
+}
+
+// --- HELPER PARA TIFF ---
+function procesarTiff(file, callback) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            if (typeof UTIF === 'undefined') throw new Error("UTIF missing");
+            const buffer = event.target.result;
+            const ifds = UTIF.decode(buffer);
+            UTIF.decodeImage(buffer, ifds[0]);
+            const rgba = UTIF.toRGBA8(ifds[0]); 
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = ifds[0].width; tempCanvas.height = ifds[0].height;
+            const tempCtx = tempCanvas.getContext('2d');
+            const imageData = tempCtx.createImageData(ifds[0].width, ifds[0].height);
+            imageData.data.set(rgba);
+            tempCtx.putImageData(imageData, 0, 0);
+            tempCanvas.toBlob((blob) => { 
+                const tiffUrl = URL.createObjectURL(blob); 
+                callback(tiffUrl); 
+            }, 'image/png');
+        } catch (err) { 
+            console.error(err); 
+            alert("Error processing TIFF."); 
+            if(window.removeImage) window.removeImage(); 
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// --- RESET UI HELPER ---
+function resetUploadZone(zone, textSpan) {
+    if (zone && textSpan) {
+        textSpan.innerText = "Choose or drop image";
+        zone.classList.remove('has-file');
+        zone.style.borderColor = "";
+    }
+    if (imageLoader) imageLoader.value = "";
 }
 
 window.removeImage = function() {
@@ -514,10 +646,7 @@ window.removeImage = function() {
     if (sizeWarning) { sizeWarning.classList.add('hidden'); sizeWarning.innerText = ""; }
     const zone = document.querySelector('.upload-zone');
     const textSpan = zone ? zone.querySelector('.upload-text') : null;
-    if (zone && textSpan) {
-        textSpan.innerText = "Choose or drop image"; 
-        zone.classList.remove('has-file'); zone.style.borderColor = ""; 
-    }
+    resetUploadZone(zone, textSpan);
     draw();
 }
 
