@@ -716,14 +716,4 @@ input[type="range"] {
     }
 }
 
-.footer-spacer {
-    height: 100px; /* En Desktop necesitamos espacio por el footer fijo */
-    width: 100%;
-    clear: both;
-}
 
-@media (max-width: 768px) {
-    .footer-spacer {
-        height: 20px; /* En Celular necesitamos muy poco espacio */
-    }
-}
