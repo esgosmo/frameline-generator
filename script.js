@@ -471,7 +471,7 @@ if (imageLoader) {
     });
 }
 
-// --- LÓGICA DE OPTIMIZACIÓN Y REDIMENSIONADO ---
+// --- LÓGICA DE OPTIMIZACIÓN Y REDIMENSIONADO CORREGIDA ---
 function finalizarCarga(blobUrl, isHeavyFile, zone, textSpan) {
     if (currentObjectUrl && currentObjectUrl !== blobUrl) {
         URL.revokeObjectURL(currentObjectUrl);
@@ -483,52 +483,68 @@ function finalizarCarga(blobUrl, isHeavyFile, zone, textSpan) {
     tempImg.onload = () => {
         // DETECCIÓN DE DISPOSITIVO
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-        // LÍMITES SEGÚN DISPOSITIVO
-        // Móvil: 4096px (Seguro para evitar crashes de RAM)
-        // Desktop: 12000px (Permisivo para 8K/12K)
         const MAX_SAFE_SIZE = isMobile ? 4096 : 12000; 
         
         let wasResized = false; 
 
-        // Si la imagen excede el límite seguro del dispositivo...
         if (tempImg.width > MAX_SAFE_SIZE || tempImg.height > MAX_SAFE_SIZE) {
             
-            // Calculamos nueva escala
-            const scale = Math.min(MAX_SAFE_SIZE / tempImg.width, MAX_SAFE_SIZE / tempImg.height);
-            const newW = Math.round(tempImg.width * scale);
-            const newH = Math.round(tempImg.height * scale);
+            try {
+                // Cálculo de escala
+                const scale = Math.min(MAX_SAFE_SIZE / tempImg.width, MAX_SAFE_SIZE / tempImg.height);
+                const newW = Math.round(tempImg.width * scale);
+                const newH = Math.round(tempImg.height * scale);
 
-            console.log(`⚠️ Optimization: Resizing from ${tempImg.width}x${tempImg.height} to ${newW}x${newH}`);
+                console.log(`⚠️ Optimization: Resizing from ${tempImg.width}x${tempImg.height} to ${newW}x${newH}`);
 
-            // Redimensionamos en un canvas temporal
-            const offCanvas = document.createElement('canvas');
-            offCanvas.width = newW;
-            offCanvas.height = newH;
-            const ctx = offCanvas.getContext('2d');
-            ctx.drawImage(tempImg, 0, 0, newW, newH);
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = newW;
+                offCanvas.height = newH;
+                const ctx = offCanvas.getContext('2d');
+                ctx.drawImage(tempImg, 0, 0, newW, newH);
 
-            // Convertimos a imagen optimizada (JPG 90%)
-            const optimizedUrl = offCanvas.toDataURL('image/jpeg', 0.90);
-            const optimizedImg = new Image();
-            optimizedImg.src = optimizedUrl;
-            
-            optimizedImg.onload = () => {
-                aplicarImagenAlSistema(optimizedImg, isHeavyFile, true, zone, textSpan);
-                // Limpieza
-                tempImg.src = ""; 
-                offCanvas.width = 1; 
-            };
-            wasResized = true;
+                // Conversión a JPG
+                const optimizedUrl = offCanvas.toDataURL('image/jpeg', 0.90);
+                const optimizedImg = new Image();
+                
+                optimizedImg.onload = () => {
+                    // Aplicamos la imagen nueva
+                    aplicarImagenAlSistema(optimizedImg, isHeavyFile, true, zone, textSpan);
+                    
+                    // 🔥 CORRECCIÓN CRÍTICA AQUÍ 🔥
+                    // Desactivamos los listeners de la imagen original antes de borrarla
+                    // para evitar que salte el alert("Error loading") por error.
+                    tempImg.onload = null;
+                    tempImg.onerror = null;
+                    
+                    // Ahora sí limpiamos memoria seguro
+                    tempImg.src = ""; 
+                    offCanvas.width = 1; 
+                };
+
+                optimizedImg.onerror = () => {
+                    // Si falla la optimizada, usamos la original como fallback
+                    console.warn("Optimization failed, using original.");
+                    aplicarImagenAlSistema(tempImg, isHeavyFile, false, zone, textSpan);
+                };
+
+                optimizedImg.src = optimizedUrl;
+                wasResized = true;
+
+            } catch (err) {
+                // Si algo falla en el proceso de canvas (memoria llena), usamos la original
+                console.error("Resize error:", err);
+                aplicarImagenAlSistema(tempImg, isHeavyFile, false, zone, textSpan);
+            }
 
         } else {
-            // Si es segura, usamos la original
+            // Imagen segura, usamos la original
             aplicarImagenAlSistema(tempImg, isHeavyFile, false, zone, textSpan);
         }
     };
 
     tempImg.onerror = () => { 
-        alert("Error loading image."); 
+        alert("Error loading image data."); 
         resetUploadZone(zone, textSpan);
         if(window.removeImage) window.removeImage();
     };
