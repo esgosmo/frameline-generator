@@ -387,7 +387,7 @@ if (menuResoluciones) {
 
 
 // ==========================================
-// DRAG & DROP & IMAGE LOADER (Sin Cambios)
+// DRAG & DROP & IMAGE LOADER 
 // ==========================================
 const dropZone = document.querySelector('.upload-zone');
 const fileInput = document.getElementById('imageLoader');
@@ -1143,7 +1143,7 @@ btnDownload.addEventListener('click', async () =>   {
     }
 
     // ===============================================
-    // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO)
+    // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO) LO DEJÉ AQUÍ COMENTADO POR SI ALGÚN DÍA QUIERO PONERLO OTRA VEZ O MEJORARLO.
     // ===============================================
     
     // 1. Guardamos el texto original para no perderlo
