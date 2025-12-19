@@ -483,7 +483,7 @@ function finalizarCarga(blobUrl, isHeavyFile, zone, textSpan) {
     tempImg.onload = () => {
         // DETECCIÓN DE DISPOSITIVO
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const MAX_SAFE_SIZE = isMobile ? 4096 : 12000; 
+        const MAX_SAFE_SIZE = isMobile ? 6500 : 12000;
         
         let wasResized = false; 
 
@@ -740,9 +740,16 @@ function clearActiveButtons(containerSelector) {
 
 function autoAdjustThickness(width) {
     if (!inputs.thickness) return;
-    const w = parseInt(width);
+    
+    // CORRECCIÓN: Si 'width' viene vacío (undefined), leemos el input.
+    let val = width !== undefined ? width : (inputs.w ? inputs.w.value : 0);
+    
+    const w = parseInt(val) || 0;
+    
+    // Lógica original
     const idealThickness = (w > 3500) ? 6 : 2; 
     const currentVal = parseInt(inputs.thickness.value) || 0;
+    
     if (currentVal === 0) lastThickness = idealThickness;
     else { inputs.thickness.value = idealThickness; lastThickness = idealThickness; }
 }
@@ -1117,7 +1124,7 @@ if (inputs.secAspect) {
 }
 
 // Sincronización Manual W/H
-if (inputs.w) { inputs.w.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; clearActiveButtons('.presets'); }); }
+if (inputs.w) { inputs.w.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; clearActiveButtons('.presets'); autoAdjustThickness(); }); }
 if (inputs.h) { inputs.h.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; clearActiveButtons('.presets'); }); }
 if (inputs.aspect) {
     inputs.aspect.addEventListener('input', () => {
