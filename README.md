@@ -5,7 +5,7 @@
 ![Project Status](https://img.shields.io/badge/Status-Active-success)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Tests](https://img.shields.io/badge/Tests-11%20Passing-brightgreen)
-`![Screenshot of the App](./screenshot.png)`
+
 
 ## 📖 Overview
 
@@ -14,6 +14,7 @@
 All image processing happens locally in the browser—no data is ever uploaded to a server.
 
 **🔗 Live Demo:** [https://frameline-generator.com](https://frameline-generator.com)
+**🔗 [Screenshot]:** (https://frameline-generator.com/screenshot.png)
 
 ## ✨ Key Features
 
