@@ -341,7 +341,7 @@ canvas {
         padding: 30px; /* Un poco de aire */
     }
 
-    /* 🔥 AQUÍ ESTABA EL FALTANTE: REGLAS PARA EL CANVAS EN MÓVIL */
+    /* REGLAS PARA EL CANVAS EN MÓVIL */
     .preview-area canvas {
         /* Regla de oro: Nunca ser más alto que el contenedor (35vh) */
         max-height: 100% !important; 
@@ -585,58 +585,85 @@ input[type="range"] {
 }
 
 /* =========================================
-   ESTILOS DEL FOOTER (LEGAL & PRIVACY)
+   ESTILOS DEL FOOTER (HÍBRIDO: FIXED DESKTOP / STATIC MOBILE)
    ========================================= */
 
-/* 1. Estilo Base (Computadora) */
+/* --- VERSIÓN DESKTOP (PC) --- */
+/* Forzamos al elemento a salir del sidebar y ocupar toda la pantalla abajo */
 #legalFooter {
-    position: fixed;
+    position: fixed;       /* Flotante siempre visible */
     bottom: 0;
     left: 0;
-    width: 100%;
-    background-color: rgba(17, 17, 17, 0.95);
-    color: #666;
-    padding: 10px 20px;
-    text-align: center;
-    font-size: 11px;
+    width: 100%;           /* Ocupa TODO el ancho, no solo la izquierda */
+    
+    background-color: rgba(17, 17, 17, 0.95); /* Fondo oscuro elegante */
     border-top: 1px solid #333;
-    z-index: 100;
+    padding: 12px 0;
+    text-align: center;    /* Centrado en medio de la pantalla */
+    z-index: 999;          /* Siempre encima de todo */
+    
+    font-size: 11px;
+    color: #666;
 }
 
 #legalFooter a {
     color: #888;
-    text-decoration: underline;
-    margin-left: 5px;
+    text-decoration: none;
+    margin: 0 8px;
+    transition: color 0.2s;
 }
 
-/* 2. Estilo Móvil (Celular Vertical) */
+#legalFooter a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* Opcional: Ocultar texto largo si quieres */
+.desktop-text { display: inline; }
+
+
+/* --- VERSIÓN MÓVIL (CELULAR) --- */
+/* Aquí cambiamos radicalmente el comportamiento */
 @media (max-width: 768px) {
-    /* Ocultamos el texto largo */
-    .hide-on-mobile {
-        display: none !important;
-    }
-
-    /* Hacemos la barra invisible y que deje pasar los clics */
+    
     #legalFooter {
-        background-color: transparent !important;
-        border-top: none !important;
-        text-align: right !important; /* Botón a la derecha */
-        padding: 5px 10px !important;
-        pointer-events: none; /* MAGIA: Permite picar botones que estén DEBAJO del footer */
+        /* 1. DEJAMOS DE FLOTAR */
+        position: static !important; /* Se mete en el flujo normal */
+        
+        /* 2. LIMPIEZA VISUAL PARA QUE ENCAJE EN EL SIDEBAR */
+        width: 100%;
+        background-color: transparent; /* Sin fondo negro */
+        border: none;                  /* Sin borde superior */
+        text-align: center;
+        
+        /* 3. UBICACIÓN */
+        margin-top: 25px;    /* Espacio debajo de PayPal */
+        margin-bottom: 50px; /* Espacio final para scroll */
+        padding: 0;
+        z-index: auto;
     }
 
-    /* Estilo botón flotante para Privacy */
-    #legalFooter .privacy-link-container {
-        pointer-events: auto; /* Reactivamos el clic SOLO para este botón */
-        background-color: rgba(0, 0, 0, 0.6);
-        padding: 4px 8px;
-        border-radius: 4px;
-        display: inline-block;
+    /* Ocultamos el texto largo del disclaimer en móvil para ahorrar espacio */
+    .desktop-text {
+        display: none; 
     }
     
+    /* Hacemos los enlaces un poco más grandes para el dedo */
     #legalFooter a {
-        color: #ccc !important;
-        text-decoration: none !important;
+        font-size: 12px;
+        color: #555;
+        display: inline-block;
+        margin: 0 5px;
+        padding: 5px;
+    }
+    
+    #legalFooter .copyright {
+        display: block; /* Copyright en nueva línea */
+        margin-top: 5px;
         font-size: 10px;
+        color: #444;
     }
 }
+
+
+

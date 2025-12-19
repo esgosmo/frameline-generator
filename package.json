@@ -1,0 +1,22 @@
+{
+  "name": "frameline-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+ "scripts": {
+    "test": "cypress run",
+    "test:visual": "cypress open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/esgosmo/frameline-generator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/esgosmo/frameline-generator/issues"
+  },
+  "homepage": "https://github.com/esgosmo/frameline-generator#readme"
+}

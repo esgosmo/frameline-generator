@@ -60,6 +60,19 @@
       gtag('config', 'G-1PN3PY15DP');
     </script>
     
+<script>
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Crash Detection:", message, "Line:", lineno);
+        // Si usas Google Analytics, esto registra el crash
+        if (typeof gtag === 'function') {
+            gtag('event', 'exception', {
+                'description': message + ' @ ' + lineno,
+                'fatal': true
+            });
+        }
+    };
+</script>
+
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.min.js"></script>
 </head>
@@ -284,9 +297,6 @@
             
  </div>
 
-
-
-        </div>
                 
 <div class="input-group" style="border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 1px;margin-top: 18px;">
     <label class="input-label">Preview Image</label>
@@ -299,10 +309,7 @@
     </label>
 </div>
 
-
-<div id="imageOptionsPanel" class="hidden">
-
-     <div id="sizeWarning" class="hidden" style="
+ <div id="sizeWarning" class="hidden" style="
     background: rgba(255, 200, 0, 0.1); 
     border: 1px solid #ffcc00; 
     color: #ffcc00; 
@@ -314,6 +321,10 @@
     align-items: center;
 ">
 </div>
+
+<div id="imageOptionsPanel" class="hidden">
+
+    
 
 <style>
 /* Ocultar el radio nativo */
@@ -470,9 +481,19 @@
        <!-- <div class="ad-placeholder">Google Ads Space</div> -->
 
        <div style="height: 30px; width: 100%; clear: both;"></div>
-            </div>
+       
+<div id="legalFooter">
+    <span class="desktop-text">Not affiliated with ARRI, Sony, RED or others. Trademarks belong to their owners. &nbsp;|&nbsp; </span>
+    
+    <a href="#" id="openDisclaimer">Disclaimer</a> 
+    | 
+    <a href="#" id="openPrivacy">Privacy Policy</a>
+    
+    <span class="copyright"> &copy; 2025 Frameline Generator Tool</span>
+</div>
 
-
+</div>
+</div>
 
         </aside>
 
@@ -485,21 +506,6 @@
 
     <script src="script.js"></script>
 
-<footer id="legalFooter">
-    <div style="max-width: 1200px; margin: 0 auto;">
-        
-        <span class="hide-on-mobile">
-            <strong>Disclaimer:</strong> Not affiliated with ARRI, Sony, RED or others. Trademarks belong to their owners.
-            <span style="color: #444; margin: 0 10px;">|</span>
-            &copy; 2025 Frameline Generator. 
-        </span>
-
-        <span class="privacy-link-container">
-            <a href="#" id="openPrivacy">Privacy Policy</a>
-        </span>
-        
-    </div>
-</footer>
 
 <div id="privacyModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
     <div style="background: #222; padding: 25px; max-width: 500px; width: 90%; color: #ddd; border: 1px solid #444; border-radius: 8px; position: relative; margin: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto;">

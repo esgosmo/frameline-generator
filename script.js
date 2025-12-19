@@ -387,7 +387,7 @@ if (menuResoluciones) {
 
 
 // ==========================================
-// DRAG & DROP & IMAGE LOADER (Sin Cambios)
+// DRAG & DROP & IMAGE LOADER 
 // ==========================================
 const dropZone = document.querySelector('.upload-zone');
 const fileInput = document.getElementById('imageLoader');
@@ -402,109 +402,257 @@ if (dropZone && fileInput) {
     });
 }
 
+/// ==========================================
+// CARGADOR DE IMÁGENES OPTIMIZADO (ANTI-CRASH)
+// ==========================================
+
 // Variables Imagen
 const imageLoader = document.getElementById('imageLoader');
 const imageOptionsPanel = document.getElementById('imageOptionsPanel');
 const showImageToggle = document.getElementById('showImageToggle');
 const sizeWarning = document.getElementById('sizeWarning'); 
 
+// Variable global para limpiar memoria
+let currentObjectUrl = null;
+
 if (imageLoader) {
-    let currentObjectUrl = null;
-    imageLoader.addEventListener('change', (e) => {
+    imageLoader.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // 1. Limpieza inicial
         if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
 
+        // 2. Validaciones de nombre
         let fileName = file.name;
         if (fileName.toLowerCase().includes('temp') || fileName.length > 50) {
              const ext = fileName.split('.').pop();
              fileName = ext ? `Image_Loaded.${ext}` : "Image_Loaded";
         }
 
-        const isValid = file.type.startsWith('image/') || fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
-        if (!isValid) { alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF."); imageLoader.value = ""; return; }
+        const isTiff = fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
+        const isValid = file.type.startsWith('image/') || isTiff;
 
+        if (!isValid) { 
+            alert("⚠️ Format not supported.\nPlease use JPG, PNG or TIFF."); 
+            imageLoader.value = ""; 
+            return; 
+        }
+
+        // 3. UI: Feedback inmediato "Procesando..."
         const zone = document.querySelector('.upload-zone');
         const textSpan = zone ? zone.querySelector('.upload-text') : null;
         if (zone && textSpan) {
-            textSpan.innerText = "Image Loaded"; 
+            textSpan.innerText = "⏳ Processing..."; 
             zone.classList.add('has-file'); 
-            zone.style.borderColor = "#007bff"; 
+            zone.style.borderColor = "#ffcc00"; // Amarillo
         }
 
-        const limitBytes = 20 * 1024 * 1024;
+        // 4. Advertencia inicial de peso (MB)
+        const limitBytes = 20 * 1024 * 1024; // 20MB
         let isHeavyFile = (file.size > limitBytes);
         if(sizeWarning) {
             sizeWarning.classList.add('hidden');
-            if (isHeavyFile) { sizeWarning.innerText = "⚠️ Large file size (>20MB)"; sizeWarning.classList.remove('hidden'); }
+            if (isHeavyFile) { 
+                sizeWarning.innerText = "⚠️ Large file size (>20MB). Processing..."; 
+                sizeWarning.classList.remove('hidden'); 
+            }
         }
 
-        const finalizarCarga = (blobUrl) => {
-            currentObjectUrl = blobUrl;
-            const img = new Image();
-            img.onload = () => {
-                userImage = img;
-                const limitRes = 6000; 
-                if (img.width > limitRes || img.height > limitRes) {
-                    if (sizeWarning) {
-                        const msg = isHeavyFile ? "⚠️ Large file & large resolution (>6K) Performance may lag." : "⚠️ Large resolution (>6K). Performance may lag.";
-                        sizeWarning.innerText = msg;
-                        sizeWarning.classList.remove('hidden');
-                    }
-                }
-                if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
-                if(inputs.w) inputs.w.value = img.width;
-                if(inputs.h) inputs.h.value = img.height;
-                if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
-                // --- CORRECCIÓN ---
-                // Si estamos dentro de una carpeta (ej. Arri), volvemos al menú principal
-                // porque dentro de Arri NO existe la opción 'custom'.
-                if (typeof currentViewMode !== 'undefined' && currentViewMode !== 'root') {
-                    currentViewMode = 'root';
-                    renderResolutionMenu();
-                }
-                
-                // Borramos cualquier nombre "fantasma" que tuviéramos guardado
-                if (typeof savedLabelName !== 'undefined') savedLabelName = "";
-
-                // Ahora sí, seleccionamos Custom (que ya existe porque volvimos a root)
-                if(menuResoluciones) menuResoluciones.value = 'custom';
-                // ------------------
-                const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
-                clearContainer('resBtnContainer');
-                flashInput(inputs.w); flashInput(inputs.h);
-                if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
-                if(typeof requestDraw === 'function') requestDraw(); else draw();
-            };
-            img.onerror = () => { alert("Error loading image."); if(window.removeImage) window.removeImage(); };
-            img.src = blobUrl;
-        };
-
-        const isTiff = fileName.toLowerCase().endsWith('.tiff') || fileName.toLowerCase().endsWith('.tif');
-        if (isTiff) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    if (typeof UTIF === 'undefined') throw new Error("UTIF missing");
-                    const buffer = event.target.result;
-                    const ifds = UTIF.decode(buffer);
-                    UTIF.decodeImage(buffer, ifds[0]);
-                    const rgba = UTIF.toRGBA8(ifds[0]); 
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = ifds[0].width; tempCanvas.height = ifds[0].height;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    const imageData = tempCtx.createImageData(ifds[0].width, ifds[0].height);
-                    imageData.data.set(rgba);
-                    tempCtx.putImageData(imageData, 0, 0);
-                    tempCanvas.toBlob((blob) => { const tiffUrl = URL.createObjectURL(blob); finalizarCarga(tiffUrl); }, 'image/png');
-                } catch (err) { console.error(err); alert("Error processing TIFF."); if(window.removeImage) window.removeImage(); }
-            };
-            reader.readAsArrayBuffer(file);
-        } else {
-            const objectUrl = URL.createObjectURL(file);
-            finalizarCarga(objectUrl);
-        }
+        // 5. Ejecución diferida (setTimeout) para que la UI se actualice antes de congelarse
+        setTimeout(() => {
+            if (isTiff) {
+                procesarTiff(file, (url) => finalizarCarga(url, isHeavyFile, zone, textSpan));
+            } else {
+                const objectUrl = URL.createObjectURL(file);
+                finalizarCarga(objectUrl, isHeavyFile, zone, textSpan);
+            }
+        }, 50);
     });
+}
+
+// --- LÓGICA DE OPTIMIZACIÓN Y REDIMENSIONADO CORREGIDA ---
+function finalizarCarga(blobUrl, isHeavyFile, zone, textSpan) {
+    if (currentObjectUrl && currentObjectUrl !== blobUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+    }
+    currentObjectUrl = blobUrl;
+
+    const tempImg = new Image();
+    
+    tempImg.onload = () => {
+        // DETECCIÓN DE DISPOSITIVO
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const MAX_SAFE_SIZE = isMobile ? 6500 : 12000;
+        
+        let wasResized = false; 
+
+        if (tempImg.width > MAX_SAFE_SIZE || tempImg.height > MAX_SAFE_SIZE) {
+            
+            try {
+                // Cálculo de escala
+                const scale = Math.min(MAX_SAFE_SIZE / tempImg.width, MAX_SAFE_SIZE / tempImg.height);
+                const newW = Math.round(tempImg.width * scale);
+                const newH = Math.round(tempImg.height * scale);
+
+                console.log(`⚠️ Optimization: Resizing from ${tempImg.width}x${tempImg.height} to ${newW}x${newH}`);
+
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = newW;
+                offCanvas.height = newH;
+                const ctx = offCanvas.getContext('2d');
+                ctx.drawImage(tempImg, 0, 0, newW, newH);
+
+                // Conversión a JPG
+                const optimizedUrl = offCanvas.toDataURL('image/jpeg', 0.90);
+                const optimizedImg = new Image();
+                
+                optimizedImg.onload = () => {
+                    // Aplicamos la imagen nueva
+                    aplicarImagenAlSistema(optimizedImg, isHeavyFile, true, zone, textSpan);
+                    
+                    // 🔥 CORRECCIÓN CRÍTICA AQUÍ 🔥
+                    // Desactivamos los listeners de la imagen original antes de borrarla
+                    // para evitar que salte el alert("Error loading") por error.
+                    tempImg.onload = null;
+                    tempImg.onerror = null;
+                    
+                    // Ahora sí limpiamos memoria seguro
+                    tempImg.src = ""; 
+                    offCanvas.width = 1; 
+                };
+
+                optimizedImg.onerror = () => {
+                    // Si falla la optimizada, usamos la original como fallback
+                    console.warn("Optimization failed, using original.");
+                    aplicarImagenAlSistema(tempImg, isHeavyFile, false, zone, textSpan);
+                };
+
+                optimizedImg.src = optimizedUrl;
+                wasResized = true;
+
+            } catch (err) {
+                // Si algo falla en el proceso de canvas (memoria llena), usamos la original
+                console.error("Resize error:", err);
+                aplicarImagenAlSistema(tempImg, isHeavyFile, false, zone, textSpan);
+            }
+
+        } else {
+            // Imagen segura, usamos la original
+            aplicarImagenAlSistema(tempImg, isHeavyFile, false, zone, textSpan);
+        }
+    };
+
+    tempImg.onerror = () => { 
+        alert("Error loading image data."); 
+        resetUploadZone(zone, textSpan);
+        if(window.removeImage) window.removeImage();
+    };
+
+    tempImg.src = blobUrl;
+}
+
+// --- APLICAR IMAGEN Y CONFIGURAR UI ---
+function aplicarImagenAlSistema(img, isHeavyFile, wasResized, zone, textSpan) {
+    userImage = img; // Asignación Global
+
+    // Feedback Visual Final
+    if (zone && textSpan) {
+        textSpan.innerText = "Image Loaded"; 
+        zone.style.borderColor = "#007bff"; // Azul
+    }
+
+    // Manejo de Advertencias (Smart Warning)
+    if (sizeWarning) {
+        sizeWarning.classList.add('hidden'); 
+        
+        if (wasResized) {
+            // Caso: Celular optimizado
+            sizeWarning.innerText = "ℹ️ Image optimized for performance.";
+            sizeWarning.classList.remove('hidden');
+        } 
+        else if (img.width > 6000 || img.height > 6000) {
+            // Caso: Desktop con imagen gigante (sin recortar)
+            const msg = isHeavyFile 
+                ? "⚠️ Large file & resolution (>6K). Performance may lag." 
+                : "⚠️ Large resolution (>6K). Performance may lag.";
+            sizeWarning.innerText = msg;
+            sizeWarning.classList.remove('hidden');
+        }
+        else if (isHeavyFile) {
+            // Caso: Archivo pesado pero resolución normal
+            sizeWarning.innerText = "⚠️ Large file size (>20MB).";
+            sizeWarning.classList.remove('hidden');
+        }
+    }
+
+    // Mostrar panel
+    if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
+
+    // Configurar Inputs
+    if(inputs.w) inputs.w.value = img.width;
+    if(inputs.h) inputs.h.value = img.height;
+    if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
+
+    // Lógica de Menús y Carpetas (Resetear si estamos dentro de Arri/Red/etc)
+    if (typeof currentViewMode !== 'undefined' && currentViewMode !== 'root') {
+        currentViewMode = 'root';
+        if (typeof renderResolutionMenu === 'function') renderResolutionMenu();
+    }
+    
+    // Limpiar selección anterior
+    if (typeof savedLabelName !== 'undefined') savedLabelName = "";
+    if(menuResoluciones) menuResoluciones.value = 'custom';
+
+    const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
+    clearContainer('resBtnContainer');
+    
+    // Efectos y Dibujado
+    flashInput(inputs.w); 
+    flashInput(inputs.h);
+    if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
+    
+    if(typeof requestDraw === 'function') requestDraw(); 
+    else draw();
+}
+
+// --- HELPER PARA TIFF ---
+function procesarTiff(file, callback) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            if (typeof UTIF === 'undefined') throw new Error("UTIF missing");
+            const buffer = event.target.result;
+            const ifds = UTIF.decode(buffer);
+            UTIF.decodeImage(buffer, ifds[0]);
+            const rgba = UTIF.toRGBA8(ifds[0]); 
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = ifds[0].width; tempCanvas.height = ifds[0].height;
+            const tempCtx = tempCanvas.getContext('2d');
+            const imageData = tempCtx.createImageData(ifds[0].width, ifds[0].height);
+            imageData.data.set(rgba);
+            tempCtx.putImageData(imageData, 0, 0);
+            tempCanvas.toBlob((blob) => { 
+                const tiffUrl = URL.createObjectURL(blob); 
+                callback(tiffUrl); 
+            }, 'image/png');
+        } catch (err) { 
+            console.error(err); 
+            alert("Error processing TIFF."); 
+            if(window.removeImage) window.removeImage(); 
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// --- RESET UI HELPER ---
+function resetUploadZone(zone, textSpan) {
+    if (zone && textSpan) {
+        textSpan.innerText = "Choose or drop image";
+        zone.classList.remove('has-file');
+        zone.style.borderColor = "";
+    }
+    if (imageLoader) imageLoader.value = "";
 }
 
 window.removeImage = function() {
@@ -514,10 +662,7 @@ window.removeImage = function() {
     if (sizeWarning) { sizeWarning.classList.add('hidden'); sizeWarning.innerText = ""; }
     const zone = document.querySelector('.upload-zone');
     const textSpan = zone ? zone.querySelector('.upload-text') : null;
-    if (zone && textSpan) {
-        textSpan.innerText = "Choose or drop image"; 
-        zone.classList.remove('has-file'); zone.style.borderColor = ""; 
-    }
+    resetUploadZone(zone, textSpan);
     draw();
 }
 
@@ -595,9 +740,16 @@ function clearActiveButtons(containerSelector) {
 
 function autoAdjustThickness(width) {
     if (!inputs.thickness) return;
-    const w = parseInt(width);
+    
+    // CORRECCIÓN: Si 'width' viene vacío (undefined), leemos el input.
+    let val = width !== undefined ? width : (inputs.w ? inputs.w.value : 0);
+    
+    const w = parseInt(val) || 0;
+    
+    // Lógica original
     const idealThickness = (w > 3500) ? 6 : 2; 
     const currentVal = parseInt(inputs.thickness.value) || 0;
+    
     if (currentVal === 0) lastThickness = idealThickness;
     else { inputs.thickness.value = idealThickness; lastThickness = idealThickness; }
 }
@@ -624,16 +776,132 @@ function activarBotonHD() {
     });
 }
 
+// Convierte DataURL a Archivo (Blob) para poder compartirlo
+function dataURItoBlob(dataURI) {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], {type: mimeString});
+}
+
 // ==========================================
-// 4. FUNCIÓN DRAW (PRINCIPAL)
+// 4. FUNCIÓN DRAW (CORREGIDA: LÍMITES 8K DCI + MENSAJES DINÁMICOS)
 // ==========================================
 function draw() {
     if (!inputs.w || !inputs.h) return;
 
-    const rawW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
-    const rawH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+    // 1. Obtener dimensiones ORIGINALES
+    let logicW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
+    let logicH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+
+    // 2. LÓGICA DE "CROP"
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
 
+    if (isCropMode) {
+        logicH = Math.round(logicW / targetAspect);
+    }
+
+    // 3. SEGURIDAD MÓVIL (AJUSTADA)
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
+
+    // --- DEFINICIÓN DE LÍMITES ---
+    // 8K UHD = ~33.1 MP
+    // 8K DCI = ~35.4 MP
+    // URSA 17K = ~141 MP
+    
+    // CASO A (CON FOTO): Subimos el límite a 36 MP.
+    // Esto permite que el 8K DCI pase LIMPIO sin advertencias.
+    // Todo lo que sea mayor a 8K DCI (ej: 12K, 17K) activará la protección.
+    
+    // CASO B (SOLO LÍNEAS): Límite 150 MP.
+    // Esto soporta la URSA 17K completa.
+    
+    const PIXEL_LIMIT = hasPhoto ? 36000000 : 150000000; 
+    
+    const currentPixels = logicW * logicH;
+    
+    // Variables finales
+    let finalW = logicW;
+    let finalH = logicH;
+
+    const warningEl = document.getElementById('sizeWarning');
+
+    if (isMobile && currentPixels > PIXEL_LIMIT) {
+        
+        // --- MENSAJERÍA INTELIGENTE ---
+        // Ya no dice "17K" siempre. Detecta qué tan grande es la locura.
+        let msg = "";
+        const isExtreme = logicW > 12000; // Si el ancho es mayor a 12K, es "Extremo"
+
+        if (hasPhoto) {
+            if (isExtreme) {
+                msg = "⛔ <strong>Mobile Safety:</strong> Extreme Res (12K/17K) with image capped at 8K.";
+            } else {
+                msg = "⛔ <strong>Mobile Safety:</strong> Resolution >8K DCI capped for stability.";
+            }
+        } else {
+            msg = "⛔ <strong>Mobile Safety:</strong> Canvas exceeds device limit. Capped.";
+        }
+
+        if (warningEl) {
+            warningEl.innerHTML = msg;
+            warningEl.classList.remove('hidden');
+            warningEl.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+            warningEl.style.borderColor = "#ff4444";
+            warningEl.style.color = "#ff8888";
+        }
+
+        const safetyScale = Math.sqrt(PIXEL_LIMIT / currentPixels);
+        finalW = Math.round(logicW * safetyScale);
+        finalH = Math.round(logicH * safetyScale);
+
+    } else {
+        // Limpiamos warning SOLO si era el de seguridad móvil
+        if (warningEl && warningEl.innerText.includes("Mobile Safety")) {
+            warningEl.classList.add('hidden');
+        }
+    }
+
+    // 4. CONFIGURAR CANVAS
+    if (canvas.width !== finalW) canvas.width = finalW;
+    if (canvas.height !== finalH) canvas.height = finalH;
+    
+    ctx.clearRect(0, 0, finalW, finalH);
+    const screenAspect = finalW / finalH;
+
+    // 5. DIBUJAR IMAGEN
+    if (hasPhoto) {
+        try {
+            const isFill = inputs.scaleFill && inputs.scaleFill.checked;
+            const shouldUseFillLogic = isFill || isCropMode;
+            
+            const ratioW = finalW / userImage.width;
+            const ratioH = finalH / userImage.height;
+            
+            let renderRatio;
+            if (shouldUseFillLogic) renderRatio = Math.max(ratioW, ratioH);
+            else renderRatio = Math.min(ratioW, ratioH);
+
+            const newImgW = userImage.width * renderRatio;
+            const newImgH = userImage.height * renderRatio;
+            
+            const posX = (finalW - newImgW) / 2;
+            const posY = (finalH - newImgH) / 2;
+            
+            ctx.drawImage(userImage, posX, posY, newImgW, newImgH);
+            
+        } catch (e) { console.error("Draw image error:", e); }
+    }
+
+    // 6. CÁLCULO ZONA VISIBLE (Frameline)
+    let visibleW, visibleH, offsetX, offsetY;
+    
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
     const scaleFactor = scaleVal / 100;
@@ -644,84 +912,52 @@ function draw() {
     const opacity = opacityVal / 100;
     if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
 
+    if (isCropMode) {
+        visibleW = finalW; visibleH = finalH; offsetX = 0; offsetY = 0;
+    } else {
+        if (targetAspect > screenAspect) { 
+            visibleW = finalW; visibleH = finalW / targetAspect; 
+        } else { 
+            visibleH = finalH; visibleW = finalH * targetAspect; 
+        }
+        visibleW = Math.round(visibleW * scaleFactor);
+        visibleH = Math.round(visibleH * scaleFactor);
+        
+        offsetX = Math.floor((finalW - visibleW) / 2); 
+        offsetY = Math.floor((finalH - visibleH) / 2);
+    }
+
+    // 7. MATTE
+    if (!isCropMode) {
+        ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
+        ctx.fillRect(0, 0, finalW, offsetY); 
+        ctx.fillRect(0, finalH - offsetY, finalW, offsetY); 
+        ctx.fillRect(0, offsetY, offsetX, visibleH); 
+        ctx.fillRect(finalW - offsetX, offsetY, offsetX, visibleH); 
+    }
+
+    // 8. LÍNEAS PRINCIPALES
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
     if (rawThick > 10) { rawThick = 10; if(inputs.thickness) inputs.thickness.value = 10; }
+    
     const mainThickness = Math.max(0, rawThick);
     const mainOffset = mainThickness / 2;
-    const secThickness = mainThickness; 
-    let safeThickness = 0;
-    if (mainThickness > 0) safeThickness = Math.max(1, Math.round(mainThickness / 2));
-
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
-    let width = rawW;
-    let height = rawH;
-
-    if (isCropMode) {
-        height = Math.round(width / targetAspect);
-    }
-
-    if (canvas.width !== width) canvas.width = width;
-    if (canvas.height !== height) canvas.height = height;
-    ctx.clearRect(0, 0, width, height);
-    const screenAspect = width / height;
-
-    const mostrarImagen = !showImageToggle || showImageToggle.checked;
     
-    if (userImage && mostrarImagen) {
-        try {
-            const isFill = inputs.scaleFill && inputs.scaleFill.checked;
-            const shouldUseFillLogic = isFill || isCropMode;
-            const ratioW = width / userImage.width;
-            const ratioH = height / userImage.height;
-            let renderRatio;
-            if (shouldUseFillLogic) renderRatio = Math.max(ratioW, ratioH);
-            else renderRatio = Math.min(ratioW, ratioH);
-
-            const newW = userImage.width * renderRatio;
-            const newH = userImage.height * renderRatio;
-            const posX = (width - newW) / 2;
-            const posY = (height - newH) / 2;
-            ctx.drawImage(userImage, posX, posY, newW, newH);
-        } catch (e) { console.error(e); }
-    }
-
-    let visibleW, visibleH;
-    let offsetX, offsetY;
-
-    if (isCropMode) {
-        visibleW = width; visibleH = height; offsetX = 0; offsetY = 0;
-    } else {
-        if (targetAspect > screenAspect) { visibleW = width; visibleH = width / targetAspect; } 
-        else { visibleH = height; visibleW = height * targetAspect; }
-        visibleW = Math.round(visibleW * scaleFactor);
-        visibleH = Math.round(visibleH * scaleFactor);
-        const barHeight = Math.floor((height - visibleH) / 2);
-        const barWidth = Math.floor((width - visibleW) / 2);
-        offsetX = barWidth; offsetY = barHeight;
-    }
-
-    if (!isCropMode) {
-        ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-        ctx.fillRect(0, 0, width, offsetY); 
-        ctx.fillRect(0, height - offsetY, width, offsetY); 
-        ctx.fillRect(0, offsetY, offsetX, visibleH); 
-        ctx.fillRect(width - offsetX, offsetY, offsetX, visibleH); 
-    }
-
-    // MAIN FRAMELINE
     if (mainThickness > 0) {
         if (inputs.color) ctx.strokeStyle = inputs.color.value;
-        ctx.lineWidth = mainThickness; ctx.setLineDash([]); ctx.beginPath();
+        ctx.lineWidth = mainThickness; 
+        ctx.setLineDash([]); 
+        ctx.beginPath();
         ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
         ctx.stroke();
     }
 
-    // SECONDARY FRAMELINE
+    // 9. LÍNEA SECUNDARIA
     let secX = 0, secY = 0, secW = 0, secH = 0;
     let drawSec = false;
 
-    if (inputs.secOn && inputs.secOn.checked && secThickness > 0) {
+    if (inputs.secOn && inputs.secOn.checked && mainThickness > 0) {
         drawSec = true;
         const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
         const fitInside = inputs.secFit && inputs.secFit.checked;
@@ -731,25 +967,28 @@ function draw() {
             if (secAspect > mainFrameAspect) { secW = visibleW; secH = visibleW / secAspect; } 
             else { secH = visibleH; secW = visibleH * secAspect; }
         } else {
-            if (secAspect > screenAspect) { secW = width; secH = width / secAspect; } 
-            else { secH = height; secW = height * secAspect; }
-            secW = secW * scaleFactor;
+            if (secAspect > screenAspect) { secW = finalW; secH = finalW / secAspect; } 
+            else { secH = finalH; secW = finalH * secAspect; }
+            if (!isCropMode) {
+                secW = secW * scaleFactor;
+                secH = secW / secAspect;
+            }
         }
         secW = Math.round(secW); secH = Math.round(secH);
-        secX = (width - secW) / 2; secY = (height - secH) / 2;
+        secX = (finalW - secW) / 2; secY = (finalH - secH) / 2;
 
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
-        ctx.lineWidth = secThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
-        ctx.rect(secX, secY, secW, secH);
-        ctx.stroke();
+        ctx.lineWidth = mainThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
+        ctx.rect(secX, secY, secW, secH); ctx.stroke();
     }
 
-    // SAFE AREAS
+    // 10. SAFE AREAS
+    let safeThickness = (mainThickness > 0) ? Math.max(1, Math.round(mainThickness / 2)) : 0;
     if (safeThickness > 0) {
         const drawSafe = (pct, dashed) => {
             const p = pct / 100;
             const sW = visibleW * p; const sH = visibleH * p;
-            const sX = (width - sW) / 2; const sY = (height - sH) / 2;
+            const sX = (finalW - sW) / 2; const sY = (finalH - sH) / 2;
             ctx.lineWidth = safeThickness;
             if(inputs.color) ctx.strokeStyle = inputs.color.value;
             ctx.setLineDash(dashed ? [5, 5] : []); ctx.beginPath();
@@ -759,12 +998,12 @@ function draw() {
         if (inputs.safeTitleOn && inputs.safeTitleOn.checked) drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
     }
 
-    // LABELS
+    // 11. ETIQUETAS
     const showAspect = inputs.showLabels && inputs.showLabels.checked;
     const showRes = inputs.showResLabels && inputs.showResLabels.checked;
 
     if (showAspect || showRes) {
-        const fontSize = Math.max(12, Math.round(width / 80)); 
+        const fontSize = Math.max(12, Math.round(finalW / 80)); 
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         ctx.textBaseline = "top";
         const padding = 10; 
@@ -774,78 +1013,44 @@ function draw() {
             ctx.fillStyle = inputs.color.value;
             const txtAsp = obtenerRatioTexto(Math.round(visibleW), Math.round(visibleH));
             const txtRes = `${Math.round(visibleW)} x ${Math.round(visibleH)}`;
-            const wAsp = ctx.measureText(txtAsp).width; const wRes = ctx.measureText(txtRes).width;
-            const isTightHoriz = (wAsp + wRes + (padding * 4)) > visibleW;
-
+            
             if (showAspect) { ctx.textAlign = "left"; ctx.fillText(txtAsp, offsetX + padding, offsetY + padding); }
             if (showRes) {
-                if (isTightHoriz && showAspect) { ctx.textAlign = "left"; ctx.fillText(txtRes, offsetX + padding, offsetY + padding + lineHeight); } 
-                else { ctx.textAlign = showAspect ? "right" : "left"; const posX = showAspect ? (offsetX + visibleW - padding) : (offsetX + padding); ctx.fillText(txtRes, posX, offsetY + padding); }
+                ctx.textAlign = showAspect ? "right" : "left"; 
+                const posX = showAspect ? (offsetX + visibleW - padding) : (offsetX + padding);
+                const posY = showAspect ? (offsetY + padding) : (offsetY + padding + lineHeight); 
+                ctx.fillText(txtRes, posX, offsetY + padding);
             }
        }
-
-        if (drawSec && inputs.secAspect) {
+       if (drawSec && inputs.secAspect) {
             ctx.fillStyle = inputs.secColor.value;
             const txtSecAsp = obtenerRatioTexto(Math.round(secW), Math.round(secH));
-            const txtSecRes = `${Math.round(secW)} x ${Math.round(secH)}`;
-            let textY = secY + padding;
-            const verticalGap = Math.abs(offsetY - secY);
-            if (verticalGap < (lineHeight * 1.5)) textY += lineHeight; 
-            const wSecAsp = ctx.measureText(txtSecAsp).width; const wSecRes = ctx.measureText(txtSecRes).width;
-            const isSecTight = (wSecAsp + wSecRes + (padding * 4)) > secW;
-
-            if (showAspect) { ctx.textAlign = "left"; ctx.fillText(txtSecAsp, secX + padding, textY); }
-            if (showRes) {
-                if (isSecTight && showAspect) { ctx.textAlign = "left"; ctx.fillText(txtSecRes, secX + padding, textY + lineHeight); } 
-                else { ctx.textAlign = showAspect ? "right" : "left"; const posX = showAspect ? (secX + secW - padding) : (secX + padding); ctx.fillText(txtSecRes, posX, textY); }
-            }
-        }
+            ctx.textAlign = "left";
+            if (showAspect) ctx.fillText(txtSecAsp, secX + padding, secY + padding);
+       }
     }
 
-    // ===============================================
-    // 🔥 NUEVO: CANVAS NAME / LABEL (Corregido)
-    // ===============================================
+    // 12. CANVAS LABEL
     if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
-        const fontSize = Math.max(12, Math.round(width / 80)); 
+        const fontSize = Math.max(12, Math.round(finalW / 80)); 
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         ctx.fillStyle = inputs.color ? inputs.color.value : '#00FF00';
-        
-        ctx.textAlign = "left"; 
-        ctx.textBaseline = "bottom";
+        ctx.textAlign = "left"; ctx.textBaseline = "bottom";
 
-        // 1. Obtener el texto base
         let finalText = "";
-        
-        // Verificamos si el menú existe y si NO está en 'custom'
-        // (Si menuResoluciones.value es 'custom', significa que el usuario movió los sliders manualmente)
         const isCustom = !menuResoluciones || menuResoluciones.value === 'custom';
-
         if (!isCustom && menuResoluciones.selectedIndex >= 0) {
-            // A. Es un Preset: Obtenemos el nombre del dropdown
             const rawText = menuResoluciones.options[menuResoluciones.selectedIndex].text;
-            
-            // B. LIMPIEZA: Usamos una expresión regular (Regex) para borrar 
-            // cualquier cosa que esté entre paréntesis al final, incluyendo el espacio antes.
-            // Ej: "Arri Alexa (3200x1800)" -> "Arri Alexa"
             finalText = rawText.replace(/\s*\(.*?\)\s*$/, '').trim();
-            
-            // Seguridad: Si por alguna razón el texto queda vacío, poner la resolución
-            if (!finalText) finalText = `${width} x ${height}`;
-            
+            if (!finalText) finalText = `${finalW} x ${finalH}`;
         } else {
-            // C. Es Custom: Mostramos solo números
-            finalText = `Custom: ${width} x ${height}`;
+            finalText = `Custom: ${logicW} x ${logicH}`; 
         }
-
-        const padding = Math.max(10, width * 0.02);
-
-        // Sombra y Borde (Stroke) para legibilidad máxima
-        ctx.lineWidth = fontSize * 0.12; // Grosor proporcional a la letra
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.8)"; // Borde negro casi opaco
-        ctx.strokeText(finalText, padding, height - padding); 
-        
-        // Relleno de color
-        ctx.fillText(finalText, padding, height - padding);
+        const padding = Math.max(10, finalW * 0.02);
+        ctx.lineWidth = fontSize * 0.12; 
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.8)"; 
+        ctx.strokeText(finalText, padding, finalH - padding); 
+        ctx.fillText(finalText, padding, finalH - padding);
     }
 
     updateAspectButtonsVisuals();
@@ -919,7 +1124,7 @@ if (inputs.secAspect) {
 }
 
 // Sincronización Manual W/H
-if (inputs.w) { inputs.w.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; clearActiveButtons('.presets'); }); }
+if (inputs.w) { inputs.w.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; clearActiveButtons('.presets'); autoAdjustThickness(); }); }
 if (inputs.h) { inputs.h.addEventListener('input', () => { if (menuResoluciones) menuResoluciones.value = 'custom'; clearActiveButtons('.presets'); }); }
 if (inputs.aspect) {
     inputs.aspect.addEventListener('input', () => {
@@ -1051,23 +1256,42 @@ window.setOpacity = function(val, btn) {
     flashInput(inputs.opacity); highlightButton(btn); requestDraw();
 }
 
-// Descarga
-btnDownload.addEventListener('click', () => {
+// ==========================================
+// DESCARGAR PNG (CORREGIDO Y ROBUSTO)
+// ==========================================
+btnDownload.addEventListener('click', async () => {
+    // 1. Obtener valores actuales
     const w = parseInt(inputs.w.value) || 1920;
     const h = parseInt(inputs.h.value) || 1080;
+    
     let asp = "ratio";
-    if (inputs.aspect) asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
+    if (inputs.aspect) {
+        // Reemplazar caracteres no permitidos en nombres de archivo
+        asp = inputs.aspect.value.replace(':', '-').replace('.', '_'); 
+    }
+
     const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
+    // Verifica si hay una imagen cargada Y si el toggle de "Mostrar Imagen" está activo
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
-    const a = document.createElement('a');
+
+    // 2. Generar el DataURL (La imagen en código)
+    let fileName, dataUrl, mimeType;
 
     if (isCropMode) {
-        const type = hasPhoto ? 'image/jpeg' : 'image/png';
-        const quality = hasPhoto ? 1.0 : undefined;
+        // --- MODO CROP ---
+        // Si hay foto usamos JPG (menos peso), si no, PNG (transparencia)
+        mimeType = hasPhoto ? 'image/jpeg' : 'image/png';
+        const quality = hasPhoto ? 0.9 : undefined; // Calidad 90% si es JPG
+        
+        // 🔥 AQUÍ ESTABA EL ERROR ANTES: No guardábamos dataUrl
+        dataUrl = canvas.toDataURL(mimeType, quality);
+        
         const ext = hasPhoto ? 'jpg' : 'png';
-        a.href = canvas.toDataURL(type, quality);
-        a.download = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
+        fileName = `Frameline_${w}x${h}_${asp}_cropped.${ext}`;
+        
     } else if (hasPhoto) {
+        // --- MODO PREVIEW (Foto pero sin recortar canvas) ---
+        // Dibujamos marca de agua temporal solo para la descarga
         ctx.save(); 
         const fontSize = Math.max(10, Math.round(w * 0.012)); 
         const margin = fontSize; 
@@ -1077,25 +1301,89 @@ btnDownload.addEventListener('click', () => {
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)"; ctx.shadowBlur = 4;
         ctx.fillText("frameline-generator.com", w - margin, h - margin);
         ctx.restore(); 
-        a.href = canvas.toDataURL('image/jpeg', 0.9);
-        a.download = `Frameline_${w}x${h}_${asp}_preview.jpg`;
+
+        mimeType = 'image/jpeg';
+        dataUrl = canvas.toDataURL(mimeType, 0.9);
+        fileName = `Frameline_${w}x${h}_${asp}_preview.jpg`;
+
+        // Redibujamos rápido para quitar la marca de agua de la pantalla del usuario
         setTimeout(() => { if(typeof requestDraw === 'function') requestDraw(); else draw(); }, 0); 
+
     } else {
-        a.href = canvas.toDataURL('image/png');
-        a.download = `Frameline_${w}x${h}_${asp}.png`;
+        // --- MODO SOLO LÍNEAS (TEMPLATE) ---
+        mimeType = 'image/png';
+        dataUrl = canvas.toDataURL(mimeType);
+        fileName = `Frameline_${w}x${h}_${asp}.png`;
     }
-    if (typeof gtag === 'function') { gtag('event', 'download_file', { 'event_category': 'Engagement', 'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') }); }
-    a.click();
+
+    // Analytics (Opcional)
+    if (typeof gtag === 'function') { 
+        gtag('event', 'download_file', { 
+            'event_category': 'Engagement', 
+            'event_label': isCropMode ? 'Crop' : (hasPhoto ? 'Preview' : 'Template') 
+        }); 
+    }
+
     // ===============================================
-    // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO)
+    // 3. INTENTAR COMPARTIR (MÓVIL) O DESCARGAR (PC)
+    // ===============================================
+    
+    // Detectamos si es móvil
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let shareSuccess = false;
+
+    // Solo intentamos compartir si es móvil y el navegador lo permite
+    if (isMobile && navigator.canShare && navigator.share) {
+        try {
+            const blob = dataURItoBlob(dataUrl);
+            const file = new File([blob], fileName, { type: mimeType });
+            
+            // Verificamos si el archivo es compartible (algunos navegadores rechazan archivos muy grandes)
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Frameline Generator',
+                    text: 'Created with frameline-generator.com'
+                });
+                shareSuccess = true; // ¡Éxito!
+            }
+        } catch (error) {
+            console.log('Share skipped or canceled:', error);
+            // Si falla compartir (ej. usuario cancela), no hacemos nada más, 
+            // porque el menú ya se abrió.
+            // PERO si el error es técnico, el fallback de abajo asegura la descarga.
+            if (error.name !== 'AbortError') {
+                 shareSuccess = false; 
+            } else {
+                return; // Si el usuario canceló voluntariamente, no forzamos descarga.
+            }
+        }
+    }
+
+    // 4. FALLBACK: DESCARGA CLÁSICA
+    // Se ejecuta si estamos en PC, O si falló el compartir en Móvil
+    if (!shareSuccess) {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = fileName;
+        document.body.appendChild(a); 
+        a.click();
+        document.body.removeChild(a);
+    }
+
+
+    // ===============================================
+    // 🔥 NUEVO: FEEDBACK VISUAL (BOTE DE ÉXITO) LO DEJÉ AQUÍ COMENTADO POR SI ALGÚN DÍA QUIERO PONERLO OTRA VEZ O MEJORARLO.
     // ===============================================
     
     // 1. Guardamos el texto original para no perderlo
     // (Usamos un atributo data para seguridad, o una variable local)
+    /*
     const originalText = btnDownload.innerText; 
     const originalColor = btnDownload.style.backgroundColor;
 
     // 2. Cambiamos el estado a "ÉXITO"
+    
     btnDownload.innerText = "Downloaded!";
     btnDownload.style.backgroundColor = "#28a745"; // Verde Éxito
     btnDownload.style.borderColor = "#28a745";
@@ -1115,6 +1403,7 @@ btnDownload.addEventListener('click', () => {
         btnDownload.disabled = false;
         btnDownload.style.cursor = "pointer";
     }, 2000);
+    */
 });
 
 // Quick Toggle
@@ -1266,26 +1555,40 @@ function updateAspectButtonsVisuals() {
 }
 
 // ==========================================
-// 6. LÓGICA DE PRIVACY POLICY (Footer)
+// 6. LÓGICA DE PRIVACY POLICY Y DISCLAIMER
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const privacyBtn = document.getElementById('openPrivacy');
+    const disclaimerBtn = document.getElementById('openDisclaimer'); // <--- Agregamos esto aquí
     const privacyModal = document.getElementById('privacyModal');
     const closePrivacy = document.getElementById('closePrivacy');
 
-    if (privacyBtn && privacyModal && closePrivacy) {
-        // Al picar "Privacy Policy", quitamos la clase hidden
-        privacyBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Evita que la página salte hacia arriba
-            privacyModal.classList.remove('hidden');
-        });
+    // Verificamos que el modal y el botón de cerrar existan para evitar errores
+    if (privacyModal && closePrivacy) {
+
+        // 1. Abrir con botón Privacy
+        if (privacyBtn) {
+            privacyBtn.addEventListener('click', (e) => {
+                e.preventDefault(); 
+                privacyModal.classList.remove('hidden');
+            });
+        }
+
+        // 2. Abrir con botón Disclaimer (NUEVO)
+        if (disclaimerBtn) {
+            disclaimerBtn.addEventListener('click', (e) => {
+                e.preventDefault(); 
+                // AQUÍ ESTABA EL ERROR: Usamos 'privacyModal', no 'modal'
+                privacyModal.classList.remove('hidden'); 
+            });
+        }
         
-        // Al picar la "X", cerramos
+        // 3. Cerrar con la X
         closePrivacy.addEventListener('click', () => {
             privacyModal.classList.add('hidden');
         });
 
-        // Al picar fuera de la caja (en el fondo oscuro), cerramos
+        // 4. Cerrar picando fuera
         privacyModal.addEventListener('click', (e) => {
             if (e.target === privacyModal) {
                 privacyModal.classList.add('hidden');
@@ -1293,4 +1596,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
