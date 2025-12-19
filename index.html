@@ -421,18 +421,16 @@
         </div>
 
         <div style="display: flex; align-items: center;">
-             <span onclick="removeImage()" style="
-                font-size: 0.8rem; 
-                color: #d9534f; 
-                cursor: pointer; 
-                transition: color 0.2s;
-                padding: 5px;
-            "
-            onmouseover="this.style.color='#ff7b77'"
-            onmouseout="this.style.color='#d9534f'"
-            >
-                ✕ Remove
-            </span>
+            <span onclick="removeImage()" 
+      style="font-size: 0.8rem; color: #d9534f; cursor: pointer; transition: color 0.2s; padding: 5px;"
+      onmouseover="this.style.color='#ff7b77'"
+      onmouseout="this.style.color='#d9534f'"
+      tabindex="0"
+      role="button"
+      aria-label="Remove Image"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); removeImage();}">
+    ✕ Remove
+</span>
         </div>
 
     </div>
