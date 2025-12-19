@@ -1,1 +1,10 @@
+# Ignorar la carpeta gigante de dependencias
+node_modules/
+
+# Ignorar videos y capturas que genera el robot al probar
+cypress/videos/
+cypress/screenshots/
+
+# Archivos de sistema de Mac/Windows (opcional pero recomendado)
 .DS_Store
+Thumbs.db
