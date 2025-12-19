@@ -14,7 +14,7 @@
 All image processing happens locally in the browser—no data is ever uploaded to a server.
 
 **🔗 Live Demo:** [https://frameline-generator.com](https://frameline-generator.com)
-**🔗 Screenshot:** (https://frameline-generator.com/screenshot.png)
+**🔗 Screenshot:** [https://frameline-generator.com/screenshot.png]
 
 ## ✨ Key Features
 
