@@ -90,39 +90,40 @@ it('4. Prueba de Seguridad Móvil (Límite 6K)', () => {
     cy.get('#downloadBtn').click();
   });
 
-it('6. El botón Reset restaura los valores por defecto', () => {
+it('6. El botón Reset restaura los valores por defecto (Versión Blindada)', () => {
     // 0. Limpieza
     cy.visit('http://127.0.0.1:5500/index.html');
 
     // 1. Ensuciamos el Ancho
-    cy.get('#width').clear().type('3000').blur(); 
+    // ROMPEMOS LA CADENA: Hacemos pasos separados para evitar el error "Detached DOM"
+    cy.get('#width').clear();
+    cy.get('#width').type('3000');
+    // Truco Pro: En vez de .blur(), hacemos clic en el cuerpo de la página.
+    // Esto fuerza a que se pierda el foco sin depender del elemento input.
+    cy.get('body').click(); 
 
-    // --- CORRECCIÓN AQUÍ ---
-    // ROMPEMOS LA CADENA para evitar el error de "Detached DOM"
-    
-    // Paso A: Seleccionamos (esto puede provocar que la página se actualice)
+    // 2. FORZAMOS EL MODO CUSTOM
+    // Separamos la selección del trigger por seguridad
     cy.get('#aspectSelect').select('custom', { force: true });
-
-    // Paso B: Volvemos a buscar el elemento FRESCO y disparamos el evento
     cy.get('#aspectSelect').trigger('change', { force: true });
 
-    // 3. Ahora sí, continuamos...
-    cy.get('#aspect')
-      .should('be.visible')
-      .clear()
-      .type('1.0')
-      .blur();
+    // 3. Ensuciamos el Aspecto (Input manual)
+    cy.get('#aspect').should('be.visible').clear();
+    cy.get('#aspect').type('1.0');
+    cy.get('body').click(); // Salimos del input dando clic afuera
     
     // 4. Paneles extra
     cy.get('#secFrameOn').check({ force: true });
     
-    // 5. Reset
+    // 5. LA HORA DE LA VERDAD: Presionamos Reset
     cy.get('#resetAllBtn').click();
 
     // 6. Verificaciones
     cy.get('#width').should('have.value', '1920');
-    // Ajusta si tu default es diferente
+    
+    // Verifica tu valor default (ajusta el número si es necesario)
     cy.get('#aspect').should('have.value', '2.38695'); 
+    
     cy.get('#secFrameControls').should('have.class', 'hidden');
     cy.get('#aspectGroup').should('have.class', 'hidden');
   });
@@ -199,6 +200,69 @@ it('10. Auto-Grosor debe funcionar TAMBIÉN al cargar imagen', () => {
     // 3. Verificamos: ¿Cambió el grosor a 6?
     // Probablemente aquí falle y diga que sigue en 2
     cy.get('#thickness').should('have.value', '6');
+  });
+
+it('11. Accesibilidad: Navegación por Teclado (Sin Mouse)', () => {
+    // 1. Visitamos la web
+    cy.visit('http://127.0.0.1:5500/index.html');
+
+    // --- A. PRUEBA DE ATRIBUTOS (Verificamos que los ciegos los "vean") ---
+    // El botón Reset debe ser navegable
+    cy.get('#resetAllBtn')
+      .should('have.attr', 'tabindex', '0')
+      .and('have.attr', 'role', 'button')
+      .and('have.attr', 'aria-label');
+
+    // El botón Quick Frame debe ser navegable
+    cy.get('#quickFrameBtn')
+      .should('have.attr', 'tabindex', '0')
+      .and('have.attr', 'role', 'button');
+
+    // La zona de Upload debe ser navegable
+    cy.get('.upload-zone')
+      .should('have.attr', 'tabindex', '0')
+      .and('have.attr', 'role', 'button');
+
+    // --- B. PRUEBA DE ACCIÓN: RESET CON TECLA ENTER ---
+    // 1. Ensuciamos el valor para tener algo que resetear
+    cy.get('#width').clear().type('5555').blur();
+
+    // 2. ENFOCAMOS el botón Reset (simula llegar con TAB)
+    cy.get('#resetAllBtn').focus();
+    
+    // 3. PRESIONAMOS ENTER (simula el teclado físico)
+    // Nota: Cypress requiere que el elemento tenga foco para recibir el tecleo
+    cy.get('#resetAllBtn').type('{enter}');
+
+    // 4. Verificamos: ¿Funcionó el Enter igual que un Clic?
+    cy.get('#width').should('have.value', '1920');
+
+    // --- C. PRUEBA DE ACCIÓN: QUICK FRAME CON BARRA ESPACIADORA ---
+    // (Probamos Espacio porque tu código acepta Enter O Espacio)
+    
+    // 1. Verificamos estado inicial
+    cy.get('#quickFrameText').should('contain', 'On');
+
+    // 2. Enfocamos y presionamos ESPACIO
+    cy.get('#quickFrameBtn').focus().type(' '); 
+
+    // 3. Verificamos cambio
+    cy.get('#quickFrameText').should('contain', 'Off');
+
+    // --- D. PRUEBA DE ACCIÓN: REMOVE IMAGE CON ENTER ---
+    // 1. Cargamos una imagen primero (usando el fixture que ya tienes)
+    cy.get('#imageLoader').selectFile('cypress/fixtures/test_image.jpg', { force: true });
+    cy.get('#imageOptionsPanel').should('not.have.class', 'hidden');
+
+    // 2. Buscamos el botón de cerrar (que es un span)
+    // Usamos cy.contains para hallarlo por texto, o puedes ponerle un ID si prefieres
+    cy.contains('✕ Remove')
+      .should('be.visible')
+      .focus()
+      .type('{enter}'); // ¡ZAS! Teclazo.
+
+    // 3. Verificamos que la imagen se haya ido
+    cy.get('#imageOptionsPanel').should('have.class', 'hidden');
   });
 
 });
