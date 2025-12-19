@@ -132,11 +132,15 @@
         <label style="margin: 0;">Frameline</label>
         
         <div id="quickFrameBtn" 
-             style="cursor: pointer; font-size: 0.9rem; color: #007bff; display: flex; align-items: center; user-select: none;"
-             title="Show/Hide Frameline">
-            <span style="margin-right: 4px;">⍉</span> 
-            <span id="quickFrameText">On</span>
-        </div>
+     style="cursor: pointer; font-size: 0.9rem; color: #007bff; display: flex; align-items: center; user-select: none;"
+     title="Show/Hide Frameline"
+     tabindex="0" 
+     role="button" 
+     aria-label="Toggle Frameline visibility"
+     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+    <span style="margin-right: 4px;">⍉</span> 
+    <span id="quickFrameText">On</span>
+</div>
     </div>
 
     <select id="aspectSelect" class="custom-select">    
