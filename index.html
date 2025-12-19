@@ -311,10 +311,14 @@
     
     <input type="file" id="imageLoader" accept="image/*,.tiff,.tif" class="hidden-input">
     
-    <label for="imageLoader" class="upload-zone">
-        <span class="upload-icon">△</span> 
-        <span class="upload-text">Choose or drop image</span>
-    </label>
+    <label for="imageLoader" class="upload-zone" 
+       tabindex="0" 
+       role="button" 
+       aria-label="Upload Image Area"
+       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('imageLoader').click();}">
+    <span class="upload-icon">△</span> 
+    <span class="upload-text">Choose or drop image</span>
+</label>
 </div>
 
  <div id="sizeWarning" class="hidden" style="
