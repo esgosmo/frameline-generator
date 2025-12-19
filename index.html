@@ -89,15 +89,18 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
             <label style="margin: 0;">Canvas / Resolution</label>
             
-            <div id="resetAllBtn" 
-                 style="cursor: pointer; font-size: 0.9rem; color: #d9534f; display: flex; align-items: center; user-select: none; transition: color 0.2s;"
-                 onmouseover="this.style.color='#ff7b77'"
-                 onmouseout="this.style.color='#d9534f'"
-                 title="Reset all settings to default">
-                <span style="margin-right: 4px; font-weight: bold;">↺</span> 
-                <span>Reset</span>
-            </div>
-        </div>
+          <div id="resetAllBtn" 
+     style="cursor: pointer; font-size: 0.9rem; color: #d9534f; display: flex; align-items: center; user-select: none; transition: color 0.2s;"
+     onmouseover="this.style.color='#ff7b77'"
+     onmouseout="this.style.color='#d9534f'"
+     title="Reset all settings to default"
+     tabindex="0" 
+     role="button" 
+     aria-label="Reset all settings"
+     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+    <span style="margin-right: 4px; font-weight: bold;">↺</span> 
+    <span>Reset</span>
+</div>
         
  <select id="resolutionSelect" class="custom-select">
             <option value="custom">Custom / Manual</option>
@@ -127,13 +130,16 @@
    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
         <label style="margin: 0;">Frameline</label>
         
-        <div id="quickFrameBtn" 
-             style="cursor: pointer; font-size: 0.9rem; color: #007bff; display: flex; align-items: center; user-select: none;"
-             title="Show/Hide Frameline">
-            <span style="margin-right: 4px;">⍉</span> 
-            <span id="quickFrameText">On</span>
-        </div>
-    </div>
+      <div id="quickFrameBtn" 
+     style="cursor: pointer; font-size: 0.9rem; color: #007bff; display: flex; align-items: center; user-select: none;"
+     title="Show/Hide Frameline"
+     tabindex="0" 
+     role="button" 
+     aria-label="Toggle Frameline visibility"
+     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+    <span style="margin-right: 4px;">⍉</span> 
+    <span id="quickFrameText">On</span>
+</div>
 
     <select id="aspectSelect" class="custom-select">    
         <option value="custom">Custom / Manual</option>
@@ -303,10 +309,14 @@
     
     <input type="file" id="imageLoader" accept="image/*,.tiff,.tif" class="hidden-input">
     
-    <label for="imageLoader" class="upload-zone">
-        <span class="upload-icon">△</span> 
-        <span class="upload-text">Choose or drop image</span>
-    </label>
+   <label for="imageLoader" class="upload-zone" 
+       tabindex="0" 
+       role="button" 
+       aria-label="Upload Image Area"
+       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('imageLoader').click();}">
+    <span class="upload-icon">△</span> 
+    <span class="upload-text">Choose or drop image</span>
+</label>
 </div>
 
  <div id="sizeWarning" class="hidden" style="
@@ -409,18 +419,16 @@
         </div>
 
         <div style="display: flex; align-items: center;">
-             <span onclick="removeImage()" style="
-                font-size: 0.8rem; 
-                color: #d9534f; 
-                cursor: pointer; 
-                transition: color 0.2s;
-                padding: 5px;
-            "
-            onmouseover="this.style.color='#ff7b77'"
-            onmouseout="this.style.color='#d9534f'"
-            >
-                ✕ Remove
-            </span>
+           <span onclick="removeImage()" 
+      style="font-size: 0.8rem; color: #d9534f; cursor: pointer; transition: color 0.2s; padding: 5px;"
+      onmouseover="this.style.color='#ff7b77'"
+      onmouseout="this.style.color='#d9534f'"
+      tabindex="0"
+      role="button"
+      aria-label="Remove Image"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); removeImage();}">
+    ✕ Remove
+</span>
         </div>
 
     </div>
