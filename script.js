@@ -829,7 +829,7 @@ function draw() {
         ctx.stroke();
     }
 
-    // 9. SECUNDARIA
+// 9. LÍNEA SECUNDARIA (CORREGIDA: FIJA vs RELATIVA)
     let secX = 0, secY = 0, secW = 0, secH = 0;
     let drawSec = false;
 
@@ -839,28 +839,61 @@ function draw() {
         const fitInside = inputs.secFit && inputs.secFit.checked;
 
         if (fitInside) {
+            // ===============================================
+            // CASO A: FIT INSIDE = ON (Comportamiento Relativo)
+            // ===============================================
+            // Debe respetar el Scale y la Posición del cuadro principal (visibleW/H y drawX/Y)
+            
             const mainFrameAspect = visibleW / visibleH;
-            if (secAspect > mainFrameAspect) { secW = visibleW; secH = visibleW / secAspect; } 
-            else { secH = visibleH; secW = visibleH * secAspect; }
-        } else {
-            if (secAspect > screenAspect) { secW = baseW; secH = baseW / secAspect; } 
-            else { secH = baseH; secW = baseH * secAspect; }
-            if (!isCropMode) {
-                secW = secW * scaleFactor;
-                secH = secW / secAspect;
-            }
-        }
-        secW = Math.round(secW); secH = Math.round(secH);
-        
-        // Coordenadas base + clamp shift + offset global
-        const secBaseX = Math.floor((baseW - secW) / 2) + shiftX; 
-        const secBaseY = Math.floor((baseH - secH) / 2) + shiftY;
-        secX = secBaseX + globalOffsetX;
-        secY = secBaseY + globalOffsetY;
 
+            // Calculamos dimensiones basándonos en el cuadro YA ESCALADO (visibleW/H)
+            if (secAspect > mainFrameAspect) { 
+                secW = visibleW; 
+                secH = visibleW / secAspect; 
+            } else { 
+                secH = visibleH; 
+                secW = visibleH * secAspect; 
+            }
+            secW = Math.round(secW); 
+            secH = Math.round(secH);
+
+            // Posición: Centrado DENTRO del cuadro principal (que ya tiene shiftX/Y aplicado)
+            secX = drawX + (visibleW - secW) / 2;
+            secY = drawY + (visibleH - secH) / 2;
+
+        } else {
+            // ===============================================
+            // CASO B: FIT INSIDE = OFF (Comportamiento Fijo/Absoluto)
+            // ===============================================
+            // Debe ignorar Scale y Posición X/Y. Se calcula sobre el Canvas Base (baseW/H).
+            
+            if (secAspect > screenAspect) { 
+                secW = baseW; 
+                secH = baseW / secAspect; 
+            } else { 
+                secH = baseH; 
+                secW = baseH * secAspect; 
+            }
+            secW = Math.round(secW); 
+            secH = Math.round(secH);
+
+            // Posición: Centrado en el Canvas BASE (Siempre al centro absoluto 0,0)
+            // NO sumamos 'shiftX' ni 'shiftY' aquí.
+            const secBaseX = Math.floor((baseW - secW) / 2);
+            const secBaseY = Math.floor((baseH - secH) / 2);
+            
+            // Solo sumamos globalOffsetX por si el canvas entero se movió (Modo Crop)
+            secX = secBaseX + globalOffsetX;
+            secY = secBaseY + globalOffsetY;
+        }
+
+        // Dibujar
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
-        ctx.lineWidth = mainThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
-        ctx.rect(secX, secY, secW, secH); ctx.stroke();
+        ctx.lineWidth = mainThickness; 
+        ctx.setLineDash([10, 5]); 
+        ctx.beginPath();
+        ctx.rect(secX, secY, secW, secH); 
+        ctx.stroke();
     }
 
     // 10. SAFE AREAS
