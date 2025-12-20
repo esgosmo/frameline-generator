@@ -731,4 +731,55 @@ body.is-scrubbing {
 }
 
 
+/* Estilos base para el contenedor de Ejes */
+.axis-controls-container {
+    display: flex;
+    gap: 20px;
+}
 
+.axis-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.axis-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Separa la letra X del input */
+}
+
+.axis-head label {
+    color: #aaa;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* --- LÓGICA MÓVIL --- */
+
+/* 1. Por defecto (Desktop): OCULTAR los sliders */
+.mobile-slider {
+    display: none; 
+}
+
+/* 2. En Móviles (menos de 768px): MOSTRAR sliders */
+@media (max-width: 768px) {
+    .mobile-slider {
+        display: block;
+        width: 100%;
+        margin-top: 8px; /* Espacio entre número y slider */
+        accent-color: #007bff; /* Color del slider */
+    }
+
+    /* Opcional: Hacer que los inputs sean más grandes para dedos */
+    .davinci-input {
+        width: 100%; 
+        padding: 8px;
+    }
+    
+    /* Poner X arriba y Y abajo en vez de lado a lado para tener espacio */
+    .axis-controls-container {
+        flex-direction: column; 
+        gap: 15px;
+    }
+}
