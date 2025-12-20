@@ -665,5 +665,38 @@ input[type="range"] {
     }
 }
 
+/* Estilo del Input tipo DaVinci */
+.davinci-input {
+    background-color: #222; /* Fondo oscuro */
+    border: 1px solid #333; /* Borde sutil */
+    color: #eee; /* Texto claro */
+    padding: 4px 8px;
+    border-radius: 4px; /* Bordes ligeramente redondeados */
+    width: 70px; /* Ancho fijo compacto */
+    text-align: right; /* Números alineados a la derecha */
+    font-family: 'Consolas', monospace, sans-serif; /* Fuente técnica opcional */
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+/* Efecto al hacer foco */
+.davinci-input:focus {
+    outline: none;
+    border-color: #007bff; /* Azul al seleccionar, o usa #555 para gris */
+    background-color: #2a2a2a;
+}
+
+/* --- Ocultar las flechas/spinners de los inputs numéricos --- */
+/* Para Chrome, Safari, Edge, Opera */
+.davinci-input::-webkit-outer-spin-button,
+.davinci-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Para Firefox */
+.davinci-input {
+    -moz-appearance: textfield;
+}
+
 
 
