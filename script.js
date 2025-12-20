@@ -1367,3 +1367,23 @@ function bindInputAndSlider(input, slider) {
 // Conectamos X y Y
 bindInputAndSlider(inputs.posXInput, inputs.posXSlider);
 bindInputAndSlider(inputs.posYInput, inputs.posYSlider);
+
+// ==========================================
+// RESET DE POSICIÓN (Mini Reset)
+// ==========================================
+const btnResetPos = document.getElementById('resetPosBtn');
+
+if (btnResetPos) {
+    btnResetPos.addEventListener('click', () => {
+        // 1. Resetear Inputs Numéricos
+        if (inputs.posXInput) inputs.posXInput.value = "0.0";
+        if (inputs.posYInput) inputs.posYInput.value = "0.0";
+
+        // 2. Resetear Sliders (Móvil)
+        if (inputs.posXSlider) inputs.posXSlider.value = 0;
+        if (inputs.posYSlider) inputs.posYSlider.value = 0;
+
+        // 3. Dibujar
+        requestDraw();
+    });
+}
