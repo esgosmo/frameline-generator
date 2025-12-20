@@ -169,18 +169,26 @@
 </div>
 
 <div class="control-group position-group" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
-    <label class="main-label" style="margin-right: 15px; color: #ddd;">Position</label>
+    <label class="main-label" style="margin-bottom: 10px; display:block; color: #ddd;">Position</label>
     
-    <div class="axis-controls" style="display: flex; gap: 20px;">
-        <div class="axis-control" style="display: flex; align-items: center;">
-            <label for="posXInput" style="margin-right: 8px; color: #aaa;">X</label>
-            <input type="number" id="posXInput" value="0.0" step="0.1" min="-100" max="100" class="davinci-input">
+    <div class="axis-controls-container">
+        
+        <div class="axis-wrapper">
+            <div class="axis-head">
+                <label for="posXInput">X</label>
+                <input type="number" id="posXInput" value="0.0" step="0.1" min="-100" max="100" class="davinci-input">
+            </div>
+            <input type="range" id="posXSlider" class="mobile-slider" min="-100" max="100" value="0" step="0.1">
         </div>
 
-        <div class="axis-control" style="display: flex; align-items: center;">
-            <label for="posYInput" style="margin-right: 8px; color: #aaa;">Y</label>
-           <input type="number" id="posYInput" value="0.0" step="0.1" min="-100" max="100" class="davinci-input">
+        <div class="axis-wrapper">
+            <div class="axis-head">
+                <label for="posYInput">Y</label>
+                <input type="number" id="posYInput" value="0.0" step="0.1" min="-100" max="100" class="davinci-input">
+            </div>
+            <input type="range" id="posYSlider" class="mobile-slider" min="-100" max="100" value="0" step="0.1">
         </div>
+
     </div>
 </div>
 
