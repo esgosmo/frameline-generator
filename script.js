@@ -943,13 +943,30 @@ function draw() {
     const drawX = baseX;
     const drawY = baseY;
 
-    // 7. MATTE
+  // 7. MATTE (CORREGIDO PARA SOPORTAR POSICIÓN X/Y)
     if (!isCropMode) {
-        ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-        ctx.fillRect(0, 0, finalW, offsetY); 
-        ctx.fillRect(0, finalH - offsetY, finalW, offsetY); 
-        ctx.fillRect(0, offsetY, offsetX, visibleH); 
-        ctx.fillRect(finalW - offsetX, offsetY, offsetX, visibleH); 
+        // Obtenemos la opacidad del input
+        const opacityVal = inputs.opacity ? inputs.opacity.value : 0; 
+        // Convertimos 0-100 a 0.0-1.0 para el rgba
+        const alpha = opacityVal / 100;
+        
+        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+
+        // Dibujamos 4 rectángulos alrededor del cuadro (drawX, drawY)
+        
+        // A. Barra Superior (Desde techo hasta donde empieza el cuadro)
+        if (drawY > 0) ctx.fillRect(0, 0, finalW, drawY);
+        
+        // B. Barra Inferior (Desde donde termina el cuadro hasta el suelo)
+        const bottomY = drawY + visibleH;
+        if (bottomY < finalH) ctx.fillRect(0, bottomY, finalW, finalH - bottomY);
+
+        // C. Barra Izquierda (Desde pared izq hasta donde empieza el cuadro)
+        if (drawX > 0) ctx.fillRect(0, drawY, drawX, visibleH);
+        
+        // D. Barra Derecha (Desde donde termina el cuadro hasta pared der)
+        const rightX = drawX + visibleW;
+        if (rightX < finalW) ctx.fillRect(rightX, drawY, finalW - rightX, visibleH);
     }
 
     // 8. LÍNEAS PRINCIPALES
