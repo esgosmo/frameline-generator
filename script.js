@@ -58,7 +58,11 @@ const inputs = {
 
     // NUEVOS (Posición X/Y):
     posXInput: getEl('posXInput'),
-    posYInput: getEl('posYInput')
+    posYInput: getEl('posYInput'),
+
+    // NUEVO: Sliders móviles
+    posXSlider: getEl('posXSlider'),
+    posYSlider: getEl('posYSlider')
 };
 
 // ==========================================
@@ -1186,6 +1190,9 @@ if (resetBtn) {
         if(textoEscala) textoEscala.innerText = "100%";
         if(inputs.posXInput) inputs.posXInput.value = "0.0";
         if(inputs.posYInput) inputs.posYInput.value = "0.0";
+        // NUEVO: Resetear sliders visuales también
+        if(inputs.posXSlider) inputs.posXSlider.value = 0;
+        if(inputs.posYSlider) inputs.posYSlider.value = 0;
         if(inputs.color) inputs.color.value = "#00ff00";
         if(inputs.thickness) inputs.thickness.value = 2;
         const secColorInput = document.getElementById('secFrameColor');
@@ -1337,3 +1344,26 @@ function makeScrubbable(input) {
 
 if (inputs.posXInput) makeScrubbable(inputs.posXInput);
 if (inputs.posYInput) makeScrubbable(inputs.posYInput);
+
+// ==========================================
+// 📱 MOBILE SLIDERS SYNC
+// ==========================================
+function bindInputAndSlider(input, slider) {
+    if(!input || !slider) return;
+
+    // 1. Si muevo el Slider (Móvil) -> Actualiza Número y Dibuja
+    slider.addEventListener('input', () => {
+        input.value = slider.value;
+        // Disparamos evento input manual para activar el requestDraw del input
+        input.dispatchEvent(new Event('input')); 
+    });
+
+    // 2. Si cambio el Número (PC/Móvil) -> Mueve el Slider silenciosamente
+    input.addEventListener('input', () => {
+        slider.value = input.value;
+    });
+}
+
+// Conectamos X y Y
+bindInputAndSlider(inputs.posXInput, inputs.posXSlider);
+bindInputAndSlider(inputs.posYInput, inputs.posYSlider);
