@@ -54,7 +54,11 @@ const inputs = {
     // Radios de escala
     scaleFit: getEl('scaleFit'),
     scaleFill: getEl('scaleFill'),
-    scaleCrop: getEl('scaleCrop')
+    scaleCrop: getEl('scaleCrop'),
+
+    // NUEVOS (Solo los inputs):
+    posXInput: getEl('posXInput'),
+    posYInput: getEl('posYInput')
 };
 
 // ==========================================
@@ -899,22 +903,29 @@ function draw() {
         } catch (e) { console.error("Draw image error:", e); }
     }
 
-    // 6. CÁLCULO ZONA VISIBLE (Frameline)
-    let visibleW, visibleH, offsetX, offsetY;
-    
-    let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
-    if (isNaN(scaleVal)) scaleVal = 100;
+ // 6. CÁLCULO ZONA VISIBLE (Frameline + Posición)
+    let visibleW, visibleH, baseX, baseY;
+    // ... (código de escala existente) ...
     const scaleFactor = scaleVal / 100;
     if (textoEscala) textoEscala.innerText = scaleVal + "%";
 
-    let opacityVal = inputs.opacity ? parseInt(inputs.opacity.value) : 100;
-    if (isNaN(opacityVal)) opacityVal = 100;
-    const opacity = opacityVal / 100;
-    if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
+    // --- LÓGICA DE POSICIÓN TIPO DAVINCI ---
+    // Leemos los valores numéricos directamente (default 0)
+    // Usamos parseFloat para aceptar decimales
+    const moveXPercent = inputs.posXInput ? parseFloat(inputs.posXInput.value) || 0 : 0;
+    const moveYPercent = inputs.posYInput ? parseFloat(inputs.posYInput.value) || 0 : 0;
+
+    // Convertimos el porcentaje ingresado a píxeles reales
+    // NOTA: Puedes ajustar si este valor es % del canvas total o % del frame visible.
+    // Por ahora, lo mantengo como % del canvas total para movimientos amplios.
+    const shiftX = Math.round((finalW * moveXPercent) / 100);
+    const shiftY = Math.round((finalH * moveYPercent) / 100);
 
     if (isCropMode) {
-        visibleW = finalW; visibleH = finalH; offsetX = 0; offsetY = 0;
+        // ... (igual que antes) ...
+        visibleW = finalW; visibleH = finalH; baseX = 0; baseY = 0;
     } else {
+        // ... (cálculo de visibleW/H igual que antes) ...
         if (targetAspect > screenAspect) { 
             visibleW = finalW; visibleH = finalW / targetAspect; 
         } else { 
@@ -923,9 +934,14 @@ function draw() {
         visibleW = Math.round(visibleW * scaleFactor);
         visibleH = Math.round(visibleH * scaleFactor);
         
-        offsetX = Math.floor((finalW - visibleW) / 2); 
-        offsetY = Math.floor((finalH - visibleH) / 2);
+        // Calculamos el centro y SUMAMOS el SHIFT
+        baseX = Math.floor((finalW - visibleW) / 2) + shiftX; 
+        baseY = Math.floor((finalH - visibleH) / 2) + shiftY;
     }
+
+    // Coordenadas finales de dibujo
+    const drawX = baseX;
+    const drawY = baseY;
 
     // 7. MATTE
     if (!isCropMode) {
@@ -949,7 +965,8 @@ function draw() {
         ctx.lineWidth = mainThickness; 
         ctx.setLineDash([]); 
         ctx.beginPath();
-        ctx.rect(offsetX - mainOffset, offsetY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
+        // 🔥 USAMOS LAS NUEVAS COORDENADAS
+        ctx.rect(drawX - mainOffset, drawY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
         ctx.stroke();
     }
 
@@ -998,7 +1015,7 @@ function draw() {
         if (inputs.safeTitleOn && inputs.safeTitleOn.checked) drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
     }
 
-    // 11. ETIQUETAS
+// 11. ETIQUETAS (Actualizado para seguir la Posición X/Y)
     const showAspect = inputs.showLabels && inputs.showLabels.checked;
     const showRes = inputs.showResLabels && inputs.showResLabels.checked;
 
@@ -1014,14 +1031,29 @@ function draw() {
             const txtAsp = obtenerRatioTexto(Math.round(visibleW), Math.round(visibleH));
             const txtRes = `${Math.round(visibleW)} x ${Math.round(visibleH)}`;
             
-            if (showAspect) { ctx.textAlign = "left"; ctx.fillText(txtAsp, offsetX + padding, offsetY + padding); }
+            // 🔥 CAMBIO CLAVE: Usamos drawX y drawY en lugar de offsetX/offsetY
+            
+            if (showAspect) { 
+                ctx.textAlign = "left"; 
+                // Antes: offsetX + padding
+                // Ahora: drawX + padding
+                ctx.fillText(txtAsp, drawX + padding, drawY + padding); 
+            }
+            
             if (showRes) {
                 ctx.textAlign = showAspect ? "right" : "left"; 
-                const posX = showAspect ? (offsetX + visibleW - padding) : (offsetX + padding);
-                const posY = showAspect ? (offsetY + padding) : (offsetY + padding + lineHeight); 
-                ctx.fillText(txtRes, posX, offsetY + padding);
+                
+                // Calculamos la X
+                const posX = showAspect ? (drawX + visibleW - padding) : (drawX + padding);
+                
+                // Calculamos la Y (si hay aspecto, misma línea; si no, abajo)
+                const posY = showAspect ? (drawY + padding) : (drawY + padding + lineHeight); 
+                
+                ctx.fillText(txtRes, posX, posY);
             }
        }
+
+       // Etiquetas del cuadro secundario (este usa secX/secY, que se calculan aparte)
        if (drawSec && inputs.secAspect) {
             ctx.fillStyle = inputs.secColor.value;
             const txtSecAsp = obtenerRatioTexto(Math.round(secW), Math.round(secH));
@@ -1167,6 +1199,16 @@ if (btnInfo) {
         btnInfo.style.borderBottom = isHidden ? "1px solid #444" : "none";
     });
 }
+
+// --- Eventos de Posición ---
+if(inputs.posXInput) {
+    // Usamos 'input' para que se actualice mientras escriben o arrastran
+    inputs.posXInput.addEventListener('input', requestDraw);
+}
+if(inputs.posYInput) {
+    inputs.posYInput.addEventListener('input', requestDraw);
+}
+
 
 // =========================================================
 // Global Presets (INTELIGENTE: Detecta si estabas en Full o Crop)
@@ -1451,6 +1493,9 @@ if (resetBtn) {
         if(textoOpacidad) textoOpacidad.innerText = "100%";
         if(inputs.scale) inputs.scale.value = 100;
         if(textoEscala) textoEscala.innerText = "100%";
+        // NUEVO: Resetear inputs numéricos a 0.0
+        if(inputs.posXInput) inputs.posXInput.value = "0.0";
+        if(inputs.posYInput) inputs.posYInput.value = "0.0";
         if(inputs.color) inputs.color.value = "#00ff00";
         if(inputs.thickness) inputs.thickness.value = 2;
         const secColorInput = document.getElementById('secFrameColor');
@@ -1596,3 +1641,77 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ==========================================
+// 🔥 DAVINCI STYLE SCRUBBING LOGIC
+// ==========================================
+
+function makeScrubbable(input) {
+    if (!input) return;
+
+    let isDragging = false;
+    let startX = 0;
+    let startValue = 0;
+    
+    // Sensibilidad: Cuánto cambia el número por cada píxel movido.
+    // 0.1 es preciso, 0.5 es rápido. DaVinci usa algo intermedio.
+    const sensitivity = 0.2; 
+
+    input.addEventListener('mousedown', function(e) {
+        // Solo activamos con clic izquierdo
+        if (e.button !== 0) return;
+
+        isDragging = true;
+        startX = e.clientX;
+        startValue = parseFloat(input.value) || 0;
+
+        // Añadimos clase al body para mantener el cursor <-> en toda la pantalla
+        document.body.classList.add('is-scrubbing');
+        
+        // Evitamos que el navegador intente seleccionar texto
+        // e.preventDefault(); // OJO: Si activas esto, a veces cuesta hacer clic para escribir. 
+        // Mejor dejamos que el foco ocurra si no hay movimiento.
+    });
+
+    // Escuchamos el movimiento en TODO el documento (por si te sales del input)
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+
+        e.preventDefault(); // Aquí sí prevenimos selecciones raras
+
+        const currentX = e.clientX;
+        const deltaX = currentX - startX;
+        
+        // Si el movimiento es muy pequeño, no hacemos nada (para permitir clic simple y escribir)
+        if (Math.abs(deltaX) < 2) return;
+
+        // Calculamos nuevo valor
+        let newValue = startValue + (deltaX * sensitivity);
+
+        // Respetamos Min/Max si existen en el HTML
+        if (input.min) newValue = Math.max(parseFloat(input.min), newValue);
+        if (input.max) newValue = Math.min(parseFloat(input.max), newValue);
+
+        // Redondeamos a 1 decimal (puedes cambiar a 0 o 2 según gusto)
+        input.value = newValue.toFixed(1);
+
+        // Disparamos el evento para que tu draw() se entere
+        // Usamos 'input' en lugar de 'change' para tiempo real
+        input.dispatchEvent(new Event('input'));
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (isDragging) {
+            isDragging = false;
+            document.body.classList.remove('is-scrubbing');
+        }
+    });
+}
+
+// --- ACTIVAR SCRUBBING EN TUS INPUTS ---
+// Llama a la función para tus inputs de posición
+if (inputs.posXInput) makeScrubbable(inputs.posXInput);
+if (inputs.posYInput) makeScrubbable(inputs.posYInput);
+
+// Opcional: También podrías aplicarlo al grosor o escala si quisieras
+// if (inputs.scale) makeScrubbable(inputs.scale);
