@@ -943,7 +943,7 @@ function draw() {
     const drawX = baseX;
     const drawY = baseY;
 
-  // 7. MATTE (CORREGIDO PARA SOPORTAR POSICIÓN X/Y)
+// 7. MATTE (CORREGIDO PARA SOPORTAR POSICIÓN X/Y)
     if (!isCropMode) {
         // Obtenemos la opacidad del input
         const opacityVal = inputs.opacity ? inputs.opacity.value : 0; 
@@ -952,19 +952,19 @@ function draw() {
         
         ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
 
-        // Dibujamos 4 rectángulos alrededor del cuadro (drawX, drawY)
+        // Dibujamos 4 rectángulos alrededor del cuadro (usando drawX y drawY)
         
-        // A. Barra Superior (Desde techo hasta donde empieza el cuadro)
+        // A. Barra Superior
         if (drawY > 0) ctx.fillRect(0, 0, finalW, drawY);
         
-        // B. Barra Inferior (Desde donde termina el cuadro hasta el suelo)
+        // B. Barra Inferior
         const bottomY = drawY + visibleH;
         if (bottomY < finalH) ctx.fillRect(0, bottomY, finalW, finalH - bottomY);
 
-        // C. Barra Izquierda (Desde pared izq hasta donde empieza el cuadro)
+        // C. Barra Izquierda
         if (drawX > 0) ctx.fillRect(0, drawY, drawX, visibleH);
         
-        // D. Barra Derecha (Desde donde termina el cuadro hasta pared der)
+        // D. Barra Derecha
         const rightX = drawX + visibleW;
         if (rightX < finalW) ctx.fillRect(rightX, drawY, finalW - rightX, visibleH);
     }
@@ -1009,7 +1009,9 @@ function draw() {
             }
         }
         secW = Math.round(secW); secH = Math.round(secH);
-        secX = (finalW - secW) / 2; secY = (finalH - secH) / 2;
+        // Sumamos shiftX y shiftY para que siga al cuadro principal
+        secX = Math.floor((finalW - secW) / 2) + shiftX; 
+        secY = Math.floor((finalH - secH) / 2) + shiftY;
 
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
         ctx.lineWidth = mainThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
