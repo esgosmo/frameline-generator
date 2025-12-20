@@ -729,14 +729,73 @@ function draw() {
     let rawShiftX = Math.round((baseW * moveXPercent) / 100);
     let rawShiftY = Math.round((baseH * moveYPercent) / 100);
 
+// 3. CÁLCULO DEL FRAMELINE (CON LÍMITES Y RETROALIMENTACIÓN UI)
+    const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
+    const screenAspect = baseW / baseH;
+    
+    // A. Tamaño ideal
+    let frameW, frameH;
+    if (targetAspect > screenAspect) { 
+        frameW = baseW; 
+        frameH = baseW / targetAspect; 
+    } else { 
+        frameH = baseH; 
+        frameW = baseH * targetAspect; 
+    }
+
+    // B. Escala
+    let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
+    if (isNaN(scaleVal)) scaleVal = 100;
+    const scaleFactor = scaleVal / 100;
+    if (textoEscala) textoEscala.innerText = scaleVal + "%";
+    
+    frameW = Math.round(frameW * scaleFactor);
+    frameH = Math.round(frameH * scaleFactor);
+
+    // --- 🔥 LÓGICA DE TOPES (CLAMPING) CON FEEDBACK ---
+    
+    // 1. Calculamos el margen máximo disponible
+    const maxShiftX = Math.floor((baseW - frameW) / 2);
+    const maxShiftY = Math.floor((baseH - frameH) / 2);
+
+    // 2. Leemos lo que pide el usuario (Intención)
+    const moveXPercent = inputs.posXInput ? parseFloat(inputs.posXInput.value) || 0 : 0;
+    const moveYPercent = inputs.posYInput ? parseFloat(inputs.posYInput.value) || 0 : 0;
+    
+    // Convertimos intención a píxeles
+    let rawShiftX = (baseW * moveXPercent) / 100; // Usamos float para precisión
+    let rawShiftY = (baseH * moveYPercent) / 100;
+
     // 3. APLICAMOS EL FRENO (Clamp)
-    // Math.max y Math.min fuerzan al valor a quedarse entre el negativo y el positivo del margen.
+    // Esto es lo que realmente se va a dibujar (La Realidad)
     const shiftX = Math.max(-maxShiftX, Math.min(maxShiftX, rawShiftX));
     const shiftY = Math.max(-maxShiftY, Math.min(maxShiftY, rawShiftY));
 
-    // D. Coordenadas Virtuales
-    const virtualFrameX = Math.floor((baseW - frameW) / 2) + shiftX;
-    const virtualFrameY = Math.floor((baseH - frameH) / 2) + shiftY;
+    // 4. 🔥 FEEDBACK: Si la Intención != Realidad, actualizamos la UI
+    // Esto hace que el slider se detenga visualmente cuando chocas con el borde
+    
+    // Verificamos X (con un pequeño margen de tolerancia para decimales)
+    if (Math.abs(rawShiftX - shiftX) > 1) {
+        // Convertimos la realidad (shiftX) de vuelta a porcentaje
+        const realPercentX = (shiftX / baseW) * 100;
+        // Forzamos a los inputs a decir la verdad
+        const fixedX = realPercentX.toFixed(1);
+        if(inputs.posXInput && document.activeElement !== inputs.posXInput) inputs.posXInput.value = fixedX;
+        if(inputs.posXSlider) inputs.posXSlider.value = fixedX;
+    }
+
+    // Verificamos Y
+    if (Math.abs(rawShiftY - shiftY) > 1) {
+        const realPercentY = (shiftY / baseH) * 100;
+        const fixedY = realPercentY.toFixed(1);
+        if(inputs.posYInput && document.activeElement !== inputs.posYInput) inputs.posYInput.value = fixedY;
+        if(inputs.posYSlider) inputs.posYSlider.value = fixedY;
+    }
+
+    // D. Coordenadas Virtuales Finales
+    // Usamos shiftX/shiftY que ya están limitados
+    const virtualFrameX = Math.floor((baseW - frameW) / 2) + Math.round(shiftX);
+    const virtualFrameY = Math.floor((baseH - frameH) / 2) + Math.round(shiftY);
 
 
     // 4. MODO CROP vs FULL
