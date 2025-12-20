@@ -715,51 +715,36 @@ function draw() {
     frameW = Math.round(frameW * scaleFactor);
     frameH = Math.round(frameH * scaleFactor);
 
-    // --- 🔥 LÓGICA DE TOPES (CLAMPING) CON FEEDBACK ---
+// --- 🔥 LÓGICA DE SENSIBILIDAD ADAPTATIVA (RELATIVE POSITION) ---
     
-    // 1. Calculamos el margen máximo disponible
+    // 1. Calculamos el ESPACIO DISPONIBLE REAL (El "hueco" donde nos podemos mover)
     const maxShiftX = Math.floor((baseW - frameW) / 2);
     const maxShiftY = Math.floor((baseH - frameH) / 2);
 
-    // 2. Leemos lo que pide el usuario (Intención)
-    const moveXPercent = inputs.posXInput ? parseFloat(inputs.posXInput.value) || 0 : 0;
-    const moveYPercent = inputs.posYInput ? parseFloat(inputs.posYInput.value) || 0 : 0;
+    // 2. Leemos el input (-100 a 100)
+    let moveXPercent = inputs.posXInput ? parseFloat(inputs.posXInput.value) || 0 : 0;
+    let moveYPercent = inputs.posYInput ? parseFloat(inputs.posYInput.value) || 0 : 0;
+
+    // 3. CÁLCULO RELATIVO (El cambio clave)
+    // Antes: (baseW * porcentaje) -> Se movía basado en la pantalla completa.
+    // Ahora: (maxShift * porcentaje) -> Se mueve basado SOLO en el espacio libre.
     
-    // Convertimos intención a píxeles
-    let rawShiftX = (baseW * moveXPercent) / 100; // Usamos float para precisión
-    let rawShiftY = (baseH * moveYPercent) / 100;
+    // Esto significa que 100% en el slider SIEMPRE es tocar el borde exacto.
+    let shiftX = Math.round((maxShiftX * moveXPercent) / 100);
+    let shiftY = Math.round((maxShiftY * moveYPercent) / 100);
 
-    // 3. APLICAMOS EL FRENO (Clamp)
-    // Esto es lo que realmente se va a dibujar (La Realidad)
-    const shiftX = Math.max(-maxShiftX, Math.min(maxShiftX, rawShiftX));
-    const shiftY = Math.max(-maxShiftY, Math.min(maxShiftY, rawShiftY));
+    // 4. CLAMPING DE SEGURIDAD (Por si acaso escriben manualmente 200%)
+    // Aunque la matemática relativa ya ayuda, esto asegura que nunca nos pasemos ni un pixel.
+    shiftX = Math.max(-maxShiftX, Math.min(maxShiftX, shiftX));
+    shiftY = Math.max(-maxShiftY, Math.min(maxShiftY, shiftY));
 
-    // 4. 🔥 FEEDBACK: Si la Intención != Realidad, actualizamos la UI
-    // Esto hace que el slider se detenga visualmente cuando chocas con el borde
-    
-    // Verificamos X (con un pequeño margen de tolerancia para decimales)
-    if (Math.abs(rawShiftX - shiftX) > 1) {
-        // Convertimos la realidad (shiftX) de vuelta a porcentaje
-        const realPercentX = (shiftX / baseW) * 100;
-        // Forzamos a los inputs a decir la verdad
-        const fixedX = realPercentX.toFixed(1);
-        if(inputs.posXInput && document.activeElement !== inputs.posXInput) inputs.posXInput.value = fixedX;
-        if(inputs.posXSlider) inputs.posXSlider.value = fixedX;
-    }
-
-    // Verificamos Y
-    if (Math.abs(rawShiftY - shiftY) > 1) {
-        const realPercentY = (shiftY / baseH) * 100;
-        const fixedY = realPercentY.toFixed(1);
-        if(inputs.posYInput && document.activeElement !== inputs.posYInput) inputs.posYInput.value = fixedY;
-        if(inputs.posYSlider) inputs.posYSlider.value = fixedY;
-    }
+    // *Nota: Ya no necesitamos el código de "Feedback/SnapBack" agresivo del paso anterior,
+    // porque con esta lógica relativa, es imposible chocar contra la pared "antes de tiempo".
+    // El slider llega al 100% al mismo tiempo que la imagen llega al borde.
 
     // D. Coordenadas Virtuales Finales
-    // Usamos shiftX/shiftY que ya están limitados
-    const virtualFrameX = Math.floor((baseW - frameW) / 2) + Math.round(shiftX);
-    const virtualFrameY = Math.floor((baseH - frameH) / 2) + Math.round(shiftY);
-
+    const virtualFrameX = Math.floor((baseW - frameW) / 2) + shiftX;
+    const virtualFrameY = Math.floor((baseH - frameH) / 2) + shiftY;
 
     // 4. MODO CROP vs FULL
     const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
