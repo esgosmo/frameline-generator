@@ -698,5 +698,37 @@ input[type="range"] {
     -moz-appearance: textfield;
 }
 
+/* 1. Actualiza tu clase .davinci-input */
+.davinci-input {
+    background-color: #222;
+    border: 1px solid #333;
+    color: #eee;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: 70px;
+    text-align: right;
+    font-family: 'Consolas', monospace, sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, background-color 0.2s;
+    
+    /* 🔥 LA CLAVE: Cambia el cursor para indicar que se puede arrastrar */
+    cursor: ew-resize; 
+    /* Evita que el usuario seleccione el texto mientras arrastra */
+    user-select: none; 
+}
+
+.davinci-input:focus {
+    outline: none;
+    border-color: #007bff;
+    background-color: #2a2a2a;
+    cursor: text; /* Al escribir, vuelve a ser cursor de texto */
+}
+
+/* 2. Clase global para congelar el cursor mientras arrastras */
+body.is-scrubbing {
+    cursor: ew-resize !important;
+    user-select: none;
+}
+
 
 
