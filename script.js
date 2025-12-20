@@ -692,44 +692,7 @@ function draw() {
         if (warningEl && warningEl.innerText.includes("Mobile Safety")) warningEl.classList.add('hidden');
     }
 
-    // 3. CÁLCULO DEL FRAMELINE (CON LÍMITES)
-    const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
-    const screenAspect = baseW / baseH;
-    
-    // A. Tamaño ideal
-    let frameW, frameH;
-    if (targetAspect > screenAspect) { 
-        frameW = baseW; 
-        frameH = baseW / targetAspect; 
-    } else { 
-        frameH = baseH; 
-        frameW = baseH * targetAspect; 
-    }
-
-    // B. Escala
-    let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
-    if (isNaN(scaleVal)) scaleVal = 100;
-    const scaleFactor = scaleVal / 100;
-    if (textoEscala) textoEscala.innerText = scaleVal + "%";
-    
-    frameW = Math.round(frameW * scaleFactor);
-    frameH = Math.round(frameH * scaleFactor);
-
-    // --- 🔥 AQUÍ ESTÁ LA MAGIA DEL TOPE (CLAMPING) ---
-    
-    // 1. Calculamos cuánto espacio libre hay (margen)
-    // Si frameW es casi igual a baseW, el margen es casi 0.
-    const maxShiftX = Math.floor((baseW - frameW) / 2);
-    const maxShiftY = Math.floor((baseH - frameH) / 2);
-
-    // 2. Leemos lo que pide el usuario
-    const moveXPercent = inputs.posXInput ? parseFloat(inputs.posXInput.value) || 0 : 0;
-    const moveYPercent = inputs.posYInput ? parseFloat(inputs.posYInput.value) || 0 : 0;
-    
-    let rawShiftX = Math.round((baseW * moveXPercent) / 100);
-    let rawShiftY = Math.round((baseH * moveYPercent) / 100);
-
-// 3. CÁLCULO DEL FRAMELINE (CON LÍMITES Y RETROALIMENTACIÓN UI)
+   // 3. CÁLCULO DEL FRAMELINE (CON LÍMITES Y RETROALIMENTACIÓN UI)
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
     const screenAspect = baseW / baseH;
     
