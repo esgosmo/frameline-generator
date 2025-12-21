@@ -953,7 +953,7 @@ function draw() {
             if (showAspect) ctx.fillText(txtSecAsp, secX + padding, secY + padding);
        }
     }
-
+ 
     // 13. CANVAS LABEL
     if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
         const fontSize = Math.max(12, Math.round(finalW / 80)); 
