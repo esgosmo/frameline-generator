@@ -652,7 +652,7 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// 4. FUNCIÓN DRAW (LOGICA PAN & SCAN FINAL)
+// 4. FUNCIÓN DRAW (CORREGIDA: ERROR drawSec + LOGICA SECUNDARIA)
 // ==========================================
 function draw() {
     if (!inputs.w || !inputs.h) return;
@@ -694,38 +694,26 @@ function draw() {
         if (warningEl && warningEl.innerText.includes("Mobile Safety")) warningEl.classList.add('hidden');
     }
 
-    // 3. PRE-CÁLCULO DE IMAGEN (Para saber límites de Pan & Scan)
-    // Calculamos cuánto mide la imagen REALMENTE en pantalla para saber si nos sobra imagen.
+    // 3. PRE-CÁLCULO DE IMAGEN (Pan & Scan)
     let imgW = 0, imgH = 0;
-    
     if (hasPhoto) {
         const isFill = inputs.scaleFill && inputs.scaleFill.checked;
-        // En Crop Mode siempre forzamos Fill para que no queden huecos negros al inicio
         const shouldUseFillLogic = isFill || isCropMode; 
-        
         const ratioW = baseW / userImage.width;
         const ratioH = baseH / userImage.height;
         let renderRatio;
-        
         if (shouldUseFillLogic) renderRatio = Math.max(ratioW, ratioH);
         else renderRatio = Math.min(ratioW, ratioH);
-
         imgW = userImage.width * renderRatio;
         imgH = userImage.height * renderRatio;
     }
 
-    // 4. CÁLCULO DEL FRAMELINE
+    // 4. CÁLCULO DEL FRAMELINE PRINCIPAL
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
     const screenAspect = baseW / baseH;
-    
     let frameW, frameH;
-    if (targetAspect > screenAspect) { 
-        frameW = baseW; 
-        frameH = baseW / targetAspect; 
-    } else { 
-        frameH = baseH; 
-        frameW = baseH * targetAspect; 
-    }
+    if (targetAspect > screenAspect) { frameW = baseW; frameH = baseW / targetAspect; } 
+    else { frameH = baseH; frameW = baseH * targetAspect; }
 
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
     if (isNaN(scaleVal)) scaleVal = 100;
@@ -735,28 +723,18 @@ function draw() {
     frameW = Math.round(frameW * scaleFactor);
     frameH = Math.round(frameH * scaleFactor);
 
-    // --- 🔥 LÓGICA DE AUTO-BLOQUEO MEJORADA (Pan & Scan) ---
-    
-    // Espacio libre en el Canvas (Generalmente 0 en crop mode)
+    // --- AUTO-BLOQUEO & POSICIÓN ---
     const canvasLimitX = Math.floor((baseW - frameW) / 2);
     const canvasLimitY = Math.floor((baseH - frameH) / 2);
-
-    // Espacio libre en la Imagen (Aquí es donde ganamos la libertad de movernos)
-    // Math.max(0, ...) es para evitar números negativos si la imagen es pequeña (Fit)
     const imgLimitX = Math.max(0, Math.floor((imgW - frameW) / 2));
     const imgLimitY = Math.max(0, Math.floor((imgH - frameH) / 2));
-
-    // El límite real es el MAYOR de los dos.
-    // Si el frame llena el canvas (0) pero sobra imagen (500), ¡podemos movernos 500px!
     const maxShiftX = Math.max(canvasLimitX, imgLimitX);
     const maxShiftY = Math.max(canvasLimitY, imgLimitY);
 
-    // Helper para bloquear visualmente (Pone gris el control si no hay a donde moverse)
     const toggleAxis = (inputId, sliderId, isLocked) => {
         const input = document.getElementById(inputId);
         const slider = document.getElementById(sliderId);
         const wrapper = input ? input.closest('.axis-wrapper') : null;
-        
         if (isLocked) {
             if(input && input.value != "0" && document.activeElement !== input) input.value = 0;
             if(slider && slider.value != "0") slider.value = 0;
@@ -768,22 +746,16 @@ function draw() {
         }
     };
 
-    // Bloqueamos solo si NO hay espacio ni en el canvas ni en la imagen
     const lockX = maxShiftX < 1;
     const lockY = maxShiftY < 1;
-
     toggleAxis('posXInput', 'posXSlider', lockX);
     toggleAxis('posYInput', 'posYSlider', lockY);
 
-    // Lectura de Inputs
     let moveXPercent = (!lockX && inputs.posXInput) ? (parseFloat(inputs.posXInput.value) || 0) : 0;
     let moveYPercent = (!lockY && inputs.posYInput) ? (parseFloat(inputs.posYInput.value) || 0) : 0;
 
-    // Cálculo Relativo (100% = Borde Máximo Disponible)
     let shiftX = Math.round((maxShiftX * moveXPercent) / 100);
     let shiftY = Math.round((maxShiftY * moveYPercent) / 100);
-
-    // Clamping final
     shiftX = Math.max(-maxShiftX, Math.min(maxShiftX, shiftX));
     shiftY = Math.max(-maxShiftY, Math.min(maxShiftY, shiftY));
 
@@ -791,52 +763,40 @@ function draw() {
     const virtualFrameX = Math.floor((baseW - frameW) / 2) + shiftX;
     const virtualFrameY = Math.floor((baseH - frameH) / 2) + shiftY;
 
-
-    // 5. DETERMINAR TAMAÑO FINAL Y OFFSET GLOBAL
+    // 5. DETERMINAR TAMAÑO FINAL
     let finalW, finalH, globalOffsetX, globalOffsetY;
-
     if (isCropMode) {
-        finalW = frameW;
-        finalH = frameH;
-        // Movemos el "mundo" (imagen y coordenadas secundarias) para centrar el frame
-        globalOffsetX = -virtualFrameX;
-        globalOffsetY = -virtualFrameY;
+        finalW = frameW; finalH = frameH;
+        globalOffsetX = -virtualFrameX; globalOffsetY = -virtualFrameY;
     } else {
-        finalW = baseW;
-        finalH = baseH;
-        globalOffsetX = 0;
-        globalOffsetY = 0;
+        finalW = baseW; finalH = baseH;
+        globalOffsetX = 0; globalOffsetY = 0;
     }
 
     if (canvas.width !== finalW) canvas.width = finalW;
     if (canvas.height !== finalH) canvas.height = finalH;
-    
     ctx.clearRect(0, 0, finalW, finalH);
 
-    // 6. DIBUJAR IMAGEN (Usando las dimensiones pre-calculadas)
+    // 6. DIBUJAR IMAGEN
     if (hasPhoto && imgW > 0 && imgH > 0) {
         try {
-            // Centramos la imagen en el canvas BASE
             const baseImgX = (baseW - imgW) / 2;
             const baseImgY = (baseH - imgH) / 2;
-            
-            // Dibujamos con el Offset Global
             ctx.drawImage(userImage, baseImgX + globalOffsetX, baseImgY + globalOffsetY, imgW, imgH);
         } catch (e) { console.error("Draw image error:", e); }
     }
 
-    // 7. COORDENADAS DE DIBUJO (Framelines)
+    // 7. COORDENADAS DIBUJO
     const drawX = virtualFrameX + globalOffsetX;
     const drawY = virtualFrameY + globalOffsetY;
     const visibleW = frameW;
     const visibleH = frameH;
 
-    // 8. MATTE (Barras negras, solo en modo no-crop)
+    // 8. MATTE
     if (!isCropMode) {
         const opacityVal = inputs.opacity ? inputs.opacity.value : 0; 
         const alpha = opacityVal / 100;
         ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
-
         if (drawY > 0) ctx.fillRect(0, 0, finalW, drawY);
         const bottomY = drawY + visibleH;
         if (bottomY < finalH) ctx.fillRect(0, bottomY, finalW, finalH - bottomY);
@@ -855,44 +815,41 @@ function draw() {
     
     if (mainThickness > 0) {
         if (inputs.color) ctx.strokeStyle = inputs.color.value;
-        ctx.lineWidth = mainThickness; 
-        ctx.setLineDash([]); 
-        ctx.beginPath();
+        ctx.lineWidth = mainThickness; ctx.setLineDash([]); ctx.beginPath();
         ctx.rect(drawX - mainOffset, drawY - mainOffset, visibleW + (mainOffset * 2), visibleH + (mainOffset * 2));
         ctx.stroke();
     }
 
-    // 10. LÍNEA SECUNDARIA
+    // 10. LÍNEA SECUNDARIA (CORREGIDA)
     let secX = 0, secY = 0, secW = 0, secH = 0;
-    
+    let drawSec = false; // <--- AQUÍ FALTABA ESTA VARIABLE QUE ROMPÍA TODO
+
     if (inputs.secOn && inputs.secOn.checked && mainThickness > 0) {
+        drawSec = true;
         const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
         const fitInside = inputs.secFit && inputs.secFit.checked;
 
         if (fitInside) {
-            // Relativo al cuadro visible
+            // A) Relativo al cuadro visible (Se mueve y escala con el verde)
             const mainFrameAspect = visibleW / visibleH;
             if (secAspect > mainFrameAspect) { secW = visibleW; secH = visibleW / secAspect; } 
             else { secH = visibleH; secW = visibleH * secAspect; }
-            secW = Math.round(secW); 
-            secH = Math.round(secH);
+            secW = Math.round(secW); secH = Math.round(secH);
             secX = drawX + (visibleW - secW) / 2;
             secY = drawY + (visibleH - secH) / 2;
         } else {
-            // Absoluto al canvas base
+            // B) Absoluto al canvas base (Fijo al centro, ignora scale y position user)
             const screenAspect = baseW / baseH; 
             if (secAspect > screenAspect) { secW = baseW; secH = baseW / secAspect; } 
             else { secH = baseH; secW = baseH * secAspect; }
-            if (!isCropMode) {
-                secW = secW * scaleFactor;
-                secH = secW / secAspect;
-            }
-            secW = Math.round(secW); 
-            secH = Math.round(secH);
             
-            const secBaseX = Math.floor((baseW - secW) / 2); // Fijo al centro base
+            // NOTA: Aquí quitamos la lógica de "scaleFactor" para que sea independiente
+            secW = Math.round(secW); secH = Math.round(secH);
+            
+            // Fijo al centro del canvas base (NO sumamos shiftX/Y)
+            const secBaseX = Math.floor((baseW - secW) / 2); 
             const secBaseY = Math.floor((baseH - secH) / 2);
-            // Solo aplicamos el movimiento global del crop, NO el shift del usuario
+            // Solo aplicamos offset global si estamos en crop mode
             secX = secBaseX + globalOffsetX;
             secY = secBaseY + globalOffsetY;
         }
@@ -919,7 +876,7 @@ function draw() {
         if (inputs.safeTitleOn && inputs.safeTitleOn.checked) drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
     }
 
-    // 12. ETIQUETAS
+    // 12. ETIQUETAS (Aquí es donde ocurría el error porque drawSec no existía)
     const showAspect = inputs.showLabels && inputs.showLabels.checked;
     const showRes = inputs.showResLabels && inputs.showResLabels.checked;
 
@@ -934,11 +891,7 @@ function draw() {
             ctx.fillStyle = inputs.color.value;
             const txtAsp = obtenerRatioTexto(Math.round(visibleW), Math.round(visibleH));
             const txtRes = `${Math.round(visibleW)} x ${Math.round(visibleH)}`;
-            
-            if (showAspect) { 
-                ctx.textAlign = "left"; 
-                ctx.fillText(txtAsp, drawX + padding, drawY + padding); 
-            }
+            if (showAspect) { ctx.textAlign = "left"; ctx.fillText(txtAsp, drawX + padding, drawY + padding); }
             if (showRes) {
                 ctx.textAlign = showAspect ? "right" : "left"; 
                 const posX = showAspect ? (drawX + visibleW - padding) : (drawX + padding);
@@ -946,6 +899,7 @@ function draw() {
                 ctx.fillText(txtRes, posX, posY);
             }
        }
+       // Ahora drawSec ya está definido arriba
        if (drawSec && inputs.secAspect) {
             ctx.fillStyle = inputs.secColor.value;
             const txtSecAsp = obtenerRatioTexto(Math.round(secW), Math.round(secH));
@@ -953,7 +907,7 @@ function draw() {
             if (showAspect) ctx.fillText(txtSecAsp, secX + padding, secY + padding);
        }
     }
- 
+
     // 13. CANVAS LABEL
     if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
         const fontSize = Math.max(12, Math.round(finalW / 80)); 
@@ -970,9 +924,7 @@ function draw() {
                 const rawText = menuResoluciones.options[menuResoluciones.selectedIndex].text;
                 finalText = rawText.replace(/\s*\(.*?\)\s*$/, '').trim();
                 if (!finalText) finalText = `${finalW} x ${finalH}`;
-            } else {
-                finalText = `Canvas: ${finalW} x ${finalH}`; 
-            }
+            } else { finalText = `Canvas: ${finalW} x ${finalH}`; }
         }
         const padding = Math.max(10, finalW * 0.02);
         ctx.lineWidth = fontSize * 0.12; 
