@@ -1006,6 +1006,11 @@ if (inputs.h) { inputs.h.addEventListener('input', () => { if (menuResoluciones)
 if (inputs.aspect) {
     inputs.aspect.addEventListener('input', () => {
         if (menuAspecto) menuAspecto.value = 'custom';
+
+        // --- NUEVO: Si toco el input manual, salgo de modo Full y desbloqueo escala ---
+        isFullGateMode = false; 
+        toggleScaleLock(false);
+
         const contenedorBotones = document.getElementById('aspectBtnContainer');
         if (contenedorBotones) contenedorBotones.querySelectorAll('button.active').forEach(btn => btn.classList.remove('active'));
     });
@@ -1076,11 +1081,18 @@ window.setPreset = function(w, h, btn) {
 
 window.setAspect = function(val, btn) {
     isFullGateMode = false; 
+
+    // --- NUEVO: Desbloqueamos la escala al elegir otro aspecto ---
+    toggleScaleLock(false);
+
     if(cajaAspecto) cajaAspecto.classList.remove('hidden');
     let finalVal = val;
     if (val === '4:3') finalVal = (4/3).toFixed(5);
+    
     if(inputs.aspect) inputs.aspect.value = finalVal;
     if(menuAspecto) { menuAspecto.value = val; if(menuAspecto.value != val) menuAspecto.value = 'custom'; }
+
+    // Auto-thickness logic
     const currentThick = parseInt(inputs.thickness ? inputs.thickness.value : 0) || 0;
     if (currentThick === 0) {
         const currentW = parseInt(inputs.w.value) || 1920;
@@ -1094,12 +1106,21 @@ window.setAspect = function(val, btn) {
 window.setFullGate = function(btn) {
     const w = parseFloat(inputs.w.value);
     const h = parseFloat(inputs.h.value);
+    
     if (h > 0) {
         isFullGateMode = true; 
+        
+        // --- NUEVO: Bloqueamos la escala al entrar en modo Canvas ---
+        toggleScaleLock(true); 
+
         if(cajaAspecto) cajaAspecto.classList.remove('hidden');
+
         const nativeAspect = w / h;
-        if(inputs.aspect) inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
+        if(inputs.aspect) {
+            inputs.aspect.value = parseFloat(nativeAspect.toFixed(5));
+        }
         if(menuAspecto) menuAspecto.value = 'custom';
+        
         flashInput(inputs.aspect);
         highlightButton(btn);
         requestDraw();
@@ -1421,4 +1442,25 @@ if (btnResetPos) {
         // 3. Dibujar
         requestDraw();
     });
+}
+
+// ==========================================
+// 🔒 BLOQUEO DE ESCALA (Para modo Canvas)
+// ==========================================
+function toggleScaleLock(shouldLock) {
+    // Buscamos el contenedor del slider de escala (el div padre)
+    const scaleContainer = inputs.scale ? inputs.scale.parentElement : null;
+    
+    if (scaleContainer) {
+        if (shouldLock) {
+            // BLOQUEAR
+            scaleContainer.classList.add('disabled-group');
+            // Forzamos 100% porque en modo Canvas no tiene sentido menos
+            if(inputs.scale) inputs.scale.value = 100;
+            if(textoEscala) textoEscala.innerText = "100%";
+        } else {
+            // DESBLOQUEAR
+            scaleContainer.classList.remove('disabled-group');
+        }
+    }
 }

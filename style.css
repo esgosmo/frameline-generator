@@ -696,6 +696,7 @@ input[type="range"] {
 /* Para Firefox */
 .davinci-input {
     -moz-appearance: textfield;
+    appearance: textfield;      /* Estándar Moderno */
 }
 
 /* 1. Actualiza tu clase .davinci-input */
@@ -782,4 +783,12 @@ body.is-scrubbing {
         flex-direction: column; 
         gap: 15px;
     }
+}
+
+/* En style.css */
+.disabled-group {
+    opacity: 0.4;
+    pointer-events: none;
+    filter: grayscale(100%);
+    transition: opacity 0.3s ease;
 }
