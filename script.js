@@ -788,25 +788,34 @@ function draw() {
     
     ctx.clearRect(0, 0, finalW, finalH);
 
-    // 5. DIBUJAR IMAGEN
+// 5. DIBUJAR IMAGEN
     if (hasPhoto) {
         try {
             const isFill = inputs.scaleFill && inputs.scaleFill.checked;
-            const shouldUseFillLogic = isFill; 
+            
+            // --- 🔥 CORRECCIÓN CLAVE AQUÍ ---
+            // Si el usuario eligió "Fill" en los radios, O SI ESTAMOS EN MODO CROP.
+            // En modo Crop, DEBEMOS usar lógica de Fill para asegurar que la imagen
+            // cubra todo el lienzo base y nunca se vean bordes vacíos al mover el encuadre.
+            const shouldUseFillLogic = isFill || isCropMode; 
             
             const ratioW = baseW / userImage.width;
             const ratioH = baseH / userImage.height;
             
             let renderRatio;
+            // Math.max asegura que la imagen escale hasta llenar el lado más grande (Fill)
+            // Math.min asegura que la imagen quepa entera dentro (Fit)
             if (shouldUseFillLogic) renderRatio = Math.max(ratioW, ratioH);
             else renderRatio = Math.min(ratioW, ratioH);
 
             const newImgW = userImage.width * renderRatio;
             const newImgH = userImage.height * renderRatio;
             
+            // Centramos la imagen en el canvas BASE
             const baseImgX = (baseW - newImgW) / 2;
             const baseImgY = (baseH - newImgH) / 2;
             
+            // Dibujamos aplicando el Offset Global (que mueve el "mundo" si es Crop)
             ctx.drawImage(userImage, baseImgX + globalOffsetX, baseImgY + globalOffsetY, newImgW, newImgH);
         } catch (e) { console.error("Draw image error:", e); }
     }
