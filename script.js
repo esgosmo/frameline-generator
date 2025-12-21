@@ -652,10 +652,13 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// 4. FUNCIÓN DRAW (CON LÍMITES DE SEGURIDAD / CLAMPING)
+// 4. FUNCIÓN DRAW (FINAL: Crop Real + Smart Lock + Límites)
 // ==========================================
 function draw() {
     if (!inputs.w || !inputs.h) return;
+
+    // 0. ESTADO GLOBAL (Declaramos esto al inicio para evitar errores)
+    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
 
     // 1. DIMENSIONES BASE
     let baseW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
@@ -666,7 +669,6 @@ function draw() {
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
     const PIXEL_LIMIT = hasPhoto ? 36000000 : 150000000; 
     const currentPixels = baseW * baseH;
-    
     const warningEl = document.getElementById('sizeWarning');
 
     if (isMobile && currentPixels > PIXEL_LIMIT) {
@@ -692,7 +694,7 @@ function draw() {
         if (warningEl && warningEl.innerText.includes("Mobile Safety")) warningEl.classList.add('hidden');
     }
 
-   // 3. CÁLCULO DEL FRAMELINE (CON LÍMITES Y RETROALIMENTACIÓN UI)
+    // 3. CÁLCULO DEL FRAMELINE (CON AUTO-BLOQUEO X/Y INDEPENDIENTE)
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
     const screenAspect = baseW / baseH;
     
@@ -715,40 +717,57 @@ function draw() {
     frameW = Math.round(frameW * scaleFactor);
     frameH = Math.round(frameH * scaleFactor);
 
-// --- 🔥 LÓGICA DE SENSIBILIDAD ADAPTATIVA (RELATIVE POSITION) ---
+    // --- 🔥 LÓGICA DE AUTO-BLOQUEO (SMART LOCK) ---
     
-    // 1. Calculamos el ESPACIO DISPONIBLE REAL (El "hueco" donde nos podemos mover)
+    // 1. Calculamos márgenes disponibles (Espacio libre a cada lado)
     const maxShiftX = Math.floor((baseW - frameW) / 2);
     const maxShiftY = Math.floor((baseH - frameH) / 2);
 
-    // 2. Leemos el input (-100 a 100)
-    let moveXPercent = inputs.posXInput ? parseFloat(inputs.posXInput.value) || 0 : 0;
-    let moveYPercent = inputs.posYInput ? parseFloat(inputs.posYInput.value) || 0 : 0;
+    // Helper para bloquear/desbloquear visualmente un eje
+    const toggleAxis = (inputId, sliderId, isLocked) => {
+        const input = document.getElementById(inputId);
+        const slider = document.getElementById(sliderId);
+        const wrapper = input ? input.closest('.axis-wrapper') : null;
+        
+        if (isLocked) {
+            if(input && input.value != "0" && document.activeElement !== input) input.value = 0;
+            if(slider && slider.value != "0") slider.value = 0;
+            if(wrapper) wrapper.style.opacity = "0.3"; 
+            if(wrapper) wrapper.style.pointerEvents = "none"; 
+        } else {
+            if(wrapper) wrapper.style.opacity = "1";
+            if(wrapper) wrapper.style.pointerEvents = "auto";
+        }
+    };
 
-    // 3. CÁLCULO RELATIVO (El cambio clave)
-    // Antes: (baseW * porcentaje) -> Se movía basado en la pantalla completa.
-    // Ahora: (maxShift * porcentaje) -> Se mueve basado SOLO en el espacio libre.
-    
-    // Esto significa que 100% en el slider SIEMPRE es tocar el borde exacto.
+    // 2. Bloqueo Inteligente por Eje
+    const lockX = maxShiftX < 1;
+    const lockY = maxShiftY < 1;
+
+    // Solo ejecutamos la actualización visual si NO estamos en modo Crop 
+    if (!isCropMode) {
+        toggleAxis('posXInput', 'posXSlider', lockX);
+        toggleAxis('posYInput', 'posYSlider', lockY);
+    }
+
+    // 3. Lectura de Inputs
+    let moveXPercent = (!lockX && inputs.posXInput) ? (parseFloat(inputs.posXInput.value) || 0) : 0;
+    let moveYPercent = (!lockY && inputs.posYInput) ? (parseFloat(inputs.posYInput.value) || 0) : 0;
+
+    // 4. Cálculo Relativo (100% = Borde)
     let shiftX = Math.round((maxShiftX * moveXPercent) / 100);
     let shiftY = Math.round((maxShiftY * moveYPercent) / 100);
 
-    // 4. CLAMPING DE SEGURIDAD (Por si acaso escriben manualmente 200%)
-    // Aunque la matemática relativa ya ayuda, esto asegura que nunca nos pasemos ni un pixel.
+    // 5. Clamping final de seguridad
     shiftX = Math.max(-maxShiftX, Math.min(maxShiftX, shiftX));
     shiftY = Math.max(-maxShiftY, Math.min(maxShiftY, shiftY));
 
-    // *Nota: Ya no necesitamos el código de "Feedback/SnapBack" agresivo del paso anterior,
-    // porque con esta lógica relativa, es imposible chocar contra la pared "antes de tiempo".
-    // El slider llega al 100% al mismo tiempo que la imagen llega al borde.
-
-    // D. Coordenadas Virtuales Finales
+    // D. Coordenadas Virtuales
     const virtualFrameX = Math.floor((baseW - frameW) / 2) + shiftX;
     const virtualFrameY = Math.floor((baseH - frameH) / 2) + shiftY;
 
-    // 4. MODO CROP vs FULL
-    const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
-    
+
+    // 4. DETERMINAR TAMAÑO FINAL DEL CANVAS (Crop vs Full)
     let finalW, finalH, globalOffsetX, globalOffsetY;
 
     if (isCropMode) {
@@ -789,10 +808,10 @@ function draw() {
             const baseImgY = (baseH - newImgH) / 2;
             
             ctx.drawImage(userImage, baseImgX + globalOffsetX, baseImgY + globalOffsetY, newImgW, newImgH);
-        } catch (e) { console.error("Draw error", e); }
+        } catch (e) { console.error("Draw image error:", e); }
     }
 
-    // 6. COORDENADAS DIBUJO
+    // 6. COORDENADAS DE DIBUJO
     const drawX = virtualFrameX + globalOffsetX;
     const drawY = virtualFrameY + globalOffsetY;
     const visibleW = frameW;
@@ -812,7 +831,7 @@ function draw() {
         if (rightX < finalW) ctx.fillRect(rightX, drawY, finalW - rightX, visibleH);
     }
 
-    // 8. LÍNEAS
+    // 8. LÍNEAS PRINCIPALES
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
     if (rawThick > 10) { rawThick = 10; if(inputs.thickness) inputs.thickness.value = 10; }
@@ -829,7 +848,7 @@ function draw() {
         ctx.stroke();
     }
 
-// 9. LÍNEA SECUNDARIA (CORREGIDA: FIJA vs RELATIVA)
+    // 9. LÍNEA SECUNDARIA
     let secX = 0, secY = 0, secW = 0, secH = 0;
     let drawSec = false;
 
@@ -839,61 +858,32 @@ function draw() {
         const fitInside = inputs.secFit && inputs.secFit.checked;
 
         if (fitInside) {
-            // ===============================================
-            // CASO A: FIT INSIDE = ON (Comportamiento Relativo)
-            // ===============================================
-            // Debe respetar el Scale y la Posición del cuadro principal (visibleW/H y drawX/Y)
-            
             const mainFrameAspect = visibleW / visibleH;
-
-            // Calculamos dimensiones basándonos en el cuadro YA ESCALADO (visibleW/H)
-            if (secAspect > mainFrameAspect) { 
-                secW = visibleW; 
-                secH = visibleW / secAspect; 
-            } else { 
-                secH = visibleH; 
-                secW = visibleH * secAspect; 
-            }
+            if (secAspect > mainFrameAspect) { secW = visibleW; secH = visibleW / secAspect; } 
+            else { secH = visibleH; secW = visibleH * secAspect; }
             secW = Math.round(secW); 
             secH = Math.round(secH);
-
-            // Posición: Centrado DENTRO del cuadro principal (que ya tiene shiftX/Y aplicado)
             secX = drawX + (visibleW - secW) / 2;
             secY = drawY + (visibleH - secH) / 2;
-
         } else {
-            // ===============================================
-            // CASO B: FIT INSIDE = OFF (Comportamiento Fijo/Absoluto)
-            // ===============================================
-            // Debe ignorar Scale y Posición X/Y. Se calcula sobre el Canvas Base (baseW/H).
-            
-            if (secAspect > screenAspect) { 
-                secW = baseW; 
-                secH = baseW / secAspect; 
-            } else { 
-                secH = baseH; 
-                secW = baseH * secAspect; 
+            const screenAspect = baseW / baseH; // Usar aspect del base canvas
+            if (secAspect > screenAspect) { secW = baseW; secH = baseW / secAspect; } 
+            else { secH = baseH; secW = baseH * secAspect; }
+            if (!isCropMode) {
+                secW = secW * scaleFactor;
+                secH = secW / secAspect;
             }
             secW = Math.round(secW); 
             secH = Math.round(secH);
-
-            // Posición: Centrado en el Canvas BASE (Siempre al centro absoluto 0,0)
-            // NO sumamos 'shiftX' ni 'shiftY' aquí.
-            const secBaseX = Math.floor((baseW - secW) / 2);
-            const secBaseY = Math.floor((baseH - secH) / 2);
-            
-            // Solo sumamos globalOffsetX por si el canvas entero se movió (Modo Crop)
+            const secBaseX = Math.floor((baseW - secW) / 2) + shiftX; 
+            const secBaseY = Math.floor((baseH - secH) / 2) + shiftY;
             secX = secBaseX + globalOffsetX;
             secY = secBaseY + globalOffsetY;
         }
 
-        // Dibujar
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
-        ctx.lineWidth = mainThickness; 
-        ctx.setLineDash([10, 5]); 
-        ctx.beginPath();
-        ctx.rect(secX, secY, secW, secH); 
-        ctx.stroke();
+        ctx.lineWidth = mainThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
+        ctx.rect(secX, secY, secW, secH); ctx.stroke();
     }
 
     // 10. SAFE AREAS
@@ -904,7 +894,6 @@ function draw() {
             const sW = visibleW * p; const sH = visibleH * p;
             const sX = drawX + (visibleW - sW) / 2; 
             const sY = drawY + (visibleH - sH) / 2;
-            
             ctx.lineWidth = safeThickness;
             if(inputs.color) ctx.strokeStyle = inputs.color.value;
             ctx.setLineDash(dashed ? [5, 5] : []); ctx.beginPath();
