@@ -265,4 +265,61 @@ it('11. Accesibilidad: Navegación por Teclado (Sin Mouse)', () => {
     cy.get('#imageOptionsPanel').should('have.class', 'hidden');
   });
 
+it('12. Debe permitir mover la posición y resetearla con el botón mini-reset', () => {
+    // 1. PASO NUEVO: Abrir el panel de controles seleccionando un aspecto
+    // Esto quita la clase .hidden del #aspectGroup
+    cy.contains('button', '2.39').click();
+    
+    // Ahora sí, el input ya es visible
+    cy.get('#scaleInput').should('be.visible');
+
+    // 2. Configuración inicial: Bajamos la escala al 80%
+    cy.get('#scaleInput').invoke('val', 80).trigger('input');
+    cy.get('#scaleValue').should('contain', '80%');
+
+    // 3. Mover Posición X y Y
+    cy.get('#posXInput').clear().type('15.5').trigger('input');
+    cy.get('#posYInput').clear().type('-10').trigger('input');
+
+    // Verificamos que los valores se mantuvieron
+    cy.get('#posXInput').should('have.value', '15.5');
+    cy.get('#posYInput').should('have.value', '-10');
+
+    // 4. Presionar el botón de Mini-Reset
+    cy.get('#resetPosBtn').click();
+
+    // 5. Verificar que volvieron a 0.0
+    cy.get('#posXInput').should('have.value', '0.0');
+    cy.get('#posYInput').should('have.value', '0.0');
+
+    // 6. Verificar que la escala NO se reseteó (debe seguir en 80%)
+    cy.get('#scaleInput').should('have.value', '80');
+});
+
+it('13. Debe bloquear y resetear la posición automáticamente (Smart Lock)', () => {
+    // 1. Abrir panel
+    cy.contains('button', '2.39').click();
+    
+    // 2. Bajar escala al 50%
+    cy.get('#scaleInput').invoke('val', 50).trigger('input');
+
+    // 3. Mover posición y SALIR DEL INPUT (.blur)
+    // El .blur() es la clave: simula que el usuario hizo clic fuera
+    cy.get('#posXInput').clear().type('20').blur(); 
+    
+    // Verificamos que el valor se quedó ahí
+    cy.get('#posXInput').should('have.value', '20');
+
+    // 4. Subir escala al 100% (Activa Smart Lock)
+    cy.get('#scaleInput').invoke('val', 100).trigger('input');
+
+    // 5. VERIFICACIÓN:
+    // Ahora que no tenemos el foco, el script SÍ debería forzar el 0.
+    cy.get('#posXInput').should('have.value', '0');
+    
+    // Verificar bloqueo visual
+    cy.get('#posXInput').closest('.axis-wrapper')
+      .should('have.css', 'pointer-events', 'none');
+});
+
 });
