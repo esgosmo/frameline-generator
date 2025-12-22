@@ -303,6 +303,12 @@ if (menuResoluciones) {
         if (contenedorRes) {
             contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
         }
+
+        // --- 🔥 SOLUCIÓN: Si es HD, lo volvemos a prender ---
+        if (val === "1920,1080") {
+            activarBotonHD();
+        }
+        // ----------------------------------------------------
         
         flashInput(inputs.w);
         flashInput(inputs.h);

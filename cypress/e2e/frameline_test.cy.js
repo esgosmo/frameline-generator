@@ -4,17 +4,21 @@ describe('Robot de Prueba: Frameline Generator', () => {
     cy.visit('http://127.0.0.1:5500/index.html'); 
   });
 
-  it('1. Carga inicial correcta (HD)', () => {
+  it('1. A El botón HD debe estar activo (azul) al cargar la página', () => {
+        cy.contains('button', 'HD').should('have.class', 'active');
+    });
+
+  it('2. Carga inicial correcta (HD)', () => {
     cy.get('#width').should('have.value', '1920');
   });
 
-  it('2. Cambio de Preset a UHD', () => {
+  it('3. Cambio de Preset a UHD', () => {
     cy.contains('button', 'UHD').click();
     cy.get('#width').should('have.value', '3840');
   });
 
   // --- AQUÍ ESTÁ EL ARREGLO DEL TEST 3 ---
-  it('3. Cálculo de Aspect Ratio (Crop)', () => {
+  it('4. Cálculo de Aspect Ratio (Crop)', () => {
     
     // PASO NUEVO: Primero hacemos visible el input
     // Buscamos el menú desplegable y seleccionamos 'custom'
@@ -45,8 +49,7 @@ describe('Robot de Prueba: Frameline Generator', () => {
     });
   });
 
-  // --- TEST 4 Y 5 BLINDADOS ---
-it('4. Prueba de Seguridad Móvil (Límite 6K)', () => {
+it('5. Prueba de Seguridad Móvil (Límite 6K)', () => {
     // 1. Nos disfrazamos de iPhone
     cy.visit('http://127.0.0.1:5500/index.html', {
       onBeforeLoad: (win) => {
@@ -84,13 +87,13 @@ it('4. Prueba de Seguridad Móvil (Límite 6K)', () => {
       .and('contain.text', 'Mobile Safety'); // O el texto que uses
   });
 
-  it('5. Botón de descarga', () => {
+  it('6. Botón de descarga', () => {
     // Recargamos limpio para evitar residuos del test anterior
     cy.visit('http://127.0.0.1:5500/index.html');
     cy.get('#downloadBtn').click();
   });
 
-it('6. El botón Reset restaura los valores por defecto (Versión Blindada)', () => {
+it('7. El botón Reset restaura los valores por defecto (Versión Blindada)', () => {
     // 0. Limpieza
     cy.visit('http://127.0.0.1:5500/index.html');
 
@@ -128,7 +131,7 @@ it('6. El botón Reset restaura los valores por defecto (Versión Blindada)', ()
     cy.get('#aspectGroup').should('have.class', 'hidden');
   });
 
-it('7. Carga de imagen (Método Manual Infalible)', () => {
+it('8. Carga de imagen (Método Manual Infalible)', () => {
     
     // 1. "Espía" de alertas (por si acaso)
     cy.on('window:alert', (txt) => {
@@ -148,7 +151,7 @@ it('7. Carga de imagen (Método Manual Infalible)', () => {
     cy.get('.upload-text').should('contain', 'Image Loaded');
   });
 
-it('8. Frameline Secundario (Operación Forzada)', () => {
+it('9. Frameline Secundario (Operación Forzada)', () => {
     // 1. Activamos el checkbox a la fuerza (porque el panel Advanced está cerrado)
     cy.get('#secFrameOn').check({ force: true });
 
@@ -172,7 +175,7 @@ it('8. Frameline Secundario (Operación Forzada)', () => {
       });
   });
 
-it('9. Auto-ajuste de Grosor (Thickness) en alta resolución', () => {
+it('10. Auto-ajuste de Grosor (Thickness) en alta resolución', () => {
     // 1. Empezamos en HD estándar
     cy.visit('http://127.0.0.1:5500/index.html');
     cy.get('#width').clear().type('1920').blur();
@@ -188,7 +191,7 @@ it('9. Auto-ajuste de Grosor (Thickness) en alta resolución', () => {
     cy.get('#thickness').should('have.value', '6');
   });
 
-it('10. Auto-Grosor debe funcionar TAMBIÉN al cargar imagen', () => {
+it('11. Auto-Grosor debe funcionar TAMBIÉN al cargar imagen', () => {
     // 1. Cargamos una imagen (usamos la que ya tienes en fixtures)
     cy.visit('http://127.0.0.1:5500/index.html');
     cy.get('#imageLoader').selectFile('cypress/fixtures/test_image.jpg', { force: true });
@@ -202,7 +205,7 @@ it('10. Auto-Grosor debe funcionar TAMBIÉN al cargar imagen', () => {
     cy.get('#thickness').should('have.value', '6');
   });
 
-it('11. Accesibilidad: Navegación por Teclado (Sin Mouse)', () => {
+it('12. Accesibilidad: Navegación por Teclado (Sin Mouse)', () => {
     // 1. Visitamos la web
     cy.visit('http://127.0.0.1:5500/index.html');
 
@@ -265,7 +268,7 @@ it('11. Accesibilidad: Navegación por Teclado (Sin Mouse)', () => {
     cy.get('#imageOptionsPanel').should('have.class', 'hidden');
   });
 
-it('12. Debe permitir mover la posición y resetearla con el botón mini-reset', () => {
+it('13. Debe permitir mover la posición y resetearla con el botón mini-reset', () => {
     // 1. PASO NUEVO: Abrir el panel de controles seleccionando un aspecto
     // Esto quita la clase .hidden del #aspectGroup
     cy.contains('button', '2.39').click();
@@ -296,7 +299,7 @@ it('12. Debe permitir mover la posición y resetearla con el botón mini-reset',
     cy.get('#scaleInput').should('have.value', '80');
 });
 
-it('13. Debe bloquear y resetear la posición automáticamente (Smart Lock)', () => {
+it('14. Debe bloquear y resetear la posición automáticamente (Smart Lock)', () => {
     // 1. Abrir panel
     cy.contains('button', '2.39').click();
     
@@ -321,5 +324,6 @@ it('13. Debe bloquear y resetear la posición automáticamente (Smart Lock)', ()
     cy.get('#posXInput').closest('.axis-wrapper')
       .should('have.css', 'pointer-events', 'none');
 });
+
 
 });
