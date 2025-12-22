@@ -534,13 +534,40 @@ function resetUploadZone(zone, textSpan) {
 }
 
 window.removeImage = function() {
+    // 1. Limpieza de datos básicos
     userImage = null;
     if(imageLoader) imageLoader.value = "";
     if (imageOptionsPanel) imageOptionsPanel.classList.add('hidden');
     if (sizeWarning) { sizeWarning.classList.add('hidden'); sizeWarning.innerText = ""; }
+    
     const zone = document.querySelector('.upload-zone');
     const textSpan = zone ? zone.querySelector('.upload-text') : null;
     resetUploadZone(zone, textSpan);
+
+    // --- 🔥 NUEVO: RESTAURAR ESTADO DEFAULT (Scale to Fit) ---
+    
+    // A. Forzamos el radio button a "Scale to Fit"
+    if (inputs.scaleFit) inputs.scaleFit.checked = true;
+    if (inputs.scaleFill) inputs.scaleFill.checked = false;
+    if (inputs.scaleCrop) inputs.scaleCrop.checked = false;
+
+    // B. Reseteamos Posición (Para que no quede desplazado si veníamos de un Pan & Scan)
+    if (inputs.posXInput) inputs.posXInput.value = "0.0";
+    if (inputs.posYInput) inputs.posYInput.value = "0.0";
+    if (inputs.posXSlider) inputs.posXSlider.value = 0;
+    if (inputs.posYSlider) inputs.posYSlider.value = 0;
+
+    // C. Desbloqueamos controles que el modo Crop podría haber bloqueado
+    // (Asegúrate de que estas funciones existan antes de llamarlas para evitar errores)
+    if (typeof updateSecFitUI === 'function') updateSecFitUI(); // Desbloquea el check secundario
+    if (typeof toggleScaleLock === 'function') toggleScaleLock(false); // Desbloquea escala
+    if (typeof toggleOpacityLock === 'function') toggleOpacityLock(false); // Desbloquea opacidad
+
+    // D. Si la opacidad estaba en 0 (típico de Crop), la devolvemos a algo visible o la dejamos en 0 según prefieras.
+    // Generalmente al quitar la imagen, queremos ver el Matte negro, así que 0% está bien (transparente) 
+    // o podemos dejarlo como estaba. Por ahora respetamos el valor del slider.
+
+    // 2. Redibujar
     draw();
 }
 
@@ -804,6 +831,8 @@ function draw() {
     // 8. MATTE
     if (!isCropMode) {
         const opacityVal = inputs.opacity ? inputs.opacity.value : 0; 
+        // Actualizamos el número en la interfaz (ej. "80%")
+        if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
         const alpha = opacityVal / 100;
         ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
         if (drawY > 0) ctx.fillRect(0, 0, finalW, drawY);
@@ -1021,9 +1050,9 @@ if (inputs.aspect) {
     inputs.aspect.addEventListener('input', () => {
         if (menuAspecto) menuAspecto.value = 'custom';
 
-        // --- NUEVO: Si toco el input manual, salgo de modo Full y desbloqueo escala ---
         isFullGateMode = false; 
-        toggleScaleLock(false);
+        toggleScaleLock(false);   // Desbloquea Escala
+        toggleOpacityLock(false); // <--- NUEVO: Desbloquea Opacidad
 
         const contenedorBotones = document.getElementById('aspectBtnContainer');
         if (contenedorBotones) contenedorBotones.querySelectorAll('button.active').forEach(btn => btn.classList.remove('active'));
@@ -1096,8 +1125,8 @@ window.setPreset = function(w, h, btn) {
 window.setAspect = function(val, btn) {
     isFullGateMode = false; 
 
-    // --- NUEVO: Desbloqueamos la escala al elegir otro aspecto ---
-    toggleScaleLock(false);
+    toggleScaleLock(false);   // Desbloquea Escala
+    toggleOpacityLock(false); // <--- NUEVO: Desbloquea Opacidad
 
     if(cajaAspecto) cajaAspecto.classList.remove('hidden');
     let finalVal = val;
@@ -1126,6 +1155,7 @@ window.setFullGate = function(btn) {
         
         // --- NUEVO: Bloqueamos la escala al entrar en modo Canvas ---
         toggleScaleLock(true); 
+        toggleOpacityLock(true); // <--- NUEVO: Bloquea Opacidad
 
         if(cajaAspecto) cajaAspecto.classList.remove('hidden');
 
@@ -1297,6 +1327,10 @@ if (resetBtn) {
         if(menuAspecto) menuAspecto.value = "2.38695";
         if(menuSecAspect) menuSecAspect.value = "9:16";
         if (inputs.secAspect) inputs.secAspect.value = "9:16";
+
+        // Si teníamos lógica de bloqueo, la quitamos
+        if (typeof toggleScaleLock === 'function') toggleScaleLock(false);
+        if (typeof toggleOpacityLock === 'function') toggleOpacityLock(false); // <--- NUEVO
 
         const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
         clearContainer('resBtnContainer'); clearContainer('aspectBtnContainer'); clearContainer('opacityBtnContainer');
@@ -1477,6 +1511,28 @@ function toggleScaleLock(shouldLock) {
         } else {
             // DESBLOQUEAR
             scaleContainer.classList.remove('disabled-group');
+        }
+    }
+}
+
+// ==========================================
+// 🔒 BLOQUEO DE OPACIDAD (Para modo Canvas)
+// ==========================================
+function toggleOpacityLock(shouldLock) {
+    // Buscamos el contenedor del slider de opacidad
+    // Puede ser .input-group o el padre directo
+    const opacityContainer = inputs.opacity ? inputs.opacity.closest('.input-group') : null;
+    
+    if (opacityContainer) {
+        if (shouldLock) {
+            // BLOQUEAR
+            opacityContainer.classList.add('disabled-group');
+            // Forzamos 0% visualmente para que tenga sentido
+            if(inputs.opacity) inputs.opacity.value = 0;
+            if(textoOpacidad) textoOpacidad.innerText = "0%";
+        } else {
+            // DESBLOQUEAR
+            opacityContainer.classList.remove('disabled-group');
         }
     }
 }
