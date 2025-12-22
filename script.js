@@ -534,13 +534,40 @@ function resetUploadZone(zone, textSpan) {
 }
 
 window.removeImage = function() {
+    // 1. Limpieza de datos básicos
     userImage = null;
     if(imageLoader) imageLoader.value = "";
     if (imageOptionsPanel) imageOptionsPanel.classList.add('hidden');
     if (sizeWarning) { sizeWarning.classList.add('hidden'); sizeWarning.innerText = ""; }
+    
     const zone = document.querySelector('.upload-zone');
     const textSpan = zone ? zone.querySelector('.upload-text') : null;
     resetUploadZone(zone, textSpan);
+
+    // --- 🔥 NUEVO: RESTAURAR ESTADO DEFAULT (Scale to Fit) ---
+    
+    // A. Forzamos el radio button a "Scale to Fit"
+    if (inputs.scaleFit) inputs.scaleFit.checked = true;
+    if (inputs.scaleFill) inputs.scaleFill.checked = false;
+    if (inputs.scaleCrop) inputs.scaleCrop.checked = false;
+
+    // B. Reseteamos Posición (Para que no quede desplazado si veníamos de un Pan & Scan)
+    if (inputs.posXInput) inputs.posXInput.value = "0.0";
+    if (inputs.posYInput) inputs.posYInput.value = "0.0";
+    if (inputs.posXSlider) inputs.posXSlider.value = 0;
+    if (inputs.posYSlider) inputs.posYSlider.value = 0;
+
+    // C. Desbloqueamos controles que el modo Crop podría haber bloqueado
+    // (Asegúrate de que estas funciones existan antes de llamarlas para evitar errores)
+    if (typeof updateSecFitUI === 'function') updateSecFitUI(); // Desbloquea el check secundario
+    if (typeof toggleScaleLock === 'function') toggleScaleLock(false); // Desbloquea escala
+    if (typeof toggleOpacityLock === 'function') toggleOpacityLock(false); // Desbloquea opacidad
+
+    // D. Si la opacidad estaba en 0 (típico de Crop), la devolvemos a algo visible o la dejamos en 0 según prefieras.
+    // Generalmente al quitar la imagen, queremos ver el Matte negro, así que 0% está bien (transparente) 
+    // o podemos dejarlo como estaba. Por ahora respetamos el valor del slider.
+
+    // 2. Redibujar
     draw();
 }
 
