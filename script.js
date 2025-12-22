@@ -1265,6 +1265,8 @@ if (resetBtn) {
         if(inputs.posYSlider) inputs.posYSlider.value = 0;
         if(inputs.color) inputs.color.value = "#00ff00";
         if(inputs.thickness) inputs.thickness.value = 2;
+        // Forzar que el toggle de imagen vuelva a estar activado (Checked)
+        if (showImageToggle) showImageToggle.checked = true;
         const secColorInput = document.getElementById('secFrameColor');
         if (secColorInput) secColorInput.value = "#0000FF";
         isFullGateMode = false; 
