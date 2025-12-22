@@ -545,9 +545,18 @@ window.removeImage = function() {
 }
 
 if (showImageToggle) showImageToggle.addEventListener('change', requestDraw);
-if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', requestDraw);
-if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', requestDraw);
-if (inputs.scaleCrop) inputs.scaleCrop.addEventListener('change', requestDraw);
+if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', () => { 
+    updateSecFitUI(); // <--- AGREGAR
+    requestDraw(); 
+});
+if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', () => { 
+    updateSecFitUI(); // <--- AGREGAR
+    requestDraw(); 
+});
+if (inputs.scaleCrop) inputs.scaleCrop.addEventListener('change', () => { 
+    updateSecFitUI(); // <--- AGREGAR
+    requestDraw(); 
+});
 
 
 // ==========================================
@@ -820,40 +829,45 @@ function draw() {
         ctx.stroke();
     }
 
-    // 10. LÍNEA SECUNDARIA (CORREGIDA)
+// 10. LÍNEA SECUNDARIA
     let secX = 0, secY = 0, secW = 0, secH = 0;
-    let drawSec = false; // <--- AQUÍ FALTABA ESTA VARIABLE QUE ROMPÍA TODO
+    let drawSec = false;
 
     if (inputs.secOn && inputs.secOn.checked && mainThickness > 0) {
         drawSec = true;
         const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
-        const fitInside = inputs.secFit && inputs.secFit.checked;
+        
+        // --- 🔥 CORRECCIÓN AQUÍ ---
+        // Si el usuario marcó Fit Inside, O SI ESTAMOS EN CROP MODE.
+        // En Crop Mode, es obligatorio que la secundaria sea relativa al cuadro (Fit Inside),
+        // porque el "Canvas Base" ya no existe visualmente como referencia absoluta.
+        const fitInside = (inputs.secFit && inputs.secFit.checked) || isCropMode;
 
         if (fitInside) {
-            // A) Relativo al cuadro visible (Se mueve y escala con el verde)
+            // Lógica Relativa (Safe Area dentro del encuadre)
             const mainFrameAspect = visibleW / visibleH;
             if (secAspect > mainFrameAspect) { secW = visibleW; secH = visibleW / secAspect; } 
             else { secH = visibleH; secW = visibleH * secAspect; }
-            secW = Math.round(secW); secH = Math.round(secH);
+            secW = Math.round(secW); 
+            secH = Math.round(secH);
             secX = drawX + (visibleW - secW) / 2;
             secY = drawY + (visibleH - secH) / 2;
         } else {
-            // B) Absoluto al canvas base (Fijo al centro, ignora scale y position user)
+            // Lógica Absoluta (Sensor Mode) - SOLO si NO es Crop Mode
             const screenAspect = baseW / baseH; 
             if (secAspect > screenAspect) { secW = baseW; secH = baseW / secAspect; } 
             else { secH = baseH; secW = baseH * secAspect; }
             
-            // NOTA: Aquí quitamos la lógica de "scaleFactor" para que sea independiente
-            secW = Math.round(secW); secH = Math.round(secH);
+            secW = Math.round(secW); 
+            secH = Math.round(secH);
             
-            // Fijo al centro del canvas base (NO sumamos shiftX/Y)
             const secBaseX = Math.floor((baseW - secW) / 2); 
             const secBaseY = Math.floor((baseH - secH) / 2);
-            // Solo aplicamos offset global si estamos en crop mode
             secX = secBaseX + globalOffsetX;
             secY = secBaseY + globalOffsetY;
         }
-
+        
+        // ... (El resto de dibujar rect sigue igual)
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
         ctx.lineWidth = mainThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
         ctx.rect(secX, secY, secW, secH); ctx.stroke();
@@ -1461,6 +1475,35 @@ function toggleScaleLock(shouldLock) {
         } else {
             // DESBLOQUEAR
             scaleContainer.classList.remove('disabled-group');
+        }
+    }
+}
+
+// ==========================================
+// 🔒 GESTIÓN DE SECONDARY FIT (UI)
+// ==========================================
+function updateSecFitUI() {
+    const isCrop = inputs.scaleCrop && inputs.scaleCrop.checked;
+    const chk = inputs.secFit;
+    if (!chk) return;
+    
+    // Buscamos el padre (el label o div) para ponerlo gris
+    const parent = chk.parentElement; 
+
+    if (isCrop) {
+        // En Crop Mode: Forzamos ON y Bloqueamos
+        chk.checked = true;
+        chk.disabled = true;
+        if(parent) {
+            parent.style.opacity = "0.5";
+            parent.style.pointerEvents = "none";
+        }
+    } else {
+        // En otros modos: Desbloqueamos
+        chk.disabled = false;
+        if(parent) {
+            parent.style.opacity = "1";
+            parent.style.pointerEvents = "auto";
         }
     }
 }
