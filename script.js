@@ -804,6 +804,8 @@ function draw() {
     // 8. MATTE
     if (!isCropMode) {
         const opacityVal = inputs.opacity ? inputs.opacity.value : 0; 
+        // Actualizamos el número en la interfaz (ej. "80%")
+        if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
         const alpha = opacityVal / 100;
         ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
         if (drawY > 0) ctx.fillRect(0, 0, finalW, drawY);
@@ -1021,9 +1023,9 @@ if (inputs.aspect) {
     inputs.aspect.addEventListener('input', () => {
         if (menuAspecto) menuAspecto.value = 'custom';
 
-        // --- NUEVO: Si toco el input manual, salgo de modo Full y desbloqueo escala ---
         isFullGateMode = false; 
-        toggleScaleLock(false);
+        toggleScaleLock(false);   // Desbloquea Escala
+        toggleOpacityLock(false); // <--- NUEVO: Desbloquea Opacidad
 
         const contenedorBotones = document.getElementById('aspectBtnContainer');
         if (contenedorBotones) contenedorBotones.querySelectorAll('button.active').forEach(btn => btn.classList.remove('active'));
@@ -1096,8 +1098,8 @@ window.setPreset = function(w, h, btn) {
 window.setAspect = function(val, btn) {
     isFullGateMode = false; 
 
-    // --- NUEVO: Desbloqueamos la escala al elegir otro aspecto ---
-    toggleScaleLock(false);
+    toggleScaleLock(false);   // Desbloquea Escala
+    toggleOpacityLock(false); // <--- NUEVO: Desbloquea Opacidad
 
     if(cajaAspecto) cajaAspecto.classList.remove('hidden');
     let finalVal = val;
@@ -1126,6 +1128,7 @@ window.setFullGate = function(btn) {
         
         // --- NUEVO: Bloqueamos la escala al entrar en modo Canvas ---
         toggleScaleLock(true); 
+        toggleOpacityLock(true); // <--- NUEVO: Bloquea Opacidad
 
         if(cajaAspecto) cajaAspecto.classList.remove('hidden');
 
@@ -1297,6 +1300,10 @@ if (resetBtn) {
         if(menuAspecto) menuAspecto.value = "2.38695";
         if(menuSecAspect) menuSecAspect.value = "9:16";
         if (inputs.secAspect) inputs.secAspect.value = "9:16";
+
+        // Si teníamos lógica de bloqueo, la quitamos
+        if (typeof toggleScaleLock === 'function') toggleScaleLock(false);
+        if (typeof toggleOpacityLock === 'function') toggleOpacityLock(false); // <--- NUEVO
 
         const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
         clearContainer('resBtnContainer'); clearContainer('aspectBtnContainer'); clearContainer('opacityBtnContainer');
@@ -1477,6 +1484,28 @@ function toggleScaleLock(shouldLock) {
         } else {
             // DESBLOQUEAR
             scaleContainer.classList.remove('disabled-group');
+        }
+    }
+}
+
+// ==========================================
+// 🔒 BLOQUEO DE OPACIDAD (Para modo Canvas)
+// ==========================================
+function toggleOpacityLock(shouldLock) {
+    // Buscamos el contenedor del slider de opacidad
+    // Puede ser .input-group o el padre directo
+    const opacityContainer = inputs.opacity ? inputs.opacity.closest('.input-group') : null;
+    
+    if (opacityContainer) {
+        if (shouldLock) {
+            // BLOQUEAR
+            opacityContainer.classList.add('disabled-group');
+            // Forzamos 0% visualmente para que tenga sentido
+            if(inputs.opacity) inputs.opacity.value = 0;
+            if(textoOpacidad) textoOpacidad.innerText = "0%";
+        } else {
+            // DESBLOQUEAR
+            opacityContainer.classList.remove('disabled-group');
         }
     }
 }
