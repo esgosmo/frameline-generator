@@ -571,19 +571,40 @@ window.removeImage = function() {
     draw();
 }
 
-if (showImageToggle) showImageToggle.addEventListener('change', requestDraw);
-if (inputs.scaleFit) inputs.scaleFit.addEventListener('change', () => { 
-    updateSecFitUI(); // <--- AGREGAR
-    requestDraw(); 
-});
-if (inputs.scaleFill) inputs.scaleFill.addEventListener('change', () => { 
-    updateSecFitUI(); // <--- AGREGAR
-    requestDraw(); 
-});
-if (inputs.scaleCrop) inputs.scaleCrop.addEventListener('change', () => { 
-    updateSecFitUI(); // <--- AGREGAR
-    requestDraw(); 
-});
+// Listeners para los modos de escala (Fit, Fill, Crop)
+
+if (inputs.scaleFit) {
+    inputs.scaleFit.addEventListener('change', () => {
+        if (typeof updateSecFitUI === 'function') updateSecFitUI();
+        
+        // --- NUEVO: Desbloqueamos Opacidad (porque en Fit sí hay barras negras) ---
+        if (typeof toggleOpacityLock === 'function') toggleOpacityLock(false);
+        
+        requestDraw();
+    });
+}
+
+if (inputs.scaleFill) {
+    inputs.scaleFill.addEventListener('change', () => {
+        if (typeof updateSecFitUI === 'function') updateSecFitUI();
+        
+        // --- NUEVO: Desbloqueamos Opacidad (en Fill también puede haber barras) ---
+        if (typeof toggleOpacityLock === 'function') toggleOpacityLock(false);
+        
+        requestDraw();
+    });
+}
+
+if (inputs.scaleCrop) {
+    inputs.scaleCrop.addEventListener('change', () => {
+        if (typeof updateSecFitUI === 'function') updateSecFitUI();
+        
+        // --- NUEVO: BLOQUEAMOS Opacidad (No hay espacio para Matte) ---
+        if (typeof toggleOpacityLock === 'function') toggleOpacityLock(true);
+        
+        requestDraw();
+    });
+}
 
 
 // ==========================================
@@ -1516,20 +1537,16 @@ function toggleScaleLock(shouldLock) {
 }
 
 // ==========================================
-// 🔒 BLOQUEO DE OPACIDAD (Para modo Canvas)
+// 🔒 BLOQUEO DE OPACIDAD (No destructivo)
 // ==========================================
 function toggleOpacityLock(shouldLock) {
-    // Buscamos el contenedor del slider de opacidad
-    // Puede ser .input-group o el padre directo
     const opacityContainer = inputs.opacity ? inputs.opacity.closest('.input-group') : null;
     
     if (opacityContainer) {
         if (shouldLock) {
-            // BLOQUEAR
+            // SOLO BLOQUEAR (Gris e intocable)
             opacityContainer.classList.add('disabled-group');
-            // Forzamos 0% visualmente para que tenga sentido
-            if(inputs.opacity) inputs.opacity.value = 0;
-            if(textoOpacidad) textoOpacidad.innerText = "0%";
+            // YA NO reseteamos el valor a 0. Se queda "congelado" donde estaba.
         } else {
             // DESBLOQUEAR
             opacityContainer.classList.remove('disabled-group');
