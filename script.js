@@ -1618,6 +1618,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 trigger.classList.remove('active'); // <--- AQUÍ LO DESPINTAMOS
             }
         });
+        
+        trigger.addEventListener('keydown', (e) => {
+        // Si la tecla es Enter (key === 'Enter') o Espacio (key === ' ')
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault(); // Evita scroll con espacio
+            trigger.click(); // Simula el clic, reutilizando la lógica de arriba
+        }
+    });
+        
     });
 
     // Cerrar al hacer clic fuera

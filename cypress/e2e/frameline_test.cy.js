@@ -266,6 +266,27 @@ it('12. Accesibilidad: Navegación por Teclado (Sin Mouse)', () => {
 
     // 3. Verificamos que la imagen se haya ido
     cy.get('#imageOptionsPanel').should('have.class', 'hidden');
+
+    //El botón de ayuda debe ser accesible por teclado  
+    // 1. Asegurar que el elemento existe y es visible
+    cy.get('.tooltip-trigger').should('be.visible');
+
+    // 2. Presionar TAB hasta llegar a él (o forzar el foco)
+    // Cypress a veces batalla simulando muchos TABs, así que verificamos atributos:
+    cy.get('.tooltip-trigger')
+      .should('have.attr', 'tabindex', '0') // Debe poder recibir foco
+      .should('have.attr', 'role', 'button'); // Debe anunciarse como botón
+
+    // 3. Probar que responde al teclado
+    cy.get('.tooltip-trigger').focus().type('{enter}');
+    
+    // 4. Verificar que se abrió el popover
+    cy.get('.tooltip-popover').should('have.class', 'active');
+    
+    // 5. Cerrarlo con teclado
+    cy.get('.tooltip-trigger').type('{enter}');
+    cy.get('.tooltip-popover').should('not.have.class', 'active');
+
   });
 
 it('13. Debe permitir mover la posición y resetearla con el botón mini-reset', () => {
