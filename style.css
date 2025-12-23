@@ -823,11 +823,6 @@ body.is-scrubbing {
     -webkit-tap-highlight-color: transparent; /* Quita el destello azul en Android/iOS al tocar */
 }
 
-.tooltip-trigger:hover {
-    border-color: #999;
-    color: #333;
-    background-color: #f0f0f0;
-}
 
 /* --- NUEVO: Estado Activo (Cuando la burbuja está abierta) --- */
 .tooltip-trigger.active {
