@@ -911,3 +911,33 @@ body.is-scrubbing {
     border-style: solid;
     border-color: #222 transparent transparent transparent;
 }
+
+/* Notificación Flotante (Toast) */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px); /* Empieza escondido abajo */
+    background-color: #333;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    font-size: 0.9rem;
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    text-align: center;
+    border: 1px solid #444;
+}
+
+.toast-notification.active {
+    transform: translateX(-50%) translateY(0); /* Sube a su posición */
+    opacity: 1;
+}
+
+/* Color especial para alertas (si usas ⚠️) */
+.toast-notification strong {
+    color: #ffcc00; 
+}

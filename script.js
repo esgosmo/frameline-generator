@@ -73,6 +73,8 @@ let currentViewMode = 'root';
 let userImage = null;        
 let lastThickness = 2;        
 let isFullGateMode = false; 
+// 🔥 NUEVO: Memoria para guardar la resolución antes del Crop
+let preCropResolution = { w: 1920, h: 1080 };
 
 // ==========================================
 // CARGADOR DE DATOS EXTERNOS (JSON)
@@ -304,11 +306,24 @@ if (menuResoluciones) {
             contenedorRes.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
         }
 
+        // 🔥 USAR LA FUNCIÓN LIMPIA
+        resetPosition(); 
+        // -----------------------
+
         // --- 🔥 SOLUCIÓN: Si es HD, lo volvemos a prender ---
         if (val === "1920,1080") {
             activarBotonHD();
         }
         // ----------------------------------------------------
+
+        // --- 🔥 SOLUCIÓN CRÍTICA AQUÍ ---
+        // Al cambiar la resolución, los límites de Pan/Scan cambian.
+        // Reseteamos la posición a 0 para evitar que la imagen quede "fuera" del canvas.
+        if (inputs.posXSlider) inputs.posXSlider.value = 0;
+        if (inputs.posXInput) inputs.posXInput.value = 0;
+        if (inputs.posYSlider) inputs.posYSlider.value = 0;
+        if (inputs.posYInput) inputs.posYInput.value = 0;
+        // --------------------------------
         
         flashInput(inputs.w);
         flashInput(inputs.h);
@@ -579,6 +594,24 @@ window.removeImage = function() {
 
 // Listeners para los modos de escala (Fit, Fill, Crop)
 
+// Función auxiliar para restaurar
+function restorePreCropSettings() {
+    if (preCropResolution.w > 0 && preCropResolution.h > 0) {
+        inputs.w.value = preCropResolution.w;
+        inputs.h.value = preCropResolution.h;
+        
+        // 🔥 IMPORTANTE: Recalcular grosor basado en la resolución restaurada
+        autoAdjustThickness(preCropResolution.w);
+        
+        // Actualizar menú si coincide
+        if (menuResoluciones) {
+            const key = `${preCropResolution.w},${preCropResolution.h}`;
+            const exists = [...menuResoluciones.options].some(o => o.value === key);
+            menuResoluciones.value = exists ? key : 'custom';
+        }
+    }
+}
+
 if (inputs.scaleFit) {
     inputs.scaleFit.addEventListener('change', () => {
         if (typeof updateSecFitUI === 'function') updateSecFitUI();
@@ -586,6 +619,9 @@ if (inputs.scaleFit) {
         // --- NUEVO: Desbloqueamos Opacidad (porque en Fit sí hay barras negras) ---
         if (typeof toggleOpacityLock === 'function') toggleOpacityLock(false);
         
+        // 🔥 Restaurar resolución y grosor anterior
+        restorePreCropSettings();
+
         requestDraw();
     });
 }
@@ -597,6 +633,9 @@ if (inputs.scaleFill) {
         // --- NUEVO: Desbloqueamos Opacidad (en Fill también puede haber barras) ---
         if (typeof toggleOpacityLock === 'function') toggleOpacityLock(false);
         
+        // 🔥 Restaurar resolución y grosor anterior
+        restorePreCropSettings();
+
         requestDraw();
     });
 }
@@ -608,6 +647,11 @@ if (inputs.scaleCrop) {
         // --- NUEVO: BLOQUEAMOS Opacidad (No hay espacio para Matte) ---
         if (typeof toggleOpacityLock === 'function') toggleOpacityLock(true);
         
+       // Solo mostramos el mensaje, el bloqueo visual lo hará draw()
+        if (typeof showToast === 'function') {
+            showToast("ℹ️ <strong>Crop Mode:</strong> Native resolution only.");
+        }
+        
         requestDraw();
     });
 }
@@ -616,6 +660,74 @@ if (inputs.scaleCrop) {
 // ==========================================
 // HELPERS
 // ==========================================
+
+// ==========================================
+// 🔒 BLOQUEO DE RESOLUCIÓN (CORREGIDO)
+// ==========================================
+function toggleResolutionLock(shouldLock) {
+    // 1. Bloquear Inputs (Lógica funcional)
+    if (inputs.w) inputs.w.disabled = shouldLock;
+    if (inputs.h) inputs.h.disabled = shouldLock;
+    if (menuResoluciones) menuResoluciones.disabled = shouldLock;
+
+    // 2. Bloquear Contenedor de Botones (HD, 4K...)
+    const btnContainer = document.getElementById('resBtnContainer');
+    if (btnContainer) {
+        btnContainer.style.opacity = shouldLock ? "0.4" : "1";
+        btnContainer.style.pointerEvents = shouldLock ? "none" : "auto";
+    }
+
+    // 3. 🔥 CORRECCIÓN: Opacidad para Ancho Y Alto por separado
+    // Recorremos ambos inputs para encontrar sus padres y ponerlos grises
+    [inputs.w, inputs.h].forEach(input => {
+        if (input) {
+            // Buscamos el contenedor más cercano (input-group o el padre directo)
+            const wrapper = input.closest('.input-group') || input.parentElement;
+            if (wrapper) {
+                wrapper.style.opacity = shouldLock ? "0.5" : "1";
+                // Opcional: Bloquear clics también en el wrapper
+                wrapper.style.pointerEvents = shouldLock ? "none" : "auto"; 
+            }
+        }
+    });
+    
+    // 4. Bloquear visualmente el menú también
+    if (menuResoluciones) {
+        // Asumiendo que el select tiene un wrapper o style propio
+        menuResoluciones.style.opacity = shouldLock ? "0.5" : "1";
+    }
+}
+
+// ==========================================
+// 🔔 SISTEMA DE NOTIFICACIONES (TOAST)
+// ==========================================
+function showToast(message) {
+    // 1. Buscar si ya existe el elemento en el HTML
+    let toast = document.getElementById('toast-notification');
+    
+    // 2. Si no existe, lo creamos al vuelo (Backup)
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.className = 'toast-notification';
+        document.body.appendChild(toast);
+    }
+
+    // 3. Ponemos el mensaje
+    toast.innerHTML = message;
+
+    // 4. Lo mostramos
+    toast.classList.add('active');
+
+    // 5. Lo ocultamos después de 3 segundos
+    // Limpiamos timeout anterior si hubo clics rápidos
+    if (window.toastTimeout) clearTimeout(window.toastTimeout);
+    
+    window.toastTimeout = setTimeout(() => {
+        toast.classList.remove('active');
+    }, 3500);
+}
+
 function flashInput(element) {
     if (!element) return;
     element.classList.add('highlight-change');
@@ -715,7 +827,7 @@ function dataURItoBlob(dataURI) {
 }
 
 // ==========================================
-// 4. FUNCIÓN DRAW (CORREGIDA: ERROR drawSec + LOGICA SECUNDARIA)
+// 4. FUNCIÓN DRAW (CORREGIDA - ORDEN DE VARIABLES)
 // ==========================================
 function draw() {
     if (!inputs.w || !inputs.h) return;
@@ -723,45 +835,68 @@ function draw() {
     // 0. ESTADO GLOBAL
     const isCropMode = inputs.scaleCrop && inputs.scaleCrop.checked;
 
-    // 1. DIMENSIONES BASE
-    let baseW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
-    let baseH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+    // 🔥 AUTOMATIZACIÓN: El estado de bloqueo depende DIRECTAMENTE del modo.
+    // Si estamos en Crop, bloqueamos. Si no, desbloqueamos.
+    // (Asegúrate de haber copiado la función del Paso 1 antes de esto)
+    if (typeof toggleResolutionLock === 'function') {
+        toggleResolutionLock(isCropMode);
+    }
 
-    // 2. SEGURIDAD MÓVIL
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // --- MOVIDO AQUÍ (ANTES SECCIÓN 2) ---
+    // Necesitamos definir esto ANTES de usarlo en la Sección 1
+    const userImageLoaded = userImage; // Referencia simple
+    const showImageToggle = document.getElementById('showImageToggle');
     const hasPhoto = userImage && (!showImageToggle || showImageToggle.checked);
-    const PIXEL_LIMIT = hasPhoto ? 36000000 : 150000000; 
+    // -------------------------------------
+
+    // 1. DIMENSIONES BASE Y LÓGICA DE RECORTE NATIVO
+    let baseW, baseH;
+
+    // 🔥 AHORA SÍ FUNCIONA: 'hasPhoto' ya existe
+    if (isCropMode && hasPhoto) {
+        baseW = userImage.width;
+        baseH = userImage.height;
+
+        // UI Updates
+        if (inputs.w && parseInt(inputs.w.value) !== baseW) inputs.w.value = baseW;
+        if (inputs.h && parseInt(inputs.h.value) !== baseH) inputs.h.value = baseH;
+        
+        if (menuResoluciones && menuResoluciones.value !== 'custom') {
+             menuResoluciones.value = 'custom';
+        }
+    } else {
+        baseW = Math.max(1, Math.abs(parseInt(inputs.w.value) || 1920));
+        baseH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
+    }
+
+    // 2. SEGURIDAD MÓVIL (Resto de variables)
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const PIXEL_LIMIT = hasPhoto ? 36000000 : 150000000;
     const currentPixels = baseW * baseH;
     const warningEl = document.getElementById('sizeWarning');
 
     if (isMobile && currentPixels > PIXEL_LIMIT) {
         let msg = "";
-        const isExtreme = baseW > 12000; 
-        if (hasPhoto) {
-            msg = isExtreme ? "⛔ <strong>Mobile Safety:</strong> Extreme Res (12K/17K) capped." 
-                            : "⛔ <strong>Mobile Safety:</strong> Res >8K capped.";
-        } else {
-            msg = "⛔ <strong>Mobile Safety:</strong> Canvas capped.";
-        }
+        const isExtreme = baseW > 12000;
+        if (hasPhoto) msg = isExtreme ? "⛔ Mobile Safety: Extreme Res capped." : "⛔ Mobile Safety: Res >8K capped.";
+        else msg = "⛔ Mobile Safety: Canvas capped.";
+        
         if (warningEl) {
-            warningEl.innerHTML = msg;
-            warningEl.classList.remove('hidden');
-            warningEl.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
-            warningEl.style.borderColor = "#ff4444";
-            warningEl.style.color = "#ff8888";
+            warningEl.innerHTML = msg; warningEl.classList.remove('hidden');
         }
         const safetyScale = Math.sqrt(PIXEL_LIMIT / currentPixels);
         baseW = Math.round(baseW * safetyScale);
         baseH = Math.round(baseH * safetyScale);
     } else {
-        if (warningEl && warningEl.innerText.includes("Mobile Safety")) warningEl.classList.add('hidden');
+        if (warningEl) warningEl.classList.add('hidden');
     }
 
-    // 3. PRE-CÁLCULO DE IMAGEN (Pan & Scan)
+    // 3. PRE-CÁLCULO DE TAMAÑO DE IMAGEN
     let imgW = 0, imgH = 0;
     if (hasPhoto) {
         const isFill = inputs.scaleFill && inputs.scaleFill.checked;
-        const shouldUseFillLogic = isFill || isCropMode; 
+        const shouldUseFillLogic = isFill || isCropMode;
+
         const ratioW = baseW / userImage.width;
         const ratioH = baseH / userImage.height;
         let renderRatio;
@@ -771,11 +906,11 @@ function draw() {
         imgH = userImage.height * renderRatio;
     }
 
-    // 4. CÁLCULO DEL FRAMELINE PRINCIPAL
+    // 4. CÁLCULO DEL FRAMELINE (TAMAÑO)
     const targetAspect = getAspectRatio(inputs.aspect ? inputs.aspect.value : 2.39);
     const screenAspect = baseW / baseH;
     let frameW, frameH;
-    if (targetAspect > screenAspect) { frameW = baseW; frameH = baseW / targetAspect; } 
+    if (targetAspect > screenAspect) { frameW = baseW; frameH = baseW / targetAspect; }
     else { frameH = baseH; frameW = baseH * targetAspect; }
 
     let scaleVal = inputs.scale ? parseInt(inputs.scale.value) : 100;
@@ -786,55 +921,61 @@ function draw() {
     frameW = Math.round(frameW * scaleFactor);
     frameH = Math.round(frameH * scaleFactor);
 
-    // --- AUTO-BLOQUEO & POSICIÓN ---
+    // --- 4.1 CÁLCULO DE DESPLAZAMIENTO (SHIFT) ---
     const canvasLimitX = Math.floor((baseW - frameW) / 2);
     const canvasLimitY = Math.floor((baseH - frameH) / 2);
     const imgLimitX = Math.max(0, Math.floor((imgW - frameW) / 2));
     const imgLimitY = Math.max(0, Math.floor((imgH - frameH) / 2));
-    const maxShiftX = Math.max(canvasLimitX, imgLimitX);
-    const maxShiftY = Math.max(canvasLimitY, imgLimitY);
+
+    const maxShiftX = isCropMode ? imgLimitX : canvasLimitX;
+    const maxShiftY = isCropMode ? imgLimitY : canvasLimitY;
 
     const toggleAxis = (inputId, sliderId, isLocked) => {
         const input = document.getElementById(inputId);
-        const slider = document.getElementById(sliderId);
         const wrapper = input ? input.closest('.axis-wrapper') : null;
         if (isLocked) {
-            if(input && input.value != "0" && document.activeElement !== input) input.value = 0;
-            if(slider && slider.value != "0") slider.value = 0;
-            if(wrapper) wrapper.style.opacity = "0.3"; 
-            if(wrapper) wrapper.style.pointerEvents = "none"; 
+            if(wrapper) wrapper.style.opacity = "0.3";
+            if(wrapper) wrapper.style.pointerEvents = "none";
         } else {
             if(wrapper) wrapper.style.opacity = "1";
             if(wrapper) wrapper.style.pointerEvents = "auto";
         }
     };
-
-    const lockX = maxShiftX < 1;
-    const lockY = maxShiftY < 1;
+    // Bloquear si no hay espacio O si es Canvas Mode
+    const lockX = maxShiftX < 1 || isFullGateMode;
+    const lockY = maxShiftY < 1 || isFullGateMode;
     toggleAxis('posXInput', 'posXSlider', lockX);
     toggleAxis('posYInput', 'posYSlider', lockY);
 
-    let moveXPercent = (!lockX && inputs.posXInput) ? (parseFloat(inputs.posXInput.value) || 0) : 0;
-    let moveYPercent = (!lockY && inputs.posYInput) ? (parseFloat(inputs.posYInput.value) || 0) : 0;
+    let moveXPercent = 0, moveYPercent = 0;
+    if (!isFullGateMode) {
+        moveXPercent = (!lockX && inputs.posXInput) ? (parseFloat(inputs.posXInput.value) || 0) : 0;
+        moveYPercent = (!lockY && inputs.posYInput) ? (parseFloat(inputs.posYInput.value) || 0) : 0;
+    }
 
     let shiftX = Math.round((maxShiftX * moveXPercent) / 100);
     let shiftY = Math.round((maxShiftY * moveYPercent) / 100);
+    
     shiftX = Math.max(-maxShiftX, Math.min(maxShiftX, shiftX));
     shiftY = Math.max(-maxShiftY, Math.min(maxShiftY, shiftY));
 
-    // Coordenadas Virtuales
-    const virtualFrameX = Math.floor((baseW - frameW) / 2) + shiftX;
-    const virtualFrameY = Math.floor((baseH - frameH) / 2) + shiftY;
+    // --- 4.2 ASIGNACIÓN DE MOVIMIENTO ---
+    let imageOffsetX = 0, imageOffsetY = 0;
+    let frameOffsetX = 0, frameOffsetY = 0;
 
-    // 5. DETERMINAR TAMAÑO FINAL
-    let finalW, finalH, globalOffsetX, globalOffsetY;
     if (isCropMode) {
-        finalW = frameW; finalH = frameH;
-        globalOffsetX = -virtualFrameX; globalOffsetY = -virtualFrameY;
+        imageOffsetX = shiftX; imageOffsetY = shiftY;
     } else {
-        finalW = baseW; finalH = baseH;
-        globalOffsetX = 0; globalOffsetY = 0;
+        frameOffsetX = shiftX; frameOffsetY = shiftY;
     }
+
+    // 5. PREPARAR CANVAS FINAL
+    let finalW, finalH;
+    const centerFrameX = Math.floor((baseW - frameW) / 2);
+    const centerFrameY = Math.floor((baseH - frameH) / 2);
+
+    if (isCropMode) { finalW = frameW; finalH = frameH; } 
+    else { finalW = baseW; finalH = baseH; }
 
     if (canvas.width !== finalW) canvas.width = finalW;
     if (canvas.height !== finalH) canvas.height = finalH;
@@ -845,20 +986,26 @@ function draw() {
         try {
             const baseImgX = (baseW - imgW) / 2;
             const baseImgY = (baseH - imgH) / 2;
-            ctx.drawImage(userImage, baseImgX + globalOffsetX, baseImgY + globalOffsetY, imgW, imgH);
-        } catch (e) { console.error("Draw image error:", e); }
+            let drawImgX = baseImgX + imageOffsetX;
+            let drawImgY = baseImgY + imageOffsetY;
+
+            if (isCropMode) {
+                drawImgX -= centerFrameX;
+                drawImgY -= centerFrameY;
+            }
+            ctx.drawImage(userImage, drawImgX, drawImgY, imgW, imgH);
+        } catch (e) { console.error("Draw error", e); }
     }
 
-    // 7. COORDENADAS DIBUJO
-    const drawX = virtualFrameX + globalOffsetX;
-    const drawY = virtualFrameY + globalOffsetY;
+    // 7. COORDENADAS DIBUJO FRAMELINE
+    const drawX = isCropMode ? 0 : (centerFrameX + frameOffsetX);
+    const drawY = isCropMode ? 0 : (centerFrameY + frameOffsetY);
     const visibleW = frameW;
     const visibleH = frameH;
 
     // 8. MATTE
     if (!isCropMode) {
-        const opacityVal = inputs.opacity ? inputs.opacity.value : 0; 
-        // Actualizamos el número en la interfaz (ej. "80%")
+        const opacityVal = inputs.opacity ? inputs.opacity.value : 0;
         if (textoOpacidad) textoOpacidad.innerText = opacityVal + "%";
         const alpha = opacityVal / 100;
         ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
@@ -874,10 +1021,9 @@ function draw() {
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
     if (rawThick > 10) { rawThick = 10; if(inputs.thickness) inputs.thickness.value = 10; }
-    
     const mainThickness = Math.max(0, rawThick);
     const mainOffset = mainThickness / 2;
-    
+
     if (mainThickness > 0) {
         if (inputs.color) ctx.strokeStyle = inputs.color.value;
         ctx.lineWidth = mainThickness; ctx.setLineDash([]); ctx.beginPath();
@@ -885,45 +1031,30 @@ function draw() {
         ctx.stroke();
     }
 
-// 10. LÍNEA SECUNDARIA
+    // 10. LÍNEA SECUNDARIA
     let secX = 0, secY = 0, secW = 0, secH = 0;
     let drawSec = false;
-
     if (inputs.secOn && inputs.secOn.checked && mainThickness > 0) {
         drawSec = true;
         const secAspect = getAspectRatio(inputs.secAspect ? inputs.secAspect.value : 1.77);
-        
-        // --- 🔥 CORRECCIÓN AQUÍ ---
-        // Si el usuario marcó Fit Inside, O SI ESTAMOS EN CROP MODE.
-        // En Crop Mode, es obligatorio que la secundaria sea relativa al cuadro (Fit Inside),
-        // porque el "Canvas Base" ya no existe visualmente como referencia absoluta.
         const fitInside = (inputs.secFit && inputs.secFit.checked) || isCropMode;
 
         if (fitInside) {
-            // Lógica Relativa (Safe Area dentro del encuadre)
             const mainFrameAspect = visibleW / visibleH;
-            if (secAspect > mainFrameAspect) { secW = visibleW; secH = visibleW / secAspect; } 
+            if (secAspect > mainFrameAspect) { secW = visibleW; secH = visibleW / secAspect; }
             else { secH = visibleH; secW = visibleH * secAspect; }
-            secW = Math.round(secW); 
-            secH = Math.round(secH);
+            secW = Math.round(secW); secH = Math.round(secH);
             secX = drawX + (visibleW - secW) / 2;
             secY = drawY + (visibleH - secH) / 2;
         } else {
-            // Lógica Absoluta (Sensor Mode) - SOLO si NO es Crop Mode
-            const screenAspect = baseW / baseH; 
-            if (secAspect > screenAspect) { secW = baseW; secH = baseW / secAspect; } 
+            const screenAspect = baseW / baseH;
+            if (secAspect > screenAspect) { secW = baseW; secH = baseW / secAspect; }
             else { secH = baseH; secW = baseH * secAspect; }
-            
-            secW = Math.round(secW); 
-            secH = Math.round(secH);
-            
-            const secBaseX = Math.floor((baseW - secW) / 2); 
+            secW = Math.round(secW); secH = Math.round(secH);
+            const secBaseX = Math.floor((baseW - secW) / 2);
             const secBaseY = Math.floor((baseH - secH) / 2);
-            secX = secBaseX + globalOffsetX;
-            secY = secBaseY + globalOffsetY;
+            secX = secBaseX; secY = secBaseY;
         }
-        
-        // ... (El resto de dibujar rect sigue igual)
         if(inputs.secColor) ctx.strokeStyle = inputs.secColor.value;
         ctx.lineWidth = mainThickness; ctx.setLineDash([10, 5]); ctx.beginPath();
         ctx.rect(secX, secY, secW, secH); ctx.stroke();
@@ -935,7 +1066,7 @@ function draw() {
         const drawSafe = (pct, dashed) => {
             const p = pct / 100;
             const sW = visibleW * p; const sH = visibleH * p;
-            const sX = drawX + (visibleW - sW) / 2; 
+            const sX = drawX + (visibleW - sW) / 2;
             const sY = drawY + (visibleH - sH) / 2;
             ctx.lineWidth = safeThickness;
             if(inputs.color) ctx.strokeStyle = inputs.color.value;
@@ -946,49 +1077,42 @@ function draw() {
         if (inputs.safeTitleOn && inputs.safeTitleOn.checked) drawSafe(parseFloat(inputs.safeTitleVal.value)||90, true);
     }
 
-    // 12. ETIQUETAS (Aquí es donde ocurría el error porque drawSec no existía)
+    // 12. ETIQUETAS
     const showAspect = inputs.showLabels && inputs.showLabels.checked;
     const showRes = inputs.showResLabels && inputs.showResLabels.checked;
-
     if (showAspect || showRes) {
-        const fontSize = Math.max(12, Math.round(finalW / 80)); 
-        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-        ctx.textBaseline = "top";
-        const padding = 10; 
-        const lineHeight = fontSize + 6; 
-
+        const fontSize = Math.max(12, Math.round(finalW / 80));
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`; ctx.textBaseline = "top";
+        const padding = 10; const lineHeight = fontSize + 6;
         if (mainThickness > 0) {
             ctx.fillStyle = inputs.color.value;
             const txtAsp = obtenerRatioTexto(Math.round(visibleW), Math.round(visibleH));
             const txtRes = `${Math.round(visibleW)} x ${Math.round(visibleH)}`;
             if (showAspect) { ctx.textAlign = "left"; ctx.fillText(txtAsp, drawX + padding, drawY + padding); }
             if (showRes) {
-                ctx.textAlign = showAspect ? "right" : "left"; 
+                ctx.textAlign = showAspect ? "right" : "left";
                 const posX = showAspect ? (drawX + visibleW - padding) : (drawX + padding);
-                const posY = showAspect ? (drawY + padding) : (drawY + padding + lineHeight); 
+                const posY = showAspect ? (drawY + padding) : (drawY + padding + lineHeight);
                 ctx.fillText(txtRes, posX, posY);
             }
-       }
-       // Ahora drawSec ya está definido arriba
-       if (drawSec && inputs.secAspect) {
-            ctx.fillStyle = inputs.secColor.value;
-            const txtSecAsp = obtenerRatioTexto(Math.round(secW), Math.round(secH));
-            ctx.textAlign = "left";
-            if (showAspect) ctx.fillText(txtSecAsp, secX + padding, secY + padding);
-       }
+        }
+        if (drawSec && inputs.secAspect) {
+           ctx.fillStyle = inputs.secColor.value;
+           const txtSecAsp = obtenerRatioTexto(Math.round(secW), Math.round(secH));
+           ctx.textAlign = "left";
+           if (showAspect) ctx.fillText(txtSecAsp, secX + padding, secY + padding);
+        }
     }
 
     // 13. CANVAS LABEL
     if (inputs.showCanvasRes && inputs.showCanvasRes.checked) {
-        const fontSize = Math.max(12, Math.round(finalW / 80)); 
+        const fontSize = Math.max(12, Math.round(finalW / 80));
         ctx.font = `bold ${fontSize}px Arial, sans-serif`;
         ctx.fillStyle = inputs.color ? inputs.color.value : '#00FF00';
         ctx.textAlign = "left"; ctx.textBaseline = "bottom";
         let finalText = "";
-        
-        if (isCropMode) {
-            finalText = `Crop: ${finalW} x ${finalH}`;
-        } else {
+        if (isCropMode) finalText = `Crop: ${finalW} x ${finalH}`;
+        else {
             const isCustom = !menuResoluciones || menuResoluciones.value === 'custom';
             if (!isCustom && menuResoluciones.selectedIndex >= 0) {
                 const rawText = menuResoluciones.options[menuResoluciones.selectedIndex].text;
@@ -997,14 +1121,27 @@ function draw() {
             } else { finalText = `Canvas: ${finalW} x ${finalH}`; }
         }
         const padding = Math.max(10, finalW * 0.02);
-        ctx.lineWidth = fontSize * 0.12; 
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.8)"; 
-        ctx.strokeText(finalText, padding, finalH - padding); 
+        ctx.lineWidth = fontSize * 0.12;
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.strokeText(finalText, padding, finalH - padding);
         ctx.fillText(finalText, padding, finalH - padding);
     }
-    
     updateAspectButtonsVisuals();
+
+    // 🔥 NUEVO: SISTEMA DE MEMORIA
+    // Si NO estamos en Crop Mode, guardamos esta resolución como la "última válida".
+    // Así, si entramos a Crop y luego salimos, sabremos a dónde volver.
+    if (!isCropMode) {
+        // Aseguramos que guardamos valores numéricos válidos
+        const currentW = parseInt(inputs.w.value);
+        const currentH = parseInt(inputs.h.value);
+        if (!isNaN(currentW) && !isNaN(currentH)) {
+            preCropResolution.w = currentW;
+            preCropResolution.h = currentH;
+        }
+    }
 }
+
 
 // ==========================================
 // 5. EVENTOS RESTANTES
@@ -1123,6 +1260,14 @@ if(inputs.posXInput) { inputs.posXInput.addEventListener('input', requestDraw); 
 if(inputs.posYInput) { inputs.posYInput.addEventListener('input', requestDraw); }
 
 window.setPreset = function(w, h, btn) {
+
+    // 🔥 GUARDIA: Si estamos en Crop Mode, no permitir cambios y avisar
+    if (inputs.scaleCrop && inputs.scaleCrop.checked) {
+        if (typeof showToast === 'function') {
+            showToast("⚠️ Switch to <strong>Fit/Fill</strong> to change resolution.");
+        }
+        return; // <--- DETIENE LA FUNCIÓN AQUÍ
+    }
     const estabaEnFull = isFullGateMode;
     if(inputs.w) inputs.w.value = w;
     if(inputs.h) inputs.h.value = h;
@@ -1154,6 +1299,7 @@ window.setAspect = function(val, btn) {
 
     toggleScaleLock(false);   // Desbloquea Escala
     toggleOpacityLock(false); // <--- NUEVO: Desbloquea Opacidad
+    togglePositionLock(false); // <--- NUEVO: Desbloquea Posición
 
     if(cajaAspecto) cajaAspecto.classList.remove('hidden');
     let finalVal = val;
@@ -1183,7 +1329,8 @@ window.setFullGate = function(btn) {
         // --- NUEVO: Bloqueamos la escala al entrar en modo Canvas ---
         toggleScaleLock(true); 
         toggleOpacityLock(true); // <--- NUEVO: Bloquea Opacidad
-
+        togglePositionLock(true); // --- 🔥 NUEVO: Bloquear y Resetear Posición ---
+        
         if(cajaAspecto) cajaAspecto.classList.remove('hidden');
 
         const nativeAspect = w / h;
@@ -1542,6 +1689,42 @@ function toggleScaleLock(shouldLock) {
     }
 }
 
+
+// ==========================================
+// 🛠️ HERRAMIENTAS DE POSICIÓN
+// ==========================================
+
+// 1. Bloquear/Desbloquear inputs de posición
+function togglePositionLock(shouldLock) {
+    const wrappers = document.querySelectorAll('.axis-wrapper');
+    const controls = [
+        inputs.posXInput, inputs.posXSlider, 
+        inputs.posYInput, inputs.posYSlider
+    ];
+
+    if (shouldLock) {
+        controls.forEach(el => { if(el) el.disabled = true; });
+        wrappers.forEach(w => {
+            w.style.opacity = "0.3";
+            w.style.pointerEvents = "none";
+        });
+    } else {
+        controls.forEach(el => { if(el) el.disabled = false; });
+        wrappers.forEach(w => {
+            w.style.opacity = "1";
+            w.style.pointerEvents = "auto";
+        });
+    }
+}
+
+// 2. Resetear a Cero (Hard Reset)
+function resetPosition() {
+    if (inputs.posXInput) inputs.posXInput.value = 0;
+    if (inputs.posXSlider) inputs.posXSlider.value = 0;
+    if (inputs.posYInput) inputs.posYInput.value = 0;
+    if (inputs.posYSlider) inputs.posYSlider.value = 0;
+}
+
 // ==========================================
 // 🔒 BLOQUEO DE OPACIDAD (No destructivo)
 // ==========================================
@@ -1637,3 +1820,4 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
     });
 });
+
