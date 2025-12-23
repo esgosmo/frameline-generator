@@ -819,7 +819,8 @@ body.is-scrubbing {
     margin-left: 8px; /* Separación del botón */
     cursor: pointer;
     transition: all 0.2s ease;
-    user-select: none; /* Evita que se seleccione el texto al hacer clic rápido */
+    background-color: transparent; /* Nace transparente */
+    -webkit-tap-highlight-color: transparent; /* Quita el destello azul en Android/iOS al tocar */
 }
 
 .tooltip-trigger:hover {
@@ -833,6 +834,16 @@ body.is-scrubbing {
     background-color: #f0f0f0; /* Se queda blanco mientras lees */
     color: #333;
     border-color: #666;
+}
+
+/* 3. Estado HOVER (SOLO PARA DESKTOP) 🖱️ */
+/* Esta regla mágica evita que el celular se quede "pegado" en blanco */
+@media (hover: hover) {
+    .tooltip-trigger:hover {
+        background-color: #f0f0f0;
+        color: #333;
+        border-color: #999;
+    }
 }
 
 /* La ventanita emergente (Popover) */
