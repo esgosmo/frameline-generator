@@ -1588,3 +1588,37 @@ function updateSecFitUI() {
         }
     }
 }
+
+// ==========================================
+// ❓ SISTEMA DE TOOLTIPS (Click)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const triggers = document.querySelectorAll('.tooltip-trigger');
+
+    triggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            // 1. Evitar que el clic se propague al documento inmediatamente
+            e.stopPropagation();
+
+            // 2. Encontrar el popover hermano de este icono
+            const popover = trigger.nextElementSibling;
+
+            // 3. Cerrar otros tooltips que pudieran estar abiertos (opcional)
+            document.querySelectorAll('.tooltip-popover.active').forEach(activePopover => {
+                if (activePopover !== popover) {
+                    activePopover.classList.remove('active');
+                }
+            });
+
+            // 4. Alternar (abrir/cerrar) el actual
+            popover.classList.toggle('active');
+        });
+    });
+
+    // 5. Cerrar tooltip al hacer clic en cualquier otro lado de la página
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.tooltip-popover.active').forEach(activePopover => {
+            activePopover.classList.remove('active');
+        });
+    });
+});

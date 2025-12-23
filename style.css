@@ -792,3 +792,103 @@ body.is-scrubbing {
     filter: grayscale(100%);
     transition: opacity 0.3s ease;
 }
+
+/* --- Estilos para el Tooltip de Ayuda --- */
+
+/* Contenedor para alinear botón e icono */
+.tooltip-wrapper {
+    display: inline-flex;
+    align-items: center;
+    position: relative; /* Necesario para posicionar el popover */
+    margin: 2px; /* Ajusta según el margen de tus otros botones */
+}
+
+/* El icono de interrogación (?) */
+.tooltip-trigger {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #454545; /* Borde gris claro como la imagen */
+    border-radius: 50%; /* Círculo perfecto */
+    color: #666;
+    font-weight: bold;
+    font-family: sans-serif;
+    font-size: 14px;
+    margin-left: 8px; /* Separación del botón */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none; /* Evita que se seleccione el texto al hacer clic rápido */
+}
+
+.tooltip-trigger:hover {
+    border-color: #999;
+    color: #333;
+    background-color: #f0f0f0;
+}
+
+/* La ventanita emergente (Popover) */
+.tooltip-popover {
+    /* Oculto por defecto */
+    opacity: 0;
+    visibility: hidden;
+    
+    /* --- POSICIONAMIENTO INTELIGENTE --- */
+    position: absolute;
+    bottom: 145%; /* Altura sobre el botón */
+    
+    /* Opción A: Alinear a la derecha del contenedor (Protege el borde derecho de la pantalla) */
+    right: -5px;  /* Un pequeño ajuste para alinear con el borde del icono */
+    left: auto;   /* Ignoramos la izquierda */
+    
+    /* Si el texto es largo, crecerá hacia la IZQUIERDA (sobre el botón Canvas) */
+    transform: translateY(10px); /* Solo movimiento vertical para la animación */
+    
+    z-index: 100;
+    transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1); /* Animación más suave */
+
+    /* Flexbox para contenido interno */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    /* Estilo Visual */
+    background-color: #222;
+    color: #ddd;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+
+    /* Control de tamaño */
+    width: max-content;
+    max-width: 200px;     /* Ancho máximo razonable */
+    min-width: 140px;     /* Ancho mínimo para que no se vea aplastado */
+    white-space: normal;
+}
+
+/* Estado Activo */
+.tooltip-popover.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0); /* Se mueve a su posición final */
+}
+
+/* --- LA FLECHITA (ARROW) --- */
+.tooltip-popover::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* Abajo de la burbuja */
+    
+    /* --- TRUCO: La flecha apunta al ICONO, aunque la burbuja esté corrida --- */
+    right: 12px; /* Aprox. la mitad del ancho del icono '?' (24px) */
+    left: auto;
+    
+    transform: translateX(0); 
+    border-width: 7px;
+    border-style: solid;
+    border-color: #222 transparent transparent transparent;
+}
