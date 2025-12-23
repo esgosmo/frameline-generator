@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide - Frameline Generator</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent: #2d8cf0; /* Matches your Refactor/HD button blue */
+            --border: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.5px; }
+        
+        .back-btn {
+            text-decoration: none;
+            color: var(--accent);
+            font-weight: 500;
+            font-size: 0.9rem;
+            border: 1px solid var(--accent);
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .back-btn:hover { background-color: rgba(45, 140, 240, 0.1); }
+
+        /* --- MAIN CONTENT --- */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; line-height: 1.2; }
+        h2 { font-size: 1.8rem; margin-top: 3rem; margin-bottom: 1rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        h3 { font-size: 1.3rem; margin-top: 1.5rem; color: var(--accent); }
+        p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem; }
+
+        ul { margin-bottom: 1.5rem; color: var(--text-muted); }
+        li { margin-bottom: 0.5rem; }
+
+        /* Asegura que el video/imagen llene el contenedor */
+        .media-container video, 
+        .media-container img {
+        width: 100%;
+        height: auto;
+        display: block; /* Quita un pequeño espacio blanco que a veces sale abajo */
+}
+
+        /* --- MEDIA CONTAINERS (For GIFs) --- */
+        .media-container {
+            width: 100%;
+            background-color: #000;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Placeholder for visualization */
+        .gif-placeholder {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle, #2a2a2a 0%, #1a1a1a 100%);
+            color: #555;
+            font-weight: bold;
+            flex-direction: column;
+        }
+        .gif-placeholder span { font-size: 2rem; margin-bottom: 10px; }
+        
+        /* Caption style */
+        .caption {
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+            margin-top: -10px;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        /* --- INFO BOXES (Tips) --- */
+        .info-box {
+            background-color: rgba(45, 140, 240, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+            color: #ddd;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Frameline Generator Guide</div>
+        <a href="index.html" class="back-btn">← Back to Tool</a>
+    </header>
+
+    <div class="container">
+        <h1>Quick Start Guide</h1>
+        <p>This tool is designed for post-producers, cinematographers, editors, DITs, and content creators who need to visualize aspect ratios, create custom mattes, and simulate sensor crops with mathematical precision.</p>
+
+        <h2>1. Basic Concepts</h2>
+        <p>There are two primary ways to utilize this tool, depending on your stage of production:</p>
+
+        <h3>A. Overlay Generator</h3>
+        <p><strong>Design custom aspect ratio guides and export high-resolution transparent overlays compatible with all editing software.</strong></p>
+        <p>You can set your aspect ratio and resolution, then export a clean, transparent PNG with the matte and frame guides. This is perfect for importing into Premiere Pro, DaVinci Resolve, or Avid as a timeline overlay.</p>
+
+        <h3>B. Visual Preview</h3>
+        <p><strong>Choose a file from your device to visualize framing.</strong></p>
+        <p>Drag and drop a still or click to select a file from your computer. This allows you to check compositions, simulate sensor crops, and verify safety areas against your actual footage.</p>
+        
+        <div class="info-box">
+            <strong>Privacy Note:</strong> All processing happens locally in your browser. Your images are never uploaded to a server, ensuring complete privacy for your footage.
+        </div>
+
+       <div class="media-container">
+    <video autoplay loop muted playsinline>
+        <source src="assets/Choose-file.mp4" type="video/mp4">
+        Your browser does not support html5 videos.
+    </video>
+</div>
+        <p class="caption">Fig 1. Choosing a local file for visual preview.</p>
+
+        <h2>2. Scaling Modes (Fit, Fill, Crop)</h2>
+        <p>When using an image, you have three ways to visualize your shot within the desired aspect ratio:</p>
+
+        <ul>
+            <li><strong>Scale to Fit:</strong> Displays the entire original image. Ideal for checking the full composition.</li>
+            <li><strong>Scale to Fill:</strong> Zooms in until the frame is filled. Use the <em>Position</em> controls to reframe your shot (Pan & Tilt) into the desired aspect ratio.</li>
+            <li><strong>Scale to Crop:</strong> Physically adjusts the canvas size. The final exported file will have the exact dimensions of the frameline (no frame line or black bars).</li>
+        </ul>
+
+        <div class="media-container">
+            <div class="gif-placeholder">
+                <span>🔍</span>
+                [GIF: Switching between Fit/Fill and moving Position sliders]
+            </div>
+        </div>
+        <p class="caption">Fig 2. Pan & Scan demonstration in Fill mode.</p>
+
+        <h2>3. Canvas Mode</h2>
+        <p>The "Canvas" button allows you to view the full image area without applying any mattes or scaling. Useful for visualizing the total image area beyond the active extraction.</p>
+        <div class="info-box">
+            Note: When <strong>Canvas Mode</strong> is enabled, Scale and Opacity controls are automatically locked as you are viewing the raw 100% image.
+        </div>
+
+        <h2>4. Secondary Framelines</h2>
+        <p>Need to deliver for Cinema (2.39) and Instagram (9:16) simultaneously? Enable the "Secondary Frameline".</p>
+        <p>You can customize the color and aspect ratio. Checking "Fit inside main frameline" ensures the secondary guide stays relative to your active crop.</p>
+
+        <div class="media-container">
+            <div class="gif-placeholder">
+                <span>📱</span>
+                [GIF: Enabling 9:16 Secondary Frameline over a 2.39 shot]
+            </div>
+        </div>
+
+        <h2>5. Export</h2>
+        <p>Once satisfied, click "Downlaod PNG". The file will download as a high-quality PNG with the matte and guide lines "burned in."</p>
+
+    </div>
+
+    <footer>
+        <p>Frameline Generator Tool &copy; 2025.</p>
+    </footer>
+
+</body>
+</html>
