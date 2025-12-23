@@ -834,25 +834,23 @@ body.is-scrubbing {
     opacity: 0;
     visibility: hidden;
     
-    /* --- POSICIONAMIENTO INTELIGENTE --- */
+    /* Posicionamiento */
     position: absolute;
-    bottom: 145%; /* Altura sobre el botón */
+    bottom: 145%;
     
-    /* Opción A: Alinear a la derecha del contenedor (Protege el borde derecho de la pantalla) */
-    right: -5px;  /* Un pequeño ajuste para alinear con el borde del icono */
-    left: auto;   /* Ignoramos la izquierda */
+    /* Anclado a la derecha (lado del icono) */
+    right: -8px; 
+    left: auto;
     
-    /* Si el texto es largo, crecerá hacia la IZQUIERDA (sobre el botón Canvas) */
-    transform: translateY(10px); /* Solo movimiento vertical para la animación */
-    
+    transform: translateY(10px);
     z-index: 100;
-    transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1); /* Animación más suave */
+    transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
 
-    /* Flexbox para contenido interno */
+    /* --- ALINEACIÓN A LA IZQUIERDA --- */
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start; /* Alinea los bloques al inicio (izq) */
+    text-align: left;        /* Alinea el texto adentro a la izq */
 
     /* Estilo Visual */
     background-color: #222;
@@ -863,31 +861,39 @@ body.is-scrubbing {
     line-height: 1.4;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 
-    /* Control de tamaño */
+    /* Sizing */
     width: max-content;
-    max-width: 200px;     /* Ancho máximo razonable */
-    min-width: 140px;     /* Ancho mínimo para que no se vea aplastado */
+    max-width: 200px;
+    min-width: 140px;
     white-space: normal;
 }
 
-/* Estado Activo */
+/* Título */
+.tooltip-title {
+    display: block;
+    margin-bottom: 4px;
+    color: #64b5f6;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* Activo */
 .tooltip-popover.active {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0); /* Se mueve a su posición final */
+    transform: translateY(0);
 }
 
-/* --- LA FLECHITA (ARROW) --- */
+/* Flecha (Sigue apuntando al icono ?) */
 .tooltip-popover::after {
     content: "";
     position: absolute;
-    top: 100%; /* Abajo de la burbuja */
+    top: 100%;
     
-    /* --- TRUCO: La flecha apunta al ICONO, aunque la burbuja esté corrida --- */
-    right: 12px; /* Aprox. la mitad del ancho del icono '?' (24px) */
+    /* La flecha se queda a la derecha */
+    right: 15px; 
     left: auto;
     
-    transform: translateX(0); 
     border-width: 7px;
     border-style: solid;
     border-color: #222 transparent transparent transparent;
