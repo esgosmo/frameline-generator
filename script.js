@@ -75,6 +75,10 @@ let lastThickness = 2;
 let isFullGateMode = false; 
 // 🔥 NUEVO: Memoria para guardar la resolución antes del Crop
 let preCropResolution = { w: 1920, h: 1080 };
+// 🔥 NUEVO: Bandera para recordar si la imagen actual fue optimizada
+let imageWasResized = false;
+// 🔥 NUEVO: Recordar si el archivo original era pesado (>20MB)
+let isHeavyFileGlobal = false;
 
 // ==========================================
 // CARGADOR DE DATOS EXTERNOS (JSON)
@@ -472,11 +476,18 @@ function finalizarCarga(blobUrl, isHeavyFile, zone, textSpan) {
 function aplicarImagenAlSistema(img, isHeavyFile, wasResized, zone, textSpan) {
     userImage = img; 
 
+    // 🔥 ACTUALIZAMOS LA BANDERA GLOBAL
+    imageWasResized = wasResized;
+
+    // 🔥 NUEVO: Guardamos el estado en la variable global
+    isHeavyFileGlobal = isHeavyFile;
+
     if (zone && textSpan) {
         textSpan.innerText = "Image Loaded"; 
         zone.style.borderColor = "#007bff"; 
     }
 
+    /*
     if (sizeWarning) {
         sizeWarning.classList.add('hidden'); 
         if (wasResized) {
@@ -493,6 +504,7 @@ function aplicarImagenAlSistema(img, isHeavyFile, wasResized, zone, textSpan) {
             sizeWarning.classList.remove('hidden');
         }
     }
+    */
 
     if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
 
@@ -557,6 +569,9 @@ function resetUploadZone(zone, textSpan) {
 window.removeImage = function() {
     // 1. Limpieza de datos básicos
     userImage = null;
+    imageWasResized = false;
+    isHeavyFileGlobal = false; // 🔥 RESET
+
     if(imageLoader) imageLoader.value = "";
     if (imageOptionsPanel) imageOptionsPanel.classList.add('hidden');
     if (sizeWarning) { sizeWarning.classList.add('hidden'); sizeWarning.innerText = ""; }
@@ -661,9 +676,7 @@ if (inputs.scaleCrop) {
 // HELPERS
 // ==========================================
 
-// ==========================================
 // 🔒 BLOQUEO DE RESOLUCIÓN (CORREGIDO)
-// ==========================================
 function toggleResolutionLock(shouldLock) {
     // 1. Bloquear Inputs (Lógica funcional)
     if (inputs.w) inputs.w.disabled = shouldLock;
@@ -869,25 +882,61 @@ function draw() {
         baseH = Math.max(1, Math.abs(parseInt(inputs.h.value) || 1080));
     }
 
-    // 2. SEGURIDAD MÓVIL (Resto de variables)
+   // 2. SEGURIDAD MÓVIL Y AVISOS
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const PIXEL_LIMIT = hasPhoto ? 36000000 : 150000000;
     const currentPixels = baseW * baseH;
     const warningEl = document.getElementById('sizeWarning');
 
     if (isMobile && currentPixels > PIXEL_LIMIT) {
+        // --- PRIORIDAD 1: ERROR DE SEGURIDAD MÓVIL (ROJO) ---
         let msg = "";
         const isExtreme = baseW > 12000;
         if (hasPhoto) msg = isExtreme ? "⛔ Mobile Safety: Extreme Res capped." : "⛔ Mobile Safety: Res >8K capped.";
         else msg = "⛔ Mobile Safety: Canvas capped.";
         
         if (warningEl) {
-            warningEl.innerHTML = msg; warningEl.classList.remove('hidden');
+            warningEl.innerHTML = msg; 
+            warningEl.classList.remove('hidden');
+            warningEl.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+            warningEl.style.borderColor = "#ff4444";
+            warningEl.style.color = "#ff8888";
         }
         const safetyScale = Math.sqrt(PIXEL_LIMIT / currentPixels);
         baseW = Math.round(baseW * safetyScale);
         baseH = Math.round(baseH * safetyScale);
+
+    } else if (hasPhoto && imageWasResized) {
+        // --- PRIORIDAD 2: AVISO DE OPTIMIZACIÓN (AZUL) ---
+        if (warningEl) {
+            warningEl.innerText = "ℹ️ Image optimized for performance.";
+            warningEl.classList.remove('hidden');
+            warningEl.style.backgroundColor = "rgba(45, 140, 240, 0.1)";
+            warningEl.style.borderColor = "#2d8cf0"; 
+            warningEl.style.color = "#a0a0a0";
+        }
+
+    } else if (hasPhoto && (userImage.width > 6000 || userImage.height > 6000 || isHeavyFileGlobal)) {
+        // --- PRIORIDAD 3: ADVERTENCIA DE RENDIMIENTO (AMARILLO) ---
+        // 🔥 Aquí recuperamos tu mensaje de >6K
+        if (warningEl) {
+            const isLargeRes = (userImage.width > 6000 || userImage.height > 6000);
+            let msg = "";
+            
+            if (isLargeRes && isHeavyFileGlobal) msg = "⚠️ Large file & resolution (>6K). Performance may lag.";
+            else if (isLargeRes) msg = "⚠️ Large resolution (>6K). Performance may lag.";
+            else msg = "⚠️ Large file size (>20MB).";
+
+            warningEl.innerText = msg;
+            warningEl.classList.remove('hidden');
+            // Estilo Amarillo
+            warningEl.style.backgroundColor = "rgba(255, 204, 0, 0.1)";
+            warningEl.style.borderColor = "#ffcc00"; 
+            warningEl.style.color = "#ffcc00";
+        }
+
     } else {
+        // --- LIMPIO ---
         if (warningEl) warningEl.classList.add('hidden');
     }
 
