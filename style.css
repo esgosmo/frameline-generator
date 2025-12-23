@@ -810,7 +810,7 @@ body.is-scrubbing {
     align-items: center;
     width: 24px;
     height: 24px;
-    border: 2px solid #454545; /* Borde gris claro como la imagen */
+    border: 2px solid #454545; /* Borde gris obscuro como la imagen */
     border-radius: 50%; /* Círculo perfecto */
     color: #666;
     font-weight: bold;
@@ -819,13 +819,20 @@ body.is-scrubbing {
     margin-left: 8px; /* Separación del botón */
     cursor: pointer;
     transition: all 0.2s ease;
-    user-select: none; /* Evita que se seleccione el texto al hacer clic rápido */
+    background-color: transparent;
 }
 
 .tooltip-trigger:hover {
     border-color: #999;
     color: #333;
     background-color: #f0f0f0;
+}
+
+/* --- NUEVO: Estado Activo (Cuando la burbuja está abierta) --- */
+.tooltip-trigger.active {
+    background-color: #f0f0f0; /* Se queda blanco mientras lees */
+    color: #333;
+    border-color: #666;
 }
 
 /* La ventanita emergente (Popover) */

@@ -1590,35 +1590,41 @@ function updateSecFitUI() {
 }
 
 // ==========================================
-// ❓ SISTEMA DE TOOLTIPS (Click)
+// ❓ SISTEMA DE TOOLTIPS (Lógica corregida)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const triggers = document.querySelectorAll('.tooltip-trigger');
 
     triggers.forEach(trigger => {
         trigger.addEventListener('click', (e) => {
-            // 1. Evitar que el clic se propague al documento inmediatamente
             e.stopPropagation();
 
-            // 2. Encontrar el popover hermano de este icono
             const popover = trigger.nextElementSibling;
-
-            // 3. Cerrar otros tooltips que pudieran estar abiertos (opcional)
-            document.querySelectorAll('.tooltip-popover.active').forEach(activePopover => {
-                if (activePopover !== popover) {
-                    activePopover.classList.remove('active');
-                }
-            });
-
-            // 4. Alternar (abrir/cerrar) el actual
-            popover.classList.toggle('active');
+            
+            // 1. Si vamos a abrir este, cerramos los otros primero
+            const isClosed = !popover.classList.contains('active');
+            
+            if (isClosed) {
+                // Cerrar cualquier otro abierto (limpieza total)
+                document.querySelectorAll('.tooltip-popover.active').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
+                
+                // Abrir el actual
+                popover.classList.add('active');
+                trigger.classList.add('active'); // <--- AQUÍ PINTAMOS EL BOTÓN
+            } else {
+                // Si ya estaba abierto, lo cerramos
+                popover.classList.remove('active');
+                trigger.classList.remove('active'); // <--- AQUÍ LO DESPINTAMOS
+            }
         });
     });
 
-    // 5. Cerrar tooltip al hacer clic en cualquier otro lado de la página
+    // Cerrar al hacer clic fuera
     document.addEventListener('click', () => {
-        document.querySelectorAll('.tooltip-popover.active').forEach(activePopover => {
-            activePopover.classList.remove('active');
-        });
+        // Quitamos la clase a las burbujas
+        document.querySelectorAll('.tooltip-popover.active').forEach(p => p.classList.remove('active'));
+        // Quitamos la clase a los botones (?)
+        document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
     });
 });
