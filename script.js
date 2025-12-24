@@ -981,18 +981,34 @@ function draw() {
 
     const toggleAxis = (inputId, sliderId, isLocked) => {
         const input = document.getElementById(inputId);
+        const slider = document.getElementById(sliderId);
         const wrapper = input ? input.closest('.axis-wrapper') : null;
+
         if (isLocked) {
-            if(wrapper) wrapper.style.opacity = "0.3";
-            if(wrapper) wrapper.style.pointerEvents = "none";
+            // 1. Efecto Visual (Gris)
+            if(wrapper) {
+                wrapper.style.opacity = "0.3";
+                wrapper.style.pointerEvents = "none";
+            }
+            
+            // 🔥 FIX TEST 14: Si está bloqueado, forzamos el valor a 0 visualmente.
+            // Esto garantiza que el input refleje la realidad interna.
+            if(input && input.value != "0") input.value = 0;
+            if(slider && slider.value != "0") slider.value = 0;
+
         } else {
-            if(wrapper) wrapper.style.opacity = "1";
-            if(wrapper) wrapper.style.pointerEvents = "auto";
+            // 2. Reactivar
+            if(wrapper) {
+                wrapper.style.opacity = "1";
+                wrapper.style.pointerEvents = "auto";
+            }
         }
     };
+
     // Bloquear si no hay espacio O si es Canvas Mode
     const lockX = maxShiftX < 1 || isFullGateMode;
     const lockY = maxShiftY < 1 || isFullGateMode;
+    
     toggleAxis('posXInput', 'posXSlider', lockX);
     toggleAxis('posYInput', 'posYSlider', lockY);
 
@@ -1869,4 +1885,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.tooltip-trigger.active').forEach(t => t.classList.remove('active'));
     });
 });
+
+// Listener para el Toggle de Mostrar/Ocultar Imagen
+if (typeof showImageToggle !== 'undefined' && showImageToggle) {
+    showImageToggle.addEventListener('change', () => {
+        // Al ocultar/mostrar, necesitamos redibujar
+        requestDraw();
+    });
+} else {
+    // Backup por si la variable global no se detectó
+    const toggleImg = document.getElementById('showImageToggle');
+    if (toggleImg) {
+        toggleImg.addEventListener('change', requestDraw);
+    }
+}
 
