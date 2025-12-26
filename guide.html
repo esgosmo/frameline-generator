@@ -10,8 +10,9 @@
             --card-bg: #1e1e1e;
             --text-main: #e0e0e0;
             --text-muted: #a0a0a0;
-            --accent: #2d8cf0; /* Matches your Refactor/HD button blue */
+            --accent: #2d8cf0;
             --border: #333;
+            --header-height: 80px; /* Definimos altura del header para cálculos */
         }
 
         body {
@@ -21,19 +22,22 @@
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            scroll-behavior: smooth; /* Suaviza el scroll al dar clic */
         }
 
         /* --- HEADER --- */
         header {
             background-color: var(--card-bg);
             border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
+            padding: 0 2rem;
+            height: var(--header-height);
             position: sticky;
             top: 0;
             z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-sizing: border-box;
         }
 
         .logo { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.5px; }
@@ -50,30 +54,108 @@
         }
         .back-btn:hover { background-color: rgba(45, 140, 240, 0.1); }
 
-        /* --- MAIN CONTENT --- */
+        /* --- LAYOUT PRINCIPAL (2 COLUMNAS) --- */
         .container {
-            max-width: 800px;
+            max-width: 1100px; /* Aumentado para dar espacio al sidebar */
             margin: 0 auto;
             padding: 40px 20px;
+            display: flex; /* Flexbox para columnas */
+            gap: 60px;     /* Espacio entre contenido y sidebar */
+            position: relative;
         }
 
-        h1 { font-size: 2.5rem; margin-bottom: 1rem; line-height: 1.2; }
-        h2 { font-size: 1.8rem; margin-top: 3rem; margin-bottom: 1rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        /* Columna Izquierda (Contenido) */
+        .guide-content {
+            flex: 1;
+            min-width: 0; /* Evita desbordes en flex items */
+        }
+
+        /* Columna Derecha (Sidebar Sticky) */
+        .guide-sidebar {
+            width: 240px;
+            flex-shrink: 0;
+            display: none; /* Oculto por defecto en móvil */
+        }
+
+        /* Mostrar sidebar solo en pantallas grandes */
+        @media (min-width: 900px) {
+            .guide-sidebar { display: block; }
+        }
+
+        /* Estilos del TOC (Table of Contents) */
+        .toc {
+            position: sticky;
+            top: calc(var(--header-height) + 40px); /* 40px de margen extra */
+            padding-left: 20px;
+            border-left: 2px solid #333; /* Línea base gris */
+        }
+
+        .toc h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc li {
+            margin-bottom: 12px;
+        }
+
+        .toc-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            display: block;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .toc-link:hover {
+            color: #fff;
+        }
+
+        /* Estado Activo del Link */
+        .toc-link.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* La barrita azul indicadora */
+        .toc-link.active::before {
+            content: '';
+            position: absolute;
+            left: -22px; /* Ajustado para caer sobre el borde gris */
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: var(--accent);
+        }
+
+        /* --- TIPOGRAFÍA Y ESPACIADO --- */
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; line-height: 1.2; margin-top: 0; }
+        
+        /* Ajuste para que el scroll no quede tapado por el header (Scroll Margin) */
+        section {
+            scroll-margin-top: 100px; 
+            margin-bottom: 60px;
+        }
+
+        h2 { font-size: 1.8rem; margin-bottom: 1rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         h3 { font-size: 1.3rem; margin-top: 1.5rem; color: var(--accent); }
         p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1.05rem; }
 
-        ul { margin-bottom: 1.5rem; color: var(--text-muted); }
+        ul { margin-bottom: 1.5rem; color: var(--text-muted); padding-left: 20px; }
         li { margin-bottom: 0.5rem; }
 
-        /* Asegura que el video/imagen llene el contenedor */
-        .media-container video, 
-        .media-container img {
-        width: 100%;
-        height: auto;
-        display: block; /* Quita un pequeño espacio blanco que a veces sale abajo */
-}
-
-        /* --- MEDIA CONTAINERS (For GIFs) --- */
+        /* --- MEDIA --- */
         .media-container {
             width: 100%;
             background-color: #000;
@@ -83,8 +165,32 @@
             margin: 20px 0;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+        
+        .media-container video, 
+        .media-container img {
+            width: 100%;
+            height: auto;
+            display: block; 
+        }
 
-        /* Placeholder for visualization */
+        /* --- NUEVO CSS PARA VIDEOS VERTICALES --- */
+        .media-container.vertical-media {
+        /* Limita el ancho. Juega con este porcentaje (50%, 60%, 400px) */
+        max-width: 50%; 
+        /* Centra el contenedor horizontalmente */
+        margin-left: left;
+     margin-right: auto;
+        }
+
+              /* --- NUEVO CSS PARA VIDEOS VERTICALES --- */
+        .media-container.images {
+        /* Limita el ancho. Juega con este porcentaje (50%, 60%, 400px) */
+        max-width: 30%; 
+        /* Centra el contenedor a la izquierda */
+        margin-left: left;
+     margin-right: auto;
+        }
+
         .gif-placeholder {
             width: 100%;
             height: 300px;
@@ -95,10 +201,12 @@
             color: #555;
             font-weight: bold;
             flex-direction: column;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .gif-placeholder span { font-size: 2rem; margin-bottom: 10px; }
         
-        /* Caption style */
         .caption {
             font-size: 0.85rem;
             color: #666;
@@ -108,7 +216,15 @@
             font-style: italic;
         }
 
-        /* --- INFO BOXES (Tips) --- */
+          .caption-left {
+            font-size: 0.85rem;
+            color: #666;
+            text-align: left;
+            margin-top: -10px;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
         .info-box {
             background-color: rgba(45, 140, 240, 0.1);
             border-left: 4px solid var(--accent);
@@ -125,7 +241,9 @@
             color: #555;
             font-size: 0.9rem;
             border-top: 1px solid var(--border);
-            margin-top: 60px;
+            background-color: var(--bg-color); /* Asegura fondo */
+            position: relative;
+            z-index: 10;
         }
     </style>
 </head>
@@ -137,74 +255,212 @@
     </header>
 
     <div class="container">
-        <h1>Quick Start Guide</h1>
-        <p>This tool is designed for post-producers, cinematographers, editors, DITs, and content creators who need to visualize aspect ratios, create custom mattes, and simulate sensor crops with mathematical precision.</p>
-
-        <h2>1. Basic Concepts</h2>
-        <p>There are two primary ways to utilize this tool, depending on your stage of production:</p>
-
-        <h3>A. Overlay Generator</h3>
-        <p><strong>Design custom aspect ratio guides and export high-resolution transparent overlays compatible with all editing software.</strong></p>
-        <p>You can set your aspect ratio and resolution, then export a clean, transparent PNG with the matte and frame guides. This is perfect for importing into Premiere Pro, DaVinci Resolve, or Avid as a timeline overlay.</p>
-
-        <h3>B. Visual Preview</h3>
-        <p><strong>Choose a file from your device to visualize framing.</strong></p>
-        <p>Drag and drop a still or click to select a file from your computer. This allows you to check compositions, simulate sensor crops, and verify safety areas against your actual footage.</p>
         
-        <div class="info-box">
-            <strong>Privacy Note:</strong> All processing happens locally in your browser. Your images are never uploaded to a server, ensuring complete privacy for your footage.
-        </div>
+        <aside class="guide-sidebar">
+            <nav class="toc">
+                <h4>On this page</h4>
+                <ul>
+                    <li><a href="#intro" class="toc-link">Introduction</a></li>
+                    <li><a href="#basic-concepts" class="toc-link">1. Basic Concepts</a></li>
+                    <li><a href="#scaling-modes" class="toc-link">2. Scaling Modes</a></li>
+                    <li><a href="#scale-position" class="toc-link">3. Scale and Position</a></li>
+                    <li><a href="#advance-options" class="toc-link">4. Advance Options</a></li>
+                    <li><a href="#canvas-mode" class="toc-link">5. Canvas Mode</a></li>
+                    <li><a href="#secondary-frameline" class="toc-link">6. Secondary Frameline</a></li>
+                    <li><a href="#export" class="toc-link">7. Export</a></li>
+                </ul>
+            </nav>
+        </aside>
 
-       <div class="media-container">
-    <video autoplay loop muted playsinline>
-        <source src="assets/Choose-file.mp4" type="video/mp4">
-        Your browser does not support html5 videos.
-    </video>
-</div>
-        <p class="caption">Fig 1. Choosing a local file for visual preview.</p>
+        <main class="guide-content">
+            
+            <section id="intro">
+                <h1>Quick Start Guide</h1>
+                <p>This tool is designed for post-producers, cinematographers, editors, DITs, and content creators who need to visualize aspect ratios, create custom mattes, and simulate sensor crops with mathematical precision.</p>
+                
 
-        <h2>2. Scaling Modes (Fit, Fill, Crop)</h2>
-        <p>When using an image, you have three ways to visualize your shot within the desired aspect ratio:</p>
+[Image of aspect ratio comparison diagram]
 
-        <ul>
-            <li><strong>Scale to Fit:</strong> Displays the entire original image. Ideal for checking the full composition.</li>
-            <li><strong>Scale to Fill:</strong> Zooms in until the frame is filled. Use the <em>Position</em> controls to reframe your shot (Pan & Tilt) into the desired aspect ratio.</li>
-            <li><strong>Scale to Crop:</strong> Physically adjusts the canvas size. The final exported file will have the exact dimensions of the frameline (no frame line or black bars).</li>
-        </ul>
+            </section>
 
-        <div class="media-container">
-            <div class="gif-placeholder">
-                <span>🔍</span>
-                [GIF: Switching between Fit/Fill and moving Position sliders]
-            </div>
-        </div>
-        <p class="caption">Fig 2. Pan & Scan demonstration in Fill mode.</p>
+            <section id="basic-concepts">
+                <h2>1. Basic Concepts</h2>
+                <p>There are two primary ways to utilize this tool:</p>
 
-        <h2>3. Canvas Mode</h2>
-        <p>The "Canvas" button allows you to view the full image area without applying any mattes or scaling. Useful for visualizing the total image area beyond the active extraction.</p>
-        <div class="info-box">
-            Note: When <strong>Canvas Mode</strong> is enabled, Scale and Opacity controls are automatically locked as you are viewing the raw 100% image.
-        </div>
+                <h3>A. Overlay Generator</h3>
+                <p><strong>Design custom aspect ratio guides and export high-resolution transparent overlays compatible with all editing software.</strong></p>
+                <p>You can set your aspect ratio and resolution, then export a clean, transparent PNG with the matte and frame guides. This is perfect for importing into Premiere Pro, DaVinci Resolve, or Avid as a timeline overlay.</p>
 
-        <h2>4. Secondary Framelines</h2>
-        <p>Need to deliver for Cinema (2.39) and Instagram (9:16) simultaneously? Enable the "Secondary Frameline".</p>
-        <p>You can customize the color and aspect ratio. Checking "Fit inside main frameline" ensures the secondary guide stays relative to your active crop.</p>
+                <h3>B. Visual Preview</h3>
+                <p><strong>Choose a file from your device to visualize framing.</strong></p>
+                <p>Drag and drop a still or click to select a file from your computer. This allows you to check compositions, simulate sensor crops, and verify safety areas against your actual footage.</p>
+                
+                <div class="info-box">
+                    <strong>Privacy Note:</strong> All processing happens locally in your browser. Your images are never uploaded to a server, ensuring complete privacy for your footage.
+                </div>
 
-        <div class="media-container">
-            <div class="gif-placeholder">
-                <span>📱</span>
-                [GIF: Enabling 9:16 Secondary Frameline over a 2.39 shot]
-            </div>
-        </div>
+                <div class="media-container">
+                    <video autoplay loop muted playsinline>
+                        <source src="assets/Choose-file.mp4" type="video/mp4">
+                        Your browser does not support html5 videos.
+                    </video>
+                </div>
+                <p class="caption">Choosing a local file for visual preview.</p>
+            </section>
 
-        <h2>5. Export</h2>
-        <p>Once satisfied, click "Downlaod PNG". The file will download as a high-quality PNG with the matte and guide lines "burned in."</p>
+            <section id="scaling-modes">
+                <h2>2. Scaling Modes</h2>
+                <p>When using an image, you have three ways to visualize your shot within the desired aspect ratio:</p>
+
+                <ul>
+                    <li><strong>Scale to Fit:</strong> Displays the entire original image. The image stays centered and fully contained within the canvas, adjusting automatically to any resolution change.</li>
+                    <li><strong>Scale to Fill:</strong> Zooms in until the frame is filled. Use the <em>Position</em> controls to reframe your shot (Pan & Tilt) into the desired aspect ratio.</li>
+                    <li><strong>Crop to Aspect Ratio:</strong> Physically adjusts the canvas size. The final exported file matches the exact dimensions of the <strong>active frame</strong>, eliminating any black bars.</li>
+                </ul>
+
+                <div class="media-container vertical-media">
+                     <video autoplay loop muted playsinline>
+                        <source src="assets/Scaling-modes.mp4" type="video/mp4">
+                        Your browser does not support html5 videos.
+                    </video>
+                </div>
+                <p class="caption-left">Scaling modes.</p>
+
+                 <div class="info-box">
+                        <strong>Dynamic Resolution:</strong> By default, the canvas matches your image's native size. However, you are free to set <strong>any resolution</strong> (e.g., changing to UHD). The image will automatically rescale to fit the new dimensions.
+                </div>
+
+            </section>
+
+             <section id="scale-position">
+                <h2>3. Scale and Position</h2>
+                <h3>Frameline Scale</h3>
+                <p>Adjusts the guide size relative to the canvas. Essential for visualizing <strong>safety margins</strong> for stabilization and VFX (look-around area). When combined with <em>Position</em> controls, it enables precise <strong>reframing</strong> to extract alternate aspect ratios from a master shot.<p></p>
+                <h3>Position</h3>
+
+                <p>Controls the X/Y axis alignment. Critical for <strong>Pan & Scan</strong> workflows, enabling you to re-center the subject when cropping wide footage into narrower aspect ratios (like 9:16) or adjusting headroom.</p>
+
+                <div class="media-container images">
+                            <img src="assets/Scale&Position.png" alt="Scale and Position">
+                    </div>
+                <p class="caption-left">Scale and Position sliders.</p>
+            
+            </section>
+
+            <section id="advance-options">
+                <h2>4. Advance Options</h2>
+              <p>Expand the "Advanced" panel to fine-tune the technical details of your overlay:</p>
+
+                <ul>
+                    <li><strong>Matte Opacity:</strong> Controls the transparency of the outer mask. Set to <strong>100%</strong> for a solid black letterbox (hard matte), or use lower values to visualize the "look-around" area while maintaining the framing reference.</li>
+
+                    <li><strong>Line Appearance:</strong> Customize the <strong>Color</strong> and <strong>Thickness</strong> (in pixels) of the main guide to ensure maximum visibility against your footage.</li>
+        
+                    <li><strong>Safe Areas:</strong> Toggles standard broadcast safety margins—<strong>Action Safe</strong> (93%) and <strong>Title Safe</strong> (90%)—to ensure critical elements aren't cut off on consumer displays.</li>
+        
+                    <li><strong>Data Labels:</strong> Displays the Aspect Ratio (e.g., "2.39") and Resolution (e.g., "1920 x 804") text directly on the overlay. Essential for DITs and Editors to avoid confusion in post-production.</li>
+        
+                    <li><strong>Canvas Resolution Label:</strong> Burns the total canvas size (e.g., "Canvas: 1920 x 1080") into the bottom-left corner. Useful for documenting delivery specs.</li>
+                </ul>
+
+                 <div class="media-container vertical-media">
+                            <img src="assets/advance-options.png" alt="Advance Options">
+                    </div>
+                <p class="caption-left">Advance Options.</p>
+
+
+            </section>
+
+                <section id="canvas-mode">
+                <h2>5. Canvas Mode</h2>
+                <p>The "Canvas" button allows you to view the full image area without applying any mattes or scaling. Useful for visualizing the total image area beyond the active extraction.</p>
+                
+                <div class="info-box">
+                    Note: When <strong>Canvas Mode</strong> is enabled, Scale and Opacity controls are automatically locked as you are viewing the raw 100% image.
+                </div>
+            </section>
+
+            <section id="secondary-frameline">
+                <h2>6. Secondary Frameline</h2>
+                <p>Need to deliver for Cinema (2.39) and Instagram (9:16) simultaneously? Enable the "Secondary Frameline".</p>
+                <p>You can customize the color and aspect ratio. Checking "Fit inside main frameline" ensures the secondary guide stays relative to your active crop.</p>
+
+                <div class="media-container">
+                    <video autoplay loop muted playsinline>
+                        <source src="assets/Secondary-frameline.mp4" type="video/mp4">
+                        Your browser does not support html5 videos.
+                    </video>
+                </div>
+                <p class="caption">Secondary Frameline.</p>
+            </section>
+            </section>
+
+            <section id="export">
+                <h2>7. Export</h2>
+                <p>Once satisfied, click the download button. The tool automatically selects the optimal format based on your content:</p>
+
+    <ul>
+        <li><strong>Overlays (No Image):</strong> Exports a <strong>Transparent PNG</strong>. Perfect for dragging directly into Premiere, Resolve, or Avid timelines.</li>
+        
+        <li><strong>Visual Previews (With Image):</strong> Exports a <strong>JPG</strong> with <strong>minimal compression</strong> (High Quality). This ensures your reference image retains maximum detail and color fidelity for sharing or documentation.</li>
+    </ul>
+
+    
+
+    <div class="info-box">
+        <strong>Mobile Users:</strong> On iOS and Android, the native "Share" sheet will open automatically, allowing you to send the image directly to WhatsApp, AirDrop, or save it to your Photos.
+    </div>
+            </section>
+
+        </main>
+
+
 
     </div>
 
     <footer>
         <p>Frameline Generator Tool &copy; 2025.</p>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tocLinks = document.querySelectorAll('.toc-link');
+            // Seleccionamos las secciones que queremos rastrear
+            const sections = document.querySelectorAll('section');
+
+            // Configuración del observador
+            const observerOptions = {
+                root: null,
+                // 'rootMargin' define la zona "activa" en la pantalla. 
+                // -30% arriba significa que se activa cuando la sección está cerca del top.
+                rootMargin: '-30% 0px -60% 0px', 
+                threshold: 0
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // 1. Limpiamos la clase activa de todos
+                        tocLinks.forEach(link => link.classList.remove('active'));
+                        
+                        // 2. Buscamos el link correspondiente al ID de la sección visible
+                        const id = entry.target.getAttribute('id');
+                        const activeLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                        
+                        // 3. Activamos el link
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Empezamos a observar todas las secciones
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
 
 </body>
 </html>
