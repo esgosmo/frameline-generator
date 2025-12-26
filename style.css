@@ -941,3 +941,27 @@ body.is-scrubbing {
 .toast-notification strong {
     color: #ffcc00; 
 }
+
+/* Estilo del Botón de Guía (Estilo "Pill" moderno) */
+.guide-btn {
+    display: inline-flex;
+    align-items: left;
+    gap: 8px; /* Espacio entre ícono y texto */
+    text-decoration: none;
+    color: #bbb; /* Gris claro por defecto */
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 8px 8px;
+    border-radius: 7px; /* Bordes muy redondos */
+    background-color: rgba(255, 255, 255, 0.05); /* Fondo apenas visible */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+/* Efecto Hover (Al pasar el mouse) */
+.guide-btn:hover {
+    background-color: rgba(45, 140, 240, 0.15); /* Azul muy suave */
+    color: #2d8cf0; /* Texto azul */
+    border-color: rgba(45, 140, 240, 0.3);
+    transform: translateY(-1px); /* Se levanta un poquito */
+}
