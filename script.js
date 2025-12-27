@@ -69,15 +69,26 @@ const inputs = {
 // Los valores son porcentajes del ancho/alto total del canvas.
 const socialZonesData = {
    "IG_REELS": {
-        // Medidas calibradas con la plantilla "Ramdam / Instagram 2025"
-        topPct: 0.14,      // Header superior y cámara
-        bottomPct: 0.20,   // Caption, nombre de usuario y audio ticker
+        topPct: 0.1,      // Header superior y cámara
+        bottomPct: 0.30,   // Caption, nombre de usuario y audio ticker
         leftPct: 0.04,     // Margen de seguridad izquierdo (para no pegar texto al borde)
         rightPct: 0.04,    // Margen derecho SUPERIOR (donde no hay botones)
         
         notch: {
             widthPct: 0.13,   // Ancho de la columna de botones (Like, Share, etc.)
-            heightPct: 0.45,  // Altura: Ocupan casi la mitad inferior derecha
+            heightPct: 0.357,  // Altura: Ocupan casi la mitad inferior derecha
+            // No necesitamos 'fromBottom' porque lo calcularemos matemáticamente
+        }
+    },
+       "IG_REELS_AD": {
+        topPct: 0.1,      // Header superior y cámara
+        bottomPct: 0.40,   // Caption, nombre de usuario y audio ticker
+        leftPct: 0.04,     // Margen de seguridad izquierdo (para no pegar texto al borde)
+        rightPct: 0.04,    // Margen derecho SUPERIOR (donde no hay botones)
+        
+        notch: {
+            widthPct: 0.13,   // Ancho de la columna de botones (Like, Share, etc.)
+            heightPct: 0.257,  // Altura: Ocupan casi la mitad inferior derecha
             // No necesitamos 'fromBottom' porque lo calcularemos matemáticamente
         }
     },

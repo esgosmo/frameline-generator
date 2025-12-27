@@ -6,4 +6,12 @@
       <changefreq>monthly</changefreq>
       <priority>1.0</priority>
    </url>
+
+   <url>
+      <loc>https://frameline-generator.com/guide.html</loc>
+      <lastmod>2025-01-01</lastmod>
+      <changefreq>yearly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   
 </urlset>
