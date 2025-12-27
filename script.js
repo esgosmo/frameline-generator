@@ -65,6 +65,57 @@ const inputs = {
     posYSlider: getEl('posYSlider')
 };
 
+// Definición de márgenes de UI para cada red social
+// Los valores son porcentajes del ancho/alto total del canvas.
+const socialZonesData = {
+   "IG_REELS": {
+        // Medidas calibradas con la plantilla "Ramdam / Instagram 2025"
+        topPct: 0.14,      // Header superior y cámara
+        bottomPct: 0.20,   // Caption, nombre de usuario y audio ticker
+        leftPct: 0.04,     // Margen de seguridad izquierdo (para no pegar texto al borde)
+        rightPct: 0.04,    // Margen derecho SUPERIOR (donde no hay botones)
+        
+        notch: {
+            widthPct: 0.13,   // Ancho de la columna de botones (Like, Share, etc.)
+            heightPct: 0.45,  // Altura: Ocupan casi la mitad inferior derecha
+            // No necesitamos 'fromBottom' porque lo calcularemos matemáticamente
+        }
+    },
+    "IG_FEED_4_5": {
+        // Basado en el canvas 1080x1350 Vertical
+        topPct: 0.0,     // El header de IG suele estar fuera del post
+        bottomPct: 0.12, // Botones de acción (like, comment, share) y caption inicial
+        leftPct: 0.0,
+        rightPct: 0.0
+    },
+    "IG_STORIES": {
+        // Similar a Reels pero con menos UI inferior
+        topPct: 0.08,
+        bottomPct: 0.10, // "Send message" bar
+        leftPct: 0.0,
+        rightPct: 0.0
+    },
+    "TIKTOK_APP": {
+        // UI muy intrusiva a la derecha y abajo
+        topPct: 0.05,    // Pestaña "Following/For You"
+        bottomPct: 0.15, // Caption, sonido
+        leftPct: 0.02,
+        rightPct: 0.18,   // Columna de iconos (perfil, like, comment, share)
+        notch: {
+            widthPct: 0.15,
+            heightPct: 0.70,
+        }
+    }
+};
+
+// Elemento del DOM
+const socialZoneSelect = document.getElementById('socialZoneSelect');
+
+// Listener para redibujar al cambiar
+if (socialZoneSelect) {
+    socialZoneSelect.addEventListener('change', requestDraw);
+}
+
 // ==========================================
 // VARIABLES GLOBALES
 // ==========================================
@@ -1082,6 +1133,96 @@ function draw() {
         if (rightX < finalW) ctx.fillRect(rightX, drawY, finalW - rightX, visibleH);
     }
 
+    // ==========================================
+    // 8.5. SOCIAL SAFE ZONES (CORREGIDO - NO OVERLAP)
+    // ==========================================
+    const selectedZoneKey = (typeof socialZoneSelect !== 'undefined' && socialZoneSelect) ? socialZoneSelect.value : "none";
+    
+    if (selectedZoneKey !== "none" && typeof socialZonesData !== 'undefined' && socialZonesData[selectedZoneKey]) {
+        const zone = socialZonesData[selectedZoneKey];
+        
+        // --- CÁLCULOS EN PÍXELES ---
+        const topH = Math.round(finalH * zone.topPct);
+        const botH = Math.round(finalH * zone.bottomPct);
+        const leftW = Math.round(finalW * zone.leftPct);
+        
+        // Notch y lado derecho
+        let notchW = 0, notchH = 0;
+        if (zone.notch) {
+            notchW = Math.round(finalW * zone.notch.widthPct);
+            notchH = Math.round(finalH * zone.notch.heightPct);
+        }
+        
+        // El margen derecho "normal" (arriba de los botones)
+        const rightW = Math.round(finalW * zone.rightPct);
+
+        // --- DIBUJO DE RELLENO (FILL) ---
+        // Usamos el amarillo de tu referencia, semitransparente
+        ctx.fillStyle = "rgba(225, 255, 0, 0.35)"; 
+        
+        // 1. BARRA SUPERIOR (Ancho completo)
+        if (topH > 0) ctx.fillRect(0, 0, finalW, topH);
+
+        // 2. BARRA INFERIOR (Ancho completo)
+        if (botH > 0) ctx.fillRect(0, finalH - botH, finalW, botH);
+
+        // 3. COLUMNA IZQUIERDA (Solo lo que queda entre Top y Bottom)
+        // Esto evita que se monte sobre las barras de arriba/abajo
+        const centerH = finalH - topH - botH;
+        if (leftW > 0) ctx.fillRect(0, topH, leftW, centerH);
+
+        // 4. COLUMNA DERECHA COMPLEJA (El "Notch")
+        // Aquí está la magia para que no se vea doble.
+        // Calculamos dónde empieza la zona de botones
+        const notchStartY = finalH - botH - notchH; 
+        
+        // A) Parte Derecha SUPERIOR (Arriba de los botones)
+        // Va desde el Top bar hasta donde empiezan los botones
+        const upperRightH = notchStartY - topH;
+        if (rightW > 0 && upperRightH > 0) {
+            ctx.fillRect(finalW - rightW, topH, rightW, upperRightH);
+        }
+
+        // B) Parte Derecha INFERIOR (Los botones/Notch)
+        // Va desde donde empiezan los botones hasta el Bottom bar
+        // Usamos Math.max para elegir el ancho mayor: ¿el margen normal o el notch?
+        const activeNotchW = Math.max(rightW, notchW);
+        if (activeNotchW > 0) {
+            ctx.fillRect(finalW - activeNotchW, notchStartY, activeNotchW, notchH);
+        }
+
+        // --- DIBUJO DE LÍNEA (STROKE) ---
+        // Dibujamos una sola línea continua que recorre el borde interno seguro.
+        ctx.strokeStyle = "rgba(200, 230, 0, 1.0)"; // Amarillo sólido fuerte
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+
+        // Coordenadas del área segura
+        const sTop = topH;
+        const sBot = finalH - botH;
+        const sLeft = leftW;
+        const sRightUpper = finalW - rightW; // Borde derecho zona superior
+        const sRightLower = finalW - activeNotchW; // Borde derecho zona botones
+        const sNotchY = finalH - botH - notchH; // Altura donde cambia el ancho derecho
+
+        // Trazamos el polígono en sentido horario
+        ctx.moveTo(sLeft, sTop);                  // 1. Esquina Sup-Izq
+        ctx.lineTo(sRightUpper, sTop);            // 2. Esquina Sup-Der
+        
+        if (zone.notch) {
+            ctx.lineTo(sRightUpper, sNotchY);     // 3. Baja hasta el notch
+            ctx.lineTo(sRightLower, sNotchY);     // 4. Entra a la izquierda (muesca)
+            ctx.lineTo(sRightLower, sBot);        // 5. Baja al fondo
+        } else {
+            ctx.lineTo(sRightUpper, sBot);        // (Si no hay notch, baja directo)
+        }
+
+        ctx.lineTo(sLeft, sBot);                  // 6. Esquina Inf-Izq
+        ctx.lineTo(sLeft, sTop);                  // 7. Cierra el camino (Sube)
+        
+        ctx.stroke();
+    }
+    
     // 9. LÍNEAS PRINCIPALES
     let rawThick = parseInt(inputs.thickness ? inputs.thickness.value : 2);
     if (isNaN(rawThick)) rawThick = 2;
