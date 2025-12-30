@@ -23,7 +23,19 @@
     "items": [
         { "name": "Vertical 9:16 (1080 x 1920)", "value": "1080,1920" },
         { "name": "Portrait 4:5 (1080 x 1350)", "value": "1080,1350" },
-        { "name": "Square 1:1 (1080 x 1080)", "value": "1080,1080" }
+        { "name": "Square 1:1 (1080 x 1080)", "value": "1080,1080" },
+
+        { "name": "── More Resolutions ──", "type": "separator" },
+
+        { "name": "▼ Standard", "type": "header" },
+        { "name": "Vertical 9:16 (1080 x 1920)", "value": "1080,1920" },
+        { "name": "Portrait 4:5 (1080 x 1350)", "value": "1080,1350" },
+        { "name": "Square 1:1 (1080 x 1080)", "value": "1080,1080" },
+
+      { "name": "▼ Instagram", "type": "header" },
+      { "name": "IG Feed 1:1 (1440 x 1440)", "value": "1440,1440" },
+      { "name": "IG Feed 4:5 (1440 x 1800)", "value": "1440,1800" },
+      { "name": "IG Feed 16:9 (2160 x 1215)", "value": "2160,1215" }
     ]
   },
   {

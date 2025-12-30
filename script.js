@@ -92,29 +92,38 @@ const socialZonesData = {
             // No necesitamos 'fromBottom' porque lo calcularemos matemáticamente
         }
     },
-    "IG_FEED_4_5": {
-        // Basado en el canvas 1080x1350 Vertical
-        topPct: 0.0,     // El header de IG suele estar fuera del post
-        bottomPct: 0.12, // Botones de acción (like, comment, share) y caption inicial
-        leftPct: 0.0,
-        rightPct: 0.0
-    },
     "IG_STORIES": {
         // Similar a Reels pero con menos UI inferior
-        topPct: 0.08,
-        bottomPct: 0.10, // "Send message" bar
-        leftPct: 0.0,
-        rightPct: 0.0
+        topPct: 0.091,
+        bottomPct: 0.09, // "Send message" bar
+        leftPct: 0.00,
+        rightPct: 0.00,
+
+        // notch: {
+        //    widthPct: 0.14,   // Ancho de la columna de botones (Like, Share, etc.)
+        //    heightPct: 0.252,  // Altura: Ocupan casi la mitad inferior derecha
+       // }
     },
     "TIKTOK_APP": {
         // UI muy intrusiva a la derecha y abajo
-        topPct: 0.05,    // Pestaña "Following/For You"
-        bottomPct: 0.15, // Caption, sonido
-        leftPct: 0.02,
-        rightPct: 0.18,   // Columna de iconos (perfil, like, comment, share)
+        topPct: 0.08,    // Pestaña "Following/For You"
+        bottomPct: 0.13, // Caption, sonido
+        leftPct: 0.029,
+        rightPct: 0.029,   // Columna de iconos (perfil, like, comment, share)
         notch: {
             widthPct: 0.15,
-            heightPct: 0.70,
+            heightPct: 0.53,
+        }
+    },
+        "TIKTOK_Comments": {
+        // UI muy intrusiva a la derecha y abajo
+        topPct: 0.09,    // Pestaña "Following/For You"
+        bottomPct: 0.28, // Caption, sonido
+        leftPct: 0.029,
+        rightPct: 0.029,   // Columna de iconos (perfil, like, comment, share)
+        notch: {
+            widthPct: 0.15,
+            heightPct: 0.45,
         }
     }
 };
@@ -208,7 +217,7 @@ function renderResolutionMenu() {
             optgroup.label = nombre;
             
             const mostrarTodo = nombre.includes("Broadcast") || nombre.includes("DCI")
-             || nombre.includes("Social Media") || nombre.includes("RED")
+             || nombre.includes("RED")
              || nombre.includes("Blackmagic");
             
             let itemsAMostrar = items;
@@ -1145,91 +1154,110 @@ function draw() {
     }
 
     // ==========================================
-    // 8.5. SOCIAL SAFE ZONES (CORREGIDO - NO OVERLAP)
+    // 8.5. SOCIAL SAFE ZONES (POLÍGONO ROBUSTO)
     // ==========================================
+
     const selectedZoneKey = (typeof socialZoneSelect !== 'undefined' && socialZoneSelect) ? socialZoneSelect.value : "none";
+
+    // --- NUEVA LÓGICA DE ADVERTENCIA (SOFT WARNING) ---
+    const zoneWarningEl = document.getElementById('zoneWarning');
+    
+    if (zoneWarningEl) {
+        // 1. Detectamos si el Canvas es Horizontal
+        const isHorizontalCanvas = finalW > finalH;
+        
+        // 2. Detectamos si la Zona elegida es Vertical
+        const isVerticalZone = ["IG_REELS", "TIKTOK_APP", "IG_STORIES","TIKTOK_Comments","IG_REELS_AD"].includes(selectedZoneKey);
+
+        // 3. Mostrar u ocultar
+        if (isHorizontalCanvas && isVerticalZone) {
+            zoneWarningEl.style.display = 'block';
+        } else {
+            zoneWarningEl.style.display = 'none';
+        }
+    }
     
     if (selectedZoneKey !== "none" && typeof socialZonesData !== 'undefined' && socialZonesData[selectedZoneKey]) {
         const zone = socialZonesData[selectedZoneKey];
-        
-        // --- CÁLCULOS EN PÍXELES ---
-        const topH = Math.round(finalH * zone.topPct);
-        const botH = Math.round(finalH * zone.bottomPct);
-        const leftW = Math.round(finalW * zone.leftPct);
-        
-        // Notch y lado derecho
-        let notchW = 0, notchH = 0;
+
+        // --- A. BUFFER (SLIDER) ---
+        const bufferInput = document.getElementById('socialBuffer');
+        let bufferPct = 0;
+        if (bufferInput) {
+            bufferPct = parseInt(bufferInput.value) / 100;
+            const bufferText = document.getElementById('bufferValue');
+            if (bufferText) bufferText.innerText = `+${bufferInput.value}%`;
+        }
+        const bufX = Math.round(finalW * bufferPct);
+        const bufY = Math.round(finalH * bufferPct);
+
+        // --- B. COORDENADAS (LÍMITES) ---
+        const sTop = Math.round((finalH * zone.topPct) + bufY);
+        const sBot = Math.round(finalH - (finalH * zone.bottomPct) - bufY);
+        const sLeft = Math.round((finalW * zone.leftPct) + bufX);
+        const sRightUpper = Math.round(finalW - (finalW * zone.rightPct) - bufX);
+
+        // Lógica Notch
+        let sRightLower = sRightUpper; 
+        let sNotchY = sBot; // Por defecto abajo
+
         if (zone.notch) {
-            notchW = Math.round(finalW * zone.notch.widthPct);
-            notchH = Math.round(finalH * zone.notch.heightPct);
+            const notchTotalW = Math.round((finalW * zone.notch.widthPct) + bufX);
+            const notchTotalH = Math.round((finalH * zone.notch.heightPct) + bufY);
+            
+            sRightLower = finalW - notchTotalW;
+            sNotchY = sBot - notchTotalH;
+            if (sNotchY < sTop) sNotchY = sTop; // Seguridad
         }
-        
-        // El margen derecho "normal" (arriba de los botones)
-        const rightW = Math.round(finalW * zone.rightPct);
 
-        // --- DIBUJO DE RELLENO (FILL) ---
-        // Usamos el amarillo de tu referencia, semitransparente
+        // --- C. DIBUJAR RELLENO (PIEZAS SÓLIDAS) ---
         ctx.fillStyle = "rgba(225, 255, 0, 0.35)"; 
+
+        // 1. Barra Superior
+        if (sTop > 0) ctx.fillRect(0, 0, finalW, sTop);
+
+        // 2. Barra Inferior
+        if (sBot < finalH) ctx.fillRect(0, sBot, finalW, finalH - sBot);
+
+        // 3. Columna Izquierda
+        if (sLeft > 0) ctx.fillRect(0, sTop, sLeft, sBot - sTop);
+
+        // 4. LADO DERECHO (POLÍGONO) 
+        // Dibujamos la forma exacta del área insegura derecha como una sola pieza.
+        // Esto evita líneas dobles, huecos o errores de superposición.
         
-        // 1. BARRA SUPERIOR (Ancho completo)
-        if (topH > 0) ctx.fillRect(0, 0, finalW, topH);
+        ctx.beginPath();
+        ctx.moveTo(sRightUpper, sTop);          // 1. Empieza en el borde interno superior
+        ctx.lineTo(finalW, sTop);               // 2. Va al borde derecho de pantalla
+        ctx.lineTo(finalW, sBot);               // 3. Baja hasta la zona segura inferior
+        ctx.lineTo(sRightLower, sBot);          // 4. Entra a la izquierda (Notch fondo)
+        ctx.lineTo(sRightLower, sNotchY);       // 5. Sube por el Notch
+        ctx.lineTo(sRightUpper, sNotchY);       // 6. Sale a la derecha (Margen normal)
+        ctx.lineTo(sRightUpper, sTop);          // 7. Sube y cierra
+        ctx.fill(); // Rellenamos el polígono
 
-        // 2. BARRA INFERIOR (Ancho completo)
-        if (botH > 0) ctx.fillRect(0, finalH - botH, finalW, botH);
 
-        // 3. COLUMNA IZQUIERDA (Solo lo que queda entre Top y Bottom)
-        // Esto evita que se monte sobre las barras de arriba/abajo
-        const centerH = finalH - topH - botH;
-        if (leftW > 0) ctx.fillRect(0, topH, leftW, centerH);
-
-        // 4. COLUMNA DERECHA COMPLEJA (El "Notch")
-        // Aquí está la magia para que no se vea doble.
-        // Calculamos dónde empieza la zona de botones
-        const notchStartY = finalH - botH - notchH; 
-        
-        // A) Parte Derecha SUPERIOR (Arriba de los botones)
-        // Va desde el Top bar hasta donde empiezan los botones
-        const upperRightH = notchStartY - topH;
-        if (rightW > 0 && upperRightH > 0) {
-            ctx.fillRect(finalW - rightW, topH, rightW, upperRightH);
-        }
-
-        // B) Parte Derecha INFERIOR (Los botones/Notch)
-        // Va desde donde empiezan los botones hasta el Bottom bar
-        // Usamos Math.max para elegir el ancho mayor: ¿el margen normal o el notch?
-        const activeNotchW = Math.max(rightW, notchW);
-        if (activeNotchW > 0) {
-            ctx.fillRect(finalW - activeNotchW, notchStartY, activeNotchW, notchH);
-        }
-
-        // --- DIBUJO DE LÍNEA (STROKE) ---
-        // Dibujamos una sola línea continua que recorre el borde interno seguro.
-        ctx.strokeStyle = "rgba(200, 230, 0, 1.0)"; // Amarillo sólido fuerte
+        // --- D. DIBUJAR LÍNEA (CONTORNO) ---
+        ctx.strokeStyle = "rgba(200, 230, 0, 1.0)";
         ctx.lineWidth = 2;
+
+        ctx.setLineDash([]);
+
         ctx.beginPath();
 
-        // Coordenadas del área segura
-        const sTop = topH;
-        const sBot = finalH - botH;
-        const sLeft = leftW;
-        const sRightUpper = finalW - rightW; // Borde derecho zona superior
-        const sRightLower = finalW - activeNotchW; // Borde derecho zona botones
-        const sNotchY = finalH - botH - notchH; // Altura donde cambia el ancho derecho
-
-        // Trazamos el polígono en sentido horario
-        ctx.moveTo(sLeft, sTop);                  // 1. Esquina Sup-Izq
-        ctx.lineTo(sRightUpper, sTop);            // 2. Esquina Sup-Der
+        ctx.moveTo(sLeft, sTop);
+        ctx.lineTo(sRightUpper, sTop);
         
         if (zone.notch) {
-            ctx.lineTo(sRightUpper, sNotchY);     // 3. Baja hasta el notch
-            ctx.lineTo(sRightLower, sNotchY);     // 4. Entra a la izquierda (muesca)
-            ctx.lineTo(sRightLower, sBot);        // 5. Baja al fondo
+            ctx.lineTo(sRightUpper, sNotchY);
+            ctx.lineTo(sRightLower, sNotchY);
+            ctx.lineTo(sRightLower, sBot);
         } else {
-            ctx.lineTo(sRightUpper, sBot);        // (Si no hay notch, baja directo)
+            ctx.lineTo(sRightUpper, sBot);
         }
 
-        ctx.lineTo(sLeft, sBot);                  // 6. Esquina Inf-Izq
-        ctx.lineTo(sLeft, sTop);                  // 7. Cierra el camino (Sube)
+        ctx.lineTo(sLeft, sBot);
+        ctx.lineTo(sLeft, sTop);
         
         ctx.stroke();
     }
@@ -1726,6 +1754,28 @@ if (resetBtn) {
         const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
         clearContainer('resBtnContainer'); clearContainer('aspectBtnContainer'); clearContainer('opacityBtnContainer');
         activarBotonHD();
+
+    // NUEVO: RESETEAR SOCIAL SAFE ZONES
+  
+    // 1. Resetear el selector principal a "None"
+    const zoneSelect = document.getElementById('socialZoneSelect');
+    if (zoneSelect) zoneSelect.value = 'none';
+
+    // 2. Resetear el slider de Buffer a 0
+    const bufferInput = document.getElementById('socialBuffer');
+    if (bufferInput) bufferInput.value = 0;
+
+    // 3. Resetear el texto del porcentaje (+0%)
+    const bufferText = document.getElementById('bufferValue');
+    if (bufferText) bufferText.innerText = "0%"; // O "+0%" según tu gusto
+
+    // 4. Ocultar el contenedor del slider (Ya que está en None)
+    const bufferCont = document.getElementById('bufferContainer');
+    if (bufferCont) bufferCont.style.display = 'none';
+
+    // 5. Ocultar la advertencia de Canvas Horizontal (si estaba visible)
+    const warningEl = document.getElementById('zoneWarning'); // O zoneWarningEl
+    if (warningEl) warningEl.style.display = 'none';
         
         const qBtn = document.getElementById('quickFrameBtn');
         const qTxt = document.getElementById('quickFrameText');
@@ -2052,3 +2102,30 @@ if (typeof showImageToggle !== 'undefined' && showImageToggle) {
     }
 }
 
+// ==========================================
+// LÓGICA DE VISIBILIDAD DEL BUFFER
+// ==========================================
+const zoneSelect = document.getElementById('socialZoneSelect');
+const bufferCont = document.getElementById('bufferContainer');
+
+function toggleBufferVisibility() {
+    if (!zoneSelect || !bufferCont) return;
+
+    if (zoneSelect.value === "none") {
+        bufferCont.style.display = "none";
+    } else {
+        bufferCont.style.display = "block";
+    }
+}
+
+// 1. Ejecutar al cargar la página (para asegurar el estado inicial)
+toggleBufferVisibility();
+
+// 2. Ejecutar cada vez que el usuario cambie la opción
+if (zoneSelect) {
+    zoneSelect.addEventListener('change', function() {
+        toggleBufferVisibility();
+        // Nota: Tu listener existente para 'draw()' o 'requestDraw()' 
+        // seguirá funcionando en paralelo, no necesitas tocarlo.
+    });
+}

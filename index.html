@@ -271,26 +271,55 @@
     </div>
 </div>
 
-<!--
+
 <div class="control-group" style="margin-top: 15px;">
-    <label for="socialZoneSelect" class="control-label">
-        Social Safe Zone:
-        <span class="tooltip-icon" title="Overlays a guide showing the safe area clear of app UI elements (likes, comments, search bars).">ℹ️</span>
-    </label>
+    
+    <div class="label-row" style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+        
+        <label for="socialZoneSelect" style="cursor: pointer; margin: 0;">
+            Social Safe Zone:
+        </label>
+        
+        <div class="tooltip-wrapper" style="position: relative;">
+            <span class="tooltip-trigger" tabindex="0" role="button" aria-label="Show help">?</span>
+            
+            <div class="tooltip-popover">
+                <strong style="display:block; margin-bottom:4px; color:#4dabf7;">Safe Area</strong>
+                Overlays a guide showing the safe area clear of app UI elements (likes, comments, search bars).
+            </div>
+        </div>
+
+    </div>
+   
     <select id="socialZoneSelect" class="davinci-select full-width">
         <option value="none">None</option>
         <optgroup label="Instagram">
-            <option value="IG_REELS">Reels [Mobile] (9:16)</option>
-            <option value="IG_REELS_AD">Reels AD [Mobile] (9:16)</option>
-            <option value="IG_FEED_4_5">Feed Post (4:5)</option>
-            <option value="IG_STORIES">Stories (9:16)</option>
+            <option value="IG_REELS">IG Reels (9:16)</option>
+            <option value="IG_REELS_AD">IG Reels Ads (9:16)</option>
+            <option value="IG_STORIES">IG Stories (9:16)</option>
         </optgroup>
         <optgroup label="TikTok">
-            <option value="TIKTOK_APP">TikTok App (9:16)</option>
+            <option value="TIKTOK_APP">TikTok Feed (9:16)</option>
+            <option value="TIKTOK_Comments">TikTok Ads (9:16)</option>
         </optgroup>
         </select>
+
+
+<div id="zoneWarning" style="display: none; color: #ffcc00; font-size: 0.75rem; margin-top: 5px; line-height: 1.2;">
+    ⚠️ Note: Vertical safe zone on horizontal canvas.
 </div>
--->
+
+  <div class="control-group" id="bufferContainer" style="margin-top: 10px; display: none;">
+    <div class="label-row" style="display: flex; justify-content: space-between;">
+        <label for="socialBuffer" class="control-label">Safety Buffer:</label>
+        <span id="bufferValue" style="color: #FFFFFF; font-weight: regular; font-size: 0.9rem;">0%</span>
+    </div>
+    <input type="range" id="socialBuffer" class="davinci-slider" min="0" max="7" value="0" step="1" oninput="draw()">
+    <p class="help-text" style="font-size: 0.75rem; color: #888; margin-top: 2px;">Expands the blocked area for extra safety.</p>
+</div>
+
+</div>
+
 
 <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
 
