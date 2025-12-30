@@ -1616,11 +1616,13 @@ btnDownload.addEventListener('click', async () => {
         ctx.save(); 
         const fontSize = Math.max(10, Math.round(w * 0.012)); 
         const margin = fontSize; 
+        /*
         ctx.font = `500 ${fontSize}px Arial, sans-serif`;
         ctx.fillStyle = "rgba(255, 255, 255, 0.5)"; 
         ctx.textAlign = "right"; ctx.textBaseline = "bottom";
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)"; ctx.shadowBlur = 4;
         ctx.fillText("frameline-generator.com", w - margin, h - margin);
+        */
         ctx.restore(); 
         mimeType = 'image/jpeg';
         dataUrl = canvas.toDataURL(mimeType, 0.9);
