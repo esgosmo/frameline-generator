@@ -1050,7 +1050,7 @@ function draw() {
     const maxShiftX = isCropMode ? imgLimitX : canvasLimitX;
     const maxShiftY = isCropMode ? imgLimitY : canvasLimitY;
 
-    const toggleAxis = (inputId, sliderId, isLocked) => {
+  const toggleAxis = (inputId, sliderId, isLocked) => {
         const input = document.getElementById(inputId);
         const slider = document.getElementById(sliderId);
         const wrapper = input ? input.closest('.axis-wrapper') : null;
@@ -1062,8 +1062,11 @@ function draw() {
                 wrapper.style.pointerEvents = "none";
             }
             
-            // 🔥 FIX TEST 14: Si está bloqueado, forzamos el valor a 0 visualmente.
-            // Esto garantiza que el input refleje la realidad interna.
+            // 🔥 BLINDAJE: Forzar atributo disabled
+            if (input) input.disabled = true;
+            if (slider) slider.disabled = true;
+
+            // Reset visual a 0
             if(input && input.value != "0") input.value = 0;
             if(slider && slider.value != "0") slider.value = 0;
 
@@ -1073,6 +1076,10 @@ function draw() {
                 wrapper.style.opacity = "1";
                 wrapper.style.pointerEvents = "auto";
             }
+
+            // 🔥 BLINDAJE: Forzar habilitación
+            if (input) input.disabled = false;
+            if (slider) slider.disabled = false;
         }
     };
 
@@ -1417,15 +1424,28 @@ Object.values(inputs).forEach(input => {
 
 if (menuAspecto) {
     menuAspecto.addEventListener('change', () => {
-        if (cajaAspecto) cajaAspecto.classList.remove('hidden');
-        const val = menuAspecto.value;
-        if (val === 'custom' || val === '') return;
-        if(inputs.aspect) inputs.aspect.value = val;
+        // 1. 🔥 Apagar modo Canvas inmediatamente
+        isFullGateMode = false;
+
+        // 2. 🔥 Desbloqueo total explícito
+        toggleScaleLock(false);
+        toggleOpacityLock(false);
+        if (typeof togglePositionLock === 'function') togglePositionLock(false);
+
+        // 3. Limpieza visual de botones (Apagar el botón Canvas si estaba prendido)
         const contenedorBotones = document.getElementById('aspectBtnContainer');
         if (contenedorBotones) {
-            const botonesPrendidos = contenedorBotones.querySelectorAll('button.active');
-            botonesPrendidos.forEach(btn => btn.classList.remove('active'));
+            contenedorBotones.querySelectorAll('button.active').forEach(btn => btn.classList.remove('active'));
         }
+
+        if (cajaAspecto) cajaAspecto.classList.remove('hidden');
+        
+        const val = menuAspecto.value;
+        if (val === 'custom' || val === '') return;
+        
+        if(inputs.aspect) inputs.aspect.value = val;
+
+        // Auto-thickness logic
         const currentThick = parseInt(inputs.thickness ? inputs.thickness.value : 0) || 0;
         if (currentThick === 0) {
             const currentW = parseInt(inputs.w.value) || 1920;
@@ -1434,7 +1454,9 @@ if (menuAspecto) {
             if (typeof lastThickness !== 'undefined') lastThickness = idealThickness;
             if (typeof updateQuickBtnState === 'function') updateQuickBtnState();
         }
-        flashInput(inputs.aspect); requestDraw();
+        
+        flashInput(inputs.aspect); 
+        requestDraw();
     });
 }
 
@@ -1462,6 +1484,9 @@ if (inputs.aspect) {
         isFullGateMode = false; 
         toggleScaleLock(false);   // Desbloquea Escala
         toggleOpacityLock(false); // <--- NUEVO: Desbloquea Opacidad
+
+        // 🔥 AGREGA ESTA LÍNEA QUE FALTABA:
+        if (typeof togglePositionLock === 'function') togglePositionLock(false);
 
         const contenedorBotones = document.getElementById('aspectBtnContainer');
         if (contenedorBotones) contenedorBotones.querySelectorAll('button.active').forEach(btn => btn.classList.remove('active'));
@@ -1540,13 +1565,23 @@ window.setPreset = function(w, h, btn) {
 }
 
 window.setAspect = function(val, btn) {
+    // 1. Apagar modo Canvas inmediatamente
     isFullGateMode = false; 
 
-    toggleScaleLock(false);   // Desbloquea Escala
-    toggleOpacityLock(false); // <--- NUEVO: Desbloquea Opacidad
-    togglePositionLock(false); // <--- NUEVO: Desbloquea Posición
+    // 2. Desbloqueo total explícito
+    toggleScaleLock(false);   
+    toggleOpacityLock(false); 
+    togglePositionLock(false); 
+
+    // 3. 🔥 LIMPIEZA VISUAL DEL BOTÓN CANVAS PREVIO
+    // Antes de activar el nuevo botón, borramos cualquier 'active' anterior
+    const btnContainer = document.getElementById('aspectBtnContainer');
+    if (btnContainer) {
+        btnContainer.querySelectorAll('button.active').forEach(b => b.classList.remove('active'));
+    }
 
     if(cajaAspecto) cajaAspecto.classList.remove('hidden');
+    
     let finalVal = val;
     if (val === '4:3') finalVal = (4/3).toFixed(5);
     
@@ -1560,6 +1595,10 @@ window.setAspect = function(val, btn) {
         if (inputs.thickness) inputs.thickness.value = (currentW > 3500) ? 6 : 2;
         if (typeof updateQuickBtnState === 'function') updateQuickBtnState();
     }
+    
+    // 4. Activar el botón presionado (si existe)
+    if (btn) highlightButton(btn);
+
     flashInput(inputs.aspect); 
     requestDraw();
 }
