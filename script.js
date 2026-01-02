@@ -547,49 +547,61 @@ function finalizarCarga(blobUrl, isHeavyFile, zone, textSpan) {
 function aplicarImagenAlSistema(img, isHeavyFile, wasResized, zone, textSpan) {
     userImage = img; 
 
-  // 🔥 CORRECCIÓN: Quitamos la clase del CANVAS, no del container
-    const myCanvas = document.getElementById('myCanvas');
-    if (myCanvas) myCanvas.classList.remove('demo-active');
-    
-    // Ocultamos el texto
-    hidePlaceholder();
-
-    // 🔥 ACTUALIZAMOS LA BANDERA GLOBAL
-    imageWasResized = wasResized;
-
-    // 🔥 NUEVO: Guardamos el estado en la variable global
-    isHeavyFileGlobal = isHeavyFile;
+    // 1. Limpieza y UI inicial
+    dismissDemo();
 
     if (zone && textSpan) {
         textSpan.innerText = "Image Loaded"; 
+        zone.classList.remove('has-file'); 
         zone.style.borderColor = "#007bff"; 
     }
 
-    /*
-    if (sizeWarning) {
-        sizeWarning.classList.add('hidden'); 
+    // 2. Actualizar banderas globales
+    imageWasResized = wasResized;
+    isHeavyFileGlobal = isHeavyFile;
+
+    // 3. 🔥 ALERTAS DE TAMAÑO (RESTAURO EL CÓDIGO ACTIVO)
+    // Esto asegura que el usuario sepa de inmediato si se optimizó su imagen
+    if (typeof sizeWarning !== 'undefined' && sizeWarning) {
+        sizeWarning.classList.add('hidden'); // Reset inicial
+        
         if (wasResized) {
             sizeWarning.innerText = "ℹ️ Image optimized for performance.";
             sizeWarning.classList.remove('hidden');
+            // Estilo azul informativo
+            sizeWarning.style.backgroundColor = "rgba(45, 140, 240, 0.1)";
+            sizeWarning.style.borderColor = "#2d8cf0";
+            sizeWarning.style.color = "#a0a0a0";
+            
         } else if (img.width > 6000 || img.height > 6000) {
             const msg = isHeavyFile 
                 ? "⚠️ Large file & resolution (>6K). Performance may lag." 
                 : "⚠️ Large resolution (>6K). Performance may lag.";
             sizeWarning.innerText = msg;
             sizeWarning.classList.remove('hidden');
+            // Estilo amarillo advertencia
+            sizeWarning.style.backgroundColor = "rgba(255, 204, 0, 0.1)";
+            sizeWarning.style.borderColor = "#ffcc00";
+            sizeWarning.style.color = "#ffcc00";
+
         } else if (isHeavyFile) {
             sizeWarning.innerText = "⚠️ Large file size (>20MB).";
             sizeWarning.classList.remove('hidden');
+            sizeWarning.style.backgroundColor = "rgba(255, 204, 0, 0.1)";
+            sizeWarning.style.borderColor = "#ffcc00";
+            sizeWarning.style.color = "#ffcc00";
         }
     }
-    */
 
+    // 4. Mostrar panel y configurar valores
     if (imageOptionsPanel) imageOptionsPanel.classList.remove('hidden');
 
     if(inputs.w) inputs.w.value = img.width;
     if(inputs.h) inputs.h.value = img.height;
+    
     if (typeof autoAdjustThickness === "function") autoAdjustThickness(img.width);
 
+    // 5. Resetear Menús
     if (typeof currentViewMode !== 'undefined' && currentViewMode !== 'root') {
         currentViewMode = 'root';
         if (typeof renderResolutionMenu === 'function') renderResolutionMenu();
@@ -598,12 +610,18 @@ function aplicarImagenAlSistema(img, isHeavyFile, wasResized, zone, textSpan) {
     if (typeof savedLabelName !== 'undefined') savedLabelName = "";
     if(menuResoluciones) menuResoluciones.value = 'custom';
 
-    const clearContainer = (id) => { const cont = document.getElementById(id); if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); };
+    const clearContainer = (id) => { 
+        const cont = document.getElementById(id); 
+        if(cont) cont.querySelectorAll('button.active').forEach(b => b.classList.remove('active')); 
+    };
     clearContainer('resBtnContainer');
     
+    // 6. Efectos y Dibujo final
     flashInput(inputs.w); 
     flashInput(inputs.h);
+
     if (typeof aplicarModoMobile === 'function') aplicarModoMobile();
+    
     requestDraw(); 
 }
 
@@ -2179,63 +2197,30 @@ if (zoneSelect) {
 }
 
 // ==========================================
-// 👻 LÓGICA DE BIENVENIDA (DEMO STATE) - CORREGIDA
+// 👻 LÓGICA DE BIENVENIDA (SIMPLIFICADA)
 // ==========================================
 const placeholderEl = document.getElementById('startPlaceholder');
 const demoCanvas = document.getElementById('myCanvas');
-let demoActive = true; 
 
-// 🔥 SEGURIDAD 1: Inmunidad al inicio
-// Evita que la configuración automática borre el demo al cargar.
-let isLoading = true;
-setTimeout(() => { isLoading = false; }, 1500); // 1.5 segundos de protección
-
-function dismissDemo(e) {
-    if (!demoActive) return; // Si ya se fue, salir.
-    
-    // 🔥 SEGURIDAD 2: Filtro de scripts
-    // Si estamos cargando, IGNORAR.
-    if (isLoading) return;
-    
-    // Si el evento existe y NO es confiable (fue generado por script), IGNORAR.
-    if (e && e.isTrusted === false) return;
-
-    // --- ACCIÓN ---
+// Función segura para ocultar el demo
+function dismissDemo() {
     // 1. Ocultar el Texto
     if (placeholderEl) placeholderEl.classList.add('fade-out');
     
     // 2. Quitar la Imagen de Fondo
     if (demoCanvas) demoCanvas.classList.remove('demo-active');
-    
-    demoActive = false; 
 }
 
-// --- DETECTORES DE INTERACCIÓN HUMANOS ---
-
-// A. Carga de imagen (Siempre borra el demo, sin importar el tiempo)
-if (imageLoader) {
-    imageLoader.addEventListener('click', (e) => { isLoading = false; dismissDemo(e); }); 
-    imageLoader.addEventListener('change', (e) => { isLoading = false; dismissDemo(e); });
-}
-if (dropZone) {
-    dropZone.addEventListener('drop', (e) => { isLoading = false; dismissDemo(e); });
-}
-
-// B. Detector Global en la Barra Lateral
+// A. Detectar interacción en los controles (Barra lateral)
 const sidebarControls = document.querySelector('.sidebar'); 
-
 if (sidebarControls) {
-    // Usamos eventos que solo los humanos suelen disparar intencionalmente
-    // 'mousedown' detecta el click ANTES de soltarlo (instantáneo)
+    // Si tocan cualquier cosa en la barra lateral, adiós demo
     sidebarControls.addEventListener('mousedown', dismissDemo, { capture: true });
-    
-    // 'keydown' detecta si escribes en un input
     sidebarControls.addEventListener('keydown', dismissDemo, { capture: true });
-    
-    // 'input' detecta el movimiento de sliders (solo si es trusted)
-    sidebarControls.addEventListener('input', dismissDemo, { capture: true });
 }
 
-// C. Backup para menús flotantes (si están fuera del sidebar)
-if (menuResoluciones) menuResoluciones.addEventListener('mousedown', dismissDemo);
-if (menuAspecto) menuAspecto.addEventListener('mousedown', dismissDemo);
+// B. Backup: Si hacen clic en los botones de descarga o presets
+if (btnDownload) btnDownload.addEventListener('click', dismissDemo);
+if (document.getElementById('resBtnContainer')) {
+    document.getElementById('resBtnContainer').addEventListener('click', dismissDemo);
+}

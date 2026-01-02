@@ -1006,7 +1006,6 @@ canvas {
 }
 
 
-
 /* --- 3. MODO DEMO (La imagen tapa los cuadritos) --- */
 canvas.demo-active {
     /* Sobrescribimos el gradiente con tu foto */
@@ -1028,7 +1027,7 @@ canvas.demo-active {
     align-items: center;
     justify-content: center;
     pointer-events: none; /* Los clics atraviesan esto */
-    transition: opacity 0.5s ease-out, visibility 0.5s;
+    transition: opacity 0.2s ease-out, visibility 0.2s;
     z-index: 10; /* La capa más alta */
 }
 
