@@ -2197,30 +2197,30 @@ if (zoneSelect) {
 }
 
 // ==========================================
-// 👻 LÓGICA DE BIENVENIDA (SIMPLIFICADA)
+// 👻 LÓGICA DE BIENVENIDA (CORREGIDA)
 // ==========================================
-const placeholderEl = document.getElementById('startPlaceholder');
 const demoCanvas = document.getElementById('myCanvas');
 
 // Función segura para ocultar el demo
 function dismissDemo() {
-    // 1. Ocultar el Texto
-    if (placeholderEl) placeholderEl.classList.add('fade-out');
-    
-    // 2. Quitar la Imagen de Fondo
-    if (demoCanvas) demoCanvas.classList.remove('demo-active');
+    if (demoCanvas) {
+        demoCanvas.classList.remove('demo-active');
+    }
 }
 
 // A. Detectar interacción en los controles (Barra lateral)
 const sidebarControls = document.querySelector('.sidebar'); 
 if (sidebarControls) {
-    // Si tocan cualquier cosa en la barra lateral, adiós demo
     sidebarControls.addEventListener('mousedown', dismissDemo, { capture: true });
     sidebarControls.addEventListener('keydown', dismissDemo, { capture: true });
 }
 
-// B. Backup: Si hacen clic en los botones de descarga o presets
-if (btnDownload) btnDownload.addEventListener('click', dismissDemo);
-if (document.getElementById('resBtnContainer')) {
-    document.getElementById('resBtnContainer').addEventListener('click', dismissDemo);
+// B. Backup: botones de descarga o presets
+if (typeof btnDownload !== 'undefined' && btnDownload) {
+    btnDownload.addEventListener('click', dismissDemo);
+}
+
+const resBtnContainer = document.getElementById('resBtnContainer');
+if (resBtnContainer) {
+    resBtnContainer.addEventListener('click', dismissDemo);
 }
