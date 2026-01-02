@@ -966,3 +966,96 @@ body.is-scrubbing {
     border-color: rgba(45, 140, 240, 0.3);
     transform: translateY(-1px); /* Se levanta un poquito */
 }
+
+
+/* --- 1. CONTENEDOR (Fondo Sólido Oscuro) --- */
+.preview-area {
+    position: relative;
+    background-color: #1c1c1c; /* Gris casi negro sólido, igual a tu foto */
+    transition: background 0.3s ease;
+    
+    /* Centramos el canvas visualmente si sobra espacio */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; 
+}
+
+/* --- 2. EL CANVAS (Aquí es donde van los Cuadritos) --- */
+canvas {
+    display: block;
+    position: relative;
+    z-index: 5;
+    
+    /* 🔥 EL CHECKERBOARD AHORA VIVE AQUÍ */
+    /* Cuadritos oscuros (base) */
+    background-color: #1a1a1a; 
+    
+    /* Cuadritos un poco más claros (gradiente) */
+    background-image: 
+        linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+        linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+        linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+        
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    
+    /* Una sombra sutil para separar el canvas del fondo sólido */
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+
+/* --- 3. MODO DEMO (La imagen tapa los cuadritos) --- */
+canvas.demo-active {
+    /* Sobrescribimos el gradiente con tu foto */
+    background-image: url('assets/demo-bg.jpg') !important; 
+    background-size: cover;
+    background-position: center;
+    background-color: transparent; /* Quitamos el color base gris */
+}
+
+/* --- 3. CAPA SUPERIOR (El Texto Overlay - Ya lo tenías) --- */
+.placeholder-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Los clics atraviesan esto */
+    transition: opacity 0.5s ease-out, visibility 0.5s;
+    z-index: 10; /* La capa más alta */
+}
+
+.placeholder-content {
+    text-align: center;
+    color: rgba(255,214,94, 0.8);
+    font-family: 'Inter', sans-serif, Arial;
+    font-weight: 600;
+
+    font-size: clamp(1.4rem, 5vw, 3.5rem);
+    line-height: 1.2;
+
+    text-transform: uppercase;
+    letter-spacing: 2px;
+
+    max-width: 90%;
+    padding: 0 1rem;
+
+    user-select: none;
+    text-shadow: 0px 1px 3px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 768px) {
+    .placeholder-content {
+        letter-spacing: 1px;
+    }
+}
+
+.placeholder-overlay.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}

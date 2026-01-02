@@ -547,6 +547,13 @@ function finalizarCarga(blobUrl, isHeavyFile, zone, textSpan) {
 function aplicarImagenAlSistema(img, isHeavyFile, wasResized, zone, textSpan) {
     userImage = img; 
 
+  // 🔥 CORRECCIÓN: Quitamos la clase del CANVAS, no del container
+    const myCanvas = document.getElementById('myCanvas');
+    if (myCanvas) myCanvas.classList.remove('demo-active');
+    
+    // Ocultamos el texto
+    hidePlaceholder();
+
     // 🔥 ACTUALIZAMOS LA BANDERA GLOBAL
     imageWasResized = wasResized;
 
@@ -2170,3 +2177,65 @@ if (zoneSelect) {
         // seguirá funcionando en paralelo, no necesitas tocarlo.
     });
 }
+
+// ==========================================
+// 👻 LÓGICA DE BIENVENIDA (DEMO STATE) - CORREGIDA
+// ==========================================
+const placeholderEl = document.getElementById('startPlaceholder');
+const demoCanvas = document.getElementById('myCanvas');
+let demoActive = true; 
+
+// 🔥 SEGURIDAD 1: Inmunidad al inicio
+// Evita que la configuración automática borre el demo al cargar.
+let isLoading = true;
+setTimeout(() => { isLoading = false; }, 1500); // 1.5 segundos de protección
+
+function dismissDemo(e) {
+    if (!demoActive) return; // Si ya se fue, salir.
+    
+    // 🔥 SEGURIDAD 2: Filtro de scripts
+    // Si estamos cargando, IGNORAR.
+    if (isLoading) return;
+    
+    // Si el evento existe y NO es confiable (fue generado por script), IGNORAR.
+    if (e && e.isTrusted === false) return;
+
+    // --- ACCIÓN ---
+    // 1. Ocultar el Texto
+    if (placeholderEl) placeholderEl.classList.add('fade-out');
+    
+    // 2. Quitar la Imagen de Fondo
+    if (demoCanvas) demoCanvas.classList.remove('demo-active');
+    
+    demoActive = false; 
+}
+
+// --- DETECTORES DE INTERACCIÓN HUMANOS ---
+
+// A. Carga de imagen (Siempre borra el demo, sin importar el tiempo)
+if (imageLoader) {
+    imageLoader.addEventListener('click', (e) => { isLoading = false; dismissDemo(e); }); 
+    imageLoader.addEventListener('change', (e) => { isLoading = false; dismissDemo(e); });
+}
+if (dropZone) {
+    dropZone.addEventListener('drop', (e) => { isLoading = false; dismissDemo(e); });
+}
+
+// B. Detector Global en la Barra Lateral
+const sidebarControls = document.querySelector('.sidebar'); 
+
+if (sidebarControls) {
+    // Usamos eventos que solo los humanos suelen disparar intencionalmente
+    // 'mousedown' detecta el click ANTES de soltarlo (instantáneo)
+    sidebarControls.addEventListener('mousedown', dismissDemo, { capture: true });
+    
+    // 'keydown' detecta si escribes en un input
+    sidebarControls.addEventListener('keydown', dismissDemo, { capture: true });
+    
+    // 'input' detecta el movimiento de sliders (solo si es trusted)
+    sidebarControls.addEventListener('input', dismissDemo, { capture: true });
+}
+
+// C. Backup para menús flotantes (si están fuera del sidebar)
+if (menuResoluciones) menuResoluciones.addEventListener('mousedown', dismissDemo);
+if (menuAspecto) menuAspecto.addEventListener('mousedown', dismissDemo);
