@@ -1019,13 +1019,23 @@ canvas.demo-active {
    MOBILE LANDSCAPE (AJUSTE DEMO)
 ================================ */
 @media (max-width: 900px) and (orientation: landscape) {
+    
+    /* 1. Quitamos padding extra del contenedor para ganar espacio */
+    .preview-area {
+        padding: 5px; 
+    }
+
     canvas.demo-active {
-
-        /* 👇 ESTO ES LO QUE LO ARREGLA */
-        aspect-ratio: 16 / 9;
-        width: 100%;
-        max-height: 80vh;
-
+        /* 👇 LA SOLUCIÓN: Prioridad a la Altura */
+        height: 85vh;       /* Ocupa casi toda la altura de la pantalla */
+        width: auto;        /* El ancho se calcula solo según el ratio */
+        
+        /* Mantenemos la proporción 16:9 rígida */
+        aspect-ratio: 16 / 9; 
+        
+        /* Seguridad: que no se salga del ancho si la pantalla es muy cuadrada */
+        max-width: 100%;    
+        
         background-image: url('assets/demo-mobile-landscape.jpg');
         background-size: cover;
     }
