@@ -1016,11 +1016,14 @@ canvas.demo-active {
 }
 
 /* ================================
-   MOBILE LANDSCAPE
+   MOBILE LANDSCAPE (AJUSTE DEMO)
 ================================ */
 @media (max-width: 900px) and (orientation: landscape) {
     canvas.demo-active {
         background-image: url('assets/demo-mobile-landscape.jpg');
+        background-size: contain;      /* 👈 CLAVE */
+        background-position: center;
+        background-repeat: no-repeat;
     }
 }
 
