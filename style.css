@@ -1005,6 +1005,8 @@ canvas {
     box-shadow: 0 0 50px rgba(0,0,0,0.5);
 }
 
+
+
 /* --- 3. MODO DEMO (La imagen tapa los cuadritos) --- */
 canvas.demo-active {
     /* Sobrescribimos el gradiente con tu foto */
@@ -1051,6 +1053,7 @@ canvas.demo-active {
 
 @media (max-width: 768px) {
     .placeholder-content {
+         font-size: 1.3rem;
         letter-spacing: 1px;
     }
 }
