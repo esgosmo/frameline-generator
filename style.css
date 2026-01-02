@@ -1006,13 +1006,34 @@ canvas {
 }
 
 
-/* --- 3. MODO DEMO (La imagen tapa los cuadritos) --- */
+/* --- MODO DEMO (Imagen + Mattes al 50% dentro del Canvas) --- */
 canvas.demo-active {
-    /* Sobrescribimos el gradiente con tu foto */
-    background-image: url('assets/demo-bg.jpg') !important; 
-    background-size: cover;
-    background-position: center;
-    background-color: transparent; /* Quitamos el color base gris */
+    /* Usamos !important para asegurar que sobrescriba el checkerboard */
+    background-image: 
+        /* 1. Matte Superior: Negro al 50% (0.5), ocupa el 13% superior */
+        linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 13%, transparent 13%),
+        
+        /* 2. Matte Inferior: Negro al 50% (0.5), ocupa el 13% inferior */
+        linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.5) 13%, transparent 13%),
+        
+        /* 3. Imagen Base */
+        url('assets/demo-bg.jpg') !important; 
+    
+    /* Ajustes para que cada capa se comporte bien */
+    background-size: 
+        100% auto, /* Mattes: ancho completo */
+        100% auto, 
+        cover;     /* Imagen: cubre todo */
+        
+    background-position: 
+        top center, 
+        bottom center, 
+        center;
+        
+    background-repeat: no-repeat;
+    
+    /* Hacemos transparente el color de fondo base para que no estorbe */
+    background-color: transparent; 
 }
 
 /* --- 3. CAPA SUPERIOR (El Texto Overlay - Ya lo tenías) --- */
