@@ -2253,21 +2253,45 @@ window.addEventListener('resize', () => {
     positionDemoCover();
 });
 
-// ================================
-// INTERACCIONES (NO CAMBIADAS)
-// ================================
-const sidebarControls = document.querySelector('.sidebar');
-if (sidebarControls) {
-    sidebarControls.addEventListener('mousedown', dismissDemo, { capture: true });
-    sidebarControls.addEventListener('keydown', dismissDemo, { capture: true });
-}
-
+// 1. El botón de Download SIEMPRE quita el demo (como pediste)
 if (typeof btnDownload !== 'undefined' && btnDownload) {
     btnDownload.addEventListener('click', dismissDemo);
 }
 
-const resBtnContainer = document.getElementById('resBtnContainer');
-if (resBtnContainer) {
-    resBtnContainer.addEventListener('click', dismissDemo);
-}
+// 2. Control inteligente de la barra lateral
+const sidebarControls = document.querySelector('.sidebar');
 
+if (sidebarControls) {
+    const handleInteraction = (e) => {
+        const target = e.target;
+
+        // A. LISTA DE EXCEPCIONES (Elementos que NO deben quitar el demo)
+        
+        // Botón de Info y el panel de texto mismo
+        const isInfoBtn = target.closest('#infoBtn');
+        const isInfoPanel = target.closest('#infoPanel');
+        
+        // Botones de Donación (Coffee / Paypal)
+        const isDonate = target.closest('.coffee-btn') || target.closest('.paypal-btn');
+        
+    // D. 🔥 NUEVO: Privacy, Disclaimer y su Modal
+        const isPrivacy = target.closest('#openPrivacy');
+        const isDisclaimer = target.closest('#openDisclaimer');
+        const isModal = target.closest('#privacyModal'); // Protege clics dentro del modal
+
+        // Si es cualquiera de estos, NO hacemos nada (return) -> El demo se queda.
+        if (isInfoBtn || isInfoPanel || isDonate || isPrivacy || isDisclaimer || isModal) {
+            return; 
+        }
+        
+        // B. CUALQUIER OTRA COSA (Inputs, Sliders, Selects) -> Quita el demo
+        // Nota: Si el botón Download está dentro del sidebar, caerá aquí también,
+        // lo cual está bien porque queremos que quite el demo.
+        dismissDemo();
+    };
+
+    // Usamos 'mousedown' para que la reacción sea instantánea al tocar
+    sidebarControls.addEventListener('mousedown', handleInteraction, { capture: true });
+    // Usamos 'keydown' por accesibilidad (si alguien navega con tabulador)
+    sidebarControls.addEventListener('keydown', handleInteraction, { capture: true });
+}
