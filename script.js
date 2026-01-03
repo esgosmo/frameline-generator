@@ -2197,25 +2197,71 @@ if (zoneSelect) {
 }
 
 // ==========================================
-// 👻 LÓGICA DE BIENVENIDA (CORREGIDA)
+// 👻 DEMO FADE — SIN REDECLARAR CANVAS
 // ==========================================
-const demoCanvas = document.getElementById('myCanvas');
 
-// Función segura para ocultar el demo
-function dismissDemo() {
-    if (demoCanvas) {
-        demoCanvas.classList.remove('demo-active');
+// 👇 REUSAMOS el canvas existente
+const demoCover = document.getElementById('demoCover');
+
+function positionDemoCover() {
+    if (!myCanvas || !demoCover) return;
+
+    const rect = myCanvas.getBoundingClientRect();
+    const parentRect = myCanvas.parentElement.getBoundingClientRect();
+
+    demoCover.style.width  = rect.width + 'px';
+    demoCover.style.height = rect.height + 'px';
+    demoCover.style.left   = (rect.left - parentRect.left) + 'px';
+    demoCover.style.top    = (rect.top - parentRect.top) + 'px';
+}
+
+function updateDemoImage() {
+    if (!demoCover) return;
+
+    if (window.matchMedia('(orientation: portrait)').matches) {
+        demoCover.style.backgroundImage =
+            "url('assets/demo-mobile-portrait.jpg')";
+    } else if (window.innerWidth < 900) {
+        demoCover.style.backgroundImage =
+            "url('assets/demo-mobile-landscape.jpg')";
+    } else {
+        demoCover.style.backgroundImage =
+            "url('assets/demo-desktop.jpg')";
     }
 }
 
-// A. Detectar interacción en los controles (Barra lateral)
-const sidebarControls = document.querySelector('.sidebar'); 
+function dismissDemo() {
+    if (!demoCover) return;
+
+    demoCover.classList.add('fade-out');
+
+    setTimeout(() => {
+        demoCover.remove();
+    }, 600);
+}
+
+// ================================
+// INIT
+// ================================
+window.addEventListener('load', () => {
+    updateDemoImage();
+    positionDemoCover();
+});
+
+window.addEventListener('resize', () => {
+    updateDemoImage();
+    positionDemoCover();
+});
+
+// ================================
+// INTERACCIONES (NO CAMBIADAS)
+// ================================
+const sidebarControls = document.querySelector('.sidebar');
 if (sidebarControls) {
     sidebarControls.addEventListener('mousedown', dismissDemo, { capture: true });
     sidebarControls.addEventListener('keydown', dismissDemo, { capture: true });
 }
 
-// B. Backup: botones de descarga o presets
 if (typeof btnDownload !== 'undefined' && btnDownload) {
     btnDownload.addEventListener('click', dismissDemo);
 }
@@ -2224,3 +2270,4 @@ const resBtnContainer = document.getElementById('resBtnContainer');
 if (resBtnContainer) {
     resBtnContainer.addEventListener('click', dismissDemo);
 }
+
